@@ -53,7 +53,7 @@ class YJBTrader(WebTrader):
 
     def get_balance(self):
         """获取账户资金状况"""
-        return self.__do(self.config['balance'])[0]
+        return self.__do(self.config['balance'])
 
     @property
     def position(self):
