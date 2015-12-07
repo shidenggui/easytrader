@@ -16,7 +16,7 @@
 #### 引入:
 
 ```python
-from esaytrader import YJBTrader
+from easytrader import YJBTrader
 ```
 
 #### 设置账户:
