@@ -8,6 +8,7 @@
 * 佣金宝
 
 ### requirements
+* Python 3.4
 
 > pip install -r requirements.txt
 
