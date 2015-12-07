@@ -1,3 +1,4 @@
+# coding: utf-8
 import json
 import random
 import re
@@ -78,13 +79,17 @@ class YJBTrader(WebTrader):
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
-
         :param stock_code: 股票代码
         :param price: 卖出价格
         :param amount: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
-        return self.__buy_or_sell(stock_code, price, amount, volume, entrust_prop, isbuy=True)
+        params = dict(
+            self.config['buy'],
+            entrust_bs=1,  # 买入1 卖出2
+            entrust_amount=amount if amount else volume // price // 100 * 100
+        )
+        return self.__buy_or_sell(stock_code, price, entrust_prop=entrust_prop, other=params)
 
     def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """卖出股票
@@ -93,24 +98,27 @@ class YJBTrader(WebTrader):
         :param amount: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
-        return self.__buy_or_sell(stock_code, price, amount=0, volume=0, entrust_prop=0, isbuy=False)
+        params = dict(
+            self.config['sell'],
+            entrust_bs=2,  # 买入1 卖出2
+            entrust_amount=amount if amount else volume // price
+        )
+        return self.__buy_or_sell(stock_code, price, entrust_prop=entrust_prop, other=params)
 
 
-    def __buy_or_sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0, isbuy=True):
+    def __buy_or_sell(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
         if not self.heart_process.is_alive():
             return self.get_balance()
         need_info = self.__get_trade_need_info(stock_code)
         return self.__do(dict(
-                self.config['buy'] if isbuy else self.config['sell'],
+                other,
                 stock_account=need_info['stock_account'],  # '沪深帐号'
                 exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
                 entrust_prop=0,  # 委托方式
-                entrust_bs=1 if isbuy else 2,  # 买入1 卖出2
                 stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
                 elig_riskmatch_flag=1,  # 用户风险等级
                 entrust_price=price,
-                entrust_amount=amount if amount else volume // price // 100 * 100
             ))
 
     def __get_trade_need_info(self, stock_code):
