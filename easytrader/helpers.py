@@ -1,5 +1,5 @@
+# coding: utf-8
 import json
-import base64
 
 def file2dict(path):
     with open(path) as f:
