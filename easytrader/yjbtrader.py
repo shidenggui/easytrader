@@ -53,7 +53,7 @@ class YJBTrader(WebTrader):
 
     def get_balance(self):
         """获取账户资金状况"""
-        return self.__do(self.config['balance'])
+        return self.__do(self.config['balance'])[0]
 
     @property
     def position(self):
@@ -178,5 +178,5 @@ class YJBTrader(WebTrader):
         return fun_data if header else fun_data[1:]
 
     def __fix_error_data(self, data):
-        return data[0] if type(data) == list else data
+        return data[0] if type(data) == list and data[0].get('error_no') != None else data
 
