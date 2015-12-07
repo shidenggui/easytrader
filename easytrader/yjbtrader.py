@@ -38,7 +38,7 @@ class YJBTrader(WebTrader):
         """每隔30秒查询指定接口保持 token 的有效性"""
         while True:
             data = self.get_balance()
-            if data.get('error_no'):
+            if type(data) == dict and data.get('error_no'):
                 break
             time.sleep(10)
 
@@ -109,7 +109,9 @@ class YJBTrader(WebTrader):
     def __buy_or_sell(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
         if not self.heart_process.is_alive():
-            return self.get_balance()
+            check_data = self.get_balance()
+            if type(check_data) == dict:
+                return check_data
         need_info = self.__get_trade_need_info(stock_code)
         return self.__do(dict(
                 other,
@@ -128,14 +130,14 @@ class YJBTrader(WebTrader):
         response_data = self.__do(dict(
                 self.config['exchangetype4stock'],
                 stock_code=stock_code
-            ))
+            ))[0]
         exchange_type = response_data['exchange_type']
         # 获取股票对应的证券帐号
         response_data = self.__do(dict(
                 self.config['account4stock'],
                 exchange_type=exchange_type,
                 stock_code=stock_code
-            ))
+            ))[0]
         stock_account = response_data['stock_account']
         return dict(
             exchange_type=exchange_type,
