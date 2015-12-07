@@ -37,14 +37,12 @@ user.balance
 
 **return**
 ```python
-{
-   'asset_balance': '资产总值',
+[{ 'asset_balance': '资产总值',
    'current_balance': '当前余额',
    'enable_balance': '可用金额',
    'market_value': '证券市值',
    'money_type': '币种',
-   'pre_interest': '预计利息'
-}
+   'pre_interest': '预计利息' ]}
 
 ```
 
