@@ -38,13 +38,14 @@ user.balance
 **return**
 ```python
 {
-  'asset_balance': '2.180',  # '资产总值'
-  'current_balance': '2.180',  # '当前余额'
-  'enable_balance': '2.180',  # '可用余额'
-  'market_value': '0.000',  # '证券市值'
-  'money_type': '人民币',
-  'pre_interest': '0.000'  # '预计利息'
-} 
+   'asset_balance': '资产总值',
+   'current_balance': '当前余额',
+   'enable_balance': '可用金额',
+   'market_value': '证券市值',
+   'money_type': '币种',
+   'pre_interest': '预计利息'
+}
+
 ```
 
 #### 获取持仓:
@@ -82,7 +83,7 @@ user.entrust
   'entrust_bs': '买卖方向',
   'entrust_no': '委托编号',
   'entrust_price': '委托价格',
-  'entrust_status': '委托状态',  # 废单 / 已报
+  'entrust_status': '委托状态',  # 废单 / 已报
   'report_time': '申报时间',
   'stock_code': '证券代码',
   'stock_name': '证券名称'}]
