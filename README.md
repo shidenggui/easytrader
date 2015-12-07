@@ -8,8 +8,8 @@
 * 佣金宝
 
 ### requirements
-* Python 3.4
-
+> Python 3.4+
+ 
 > pip install -r requirements.txt
 
 ### 用法
@@ -38,13 +38,14 @@ user.balance
 **return**
 ```python
 {
-  'asset_balance': '2.180',  # '资产总值'
-  'current_balance': '2.180',  # '当前余额'
-  'enable_balance': '2.180',  # '可用余额'
-  'market_value': '0.000',  # '证券市值'
-  'money_type': '人民币',
-  'pre_interest': '0.000'  # '预计利息'
-} 
+   'asset_balance': '资产总值',
+   'current_balance': '当前余额',
+   'enable_balance': '可用金额',
+   'market_value': '证券市值',
+   'money_type': '币种',
+   'pre_interest': '预计利息'
+}
+
 ```
 
 #### 获取持仓:
@@ -55,18 +56,17 @@ user.position
 
 **return**
 ```python
-[{
-  'cost_price': '0.000',
-  'current_amount': '0', # 当前数量
-  'enable_amount': '0', # 可用数量
-  'income_balance': '-11.100',
-  'keep_cost_price': '0.000',
-  'last_price': '0.571',
-  'market_value': '0.000', # 证券市值
-  'position_str': '定位字符串，无意义',
-  'stock_code': '162411',
-  'stock_name': '华宝油气'
-}]
+[{'cost_price': '摊薄成本价',
+   'current_amount': '当前数量',
+   'enable_amount': '可卖数量',
+   'income_balance': '摊薄浮动盈亏',
+   'keep_cost_price': '保本价',
+   'last_price': '最新价',
+   'market_value': '证券市值',
+   'position_str': '定位串',
+   'stock_code': '证券代码',
+   'stock_name': '证券名称'}]
+
 ```
 
 #### 获取今日委托单
@@ -74,9 +74,33 @@ user.position
 user.entrust
 ```
 
+**return** 
+
 ```python
-[{
+[{'business_amount': '成交数量',
+  'business_price': '成交价格',
+  'entrust_amount': '委托数量',
+  'entrust_bs': '买卖方向',
   'entrust_no': '委托编号',
+  'entrust_price': '委托价格',
+  'entrust_status': '委托状态',  # 废单 / 已报
+  'report_time': '申报时间',
+  'stock_code': '证券代码',
+  'stock_name': '证券名称'}]
+
+```
+
+
+#### 买入:
+
+```python
+user.buy('162411', price=0.55, amount=100)
+```
+
+**return** 
+
+```python
+[{'entrust_no': '委托编号',
   'init_date': '发生日期',
   'batch_no': '委托批号',
   'report_no': '申报号',
@@ -90,14 +114,7 @@ user.entrust
   'entrust_status': '委托状态',
   'fund_account': '资金帐号',
   'error_no': '错误号',
-  'error_info': '错误原因'
-}]
-```
-
-#### 买入:
-
-```python
-user.buy('162411', price=0.55, amount=100)
+  'error_info': '错误原因'}]
 ```
 
 #### 卖出:
@@ -106,7 +123,7 @@ user.buy('162411', price=0.55, amount=100)
 user.sell('162411', price=0.55, amount=100)
 ```
 
-#### 返回信息
-返回的都是 `JSON` 格式的信息,具体参考下面链接
+#### 其他
+其他可参考下面链接
 
 [佣金宝](http://www.jisilu.cn/question/42707)
