@@ -121,6 +121,20 @@ user.buy('162411', price=0.55, amount=100)
 user.sell('162411', price=0.55, amount=100)
 ```
 
+#### 掉线：
+
+如果掉线了,请求会返回
+
+```python
+{'error_info': '登陆已经超时，请重新登陆！', 'error_no': '-1'}
+```
+
+这时只需要重新设置token就可以了
+
+```python
+user.token='valid token'
+```
+
 #### 其他
 其他可参考下面链接
 
