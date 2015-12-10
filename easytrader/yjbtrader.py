@@ -30,7 +30,6 @@ class YJBTrader(WebTrader):
 
     def __keepalive(self):
         """启动保持在线的进程 """
-
         self.heart_process = Process(target=self.__send_heartbeat)
         self.heart_process.start()
 
@@ -124,7 +123,7 @@ class YJBTrader(WebTrader):
             ))
 
     def __get_trade_need_info(self, stock_code):
-        '''获取股票对应的证券市场和帐号'''
+        """获取股票对应的证券市场和帐号"""
         # TODO: 如果知道股票代码跟沪深的关系可以优化省略一次请求，同理先获取沪深帐号也可以省略一次请求
         # 获取股票对应的证券市场
         response_data = self.__do(dict(
@@ -145,7 +144,7 @@ class YJBTrader(WebTrader):
         )
 
     def __do(self, params):
-        '''发起对 api 的请求并过滤返回结果'''
+        """发起对 api 的请求并过滤返回结果"""
         basic_params = self.__create_basic_params()
         basic_params.update(params)
         data = self.__request(basic_params)
@@ -153,6 +152,7 @@ class YJBTrader(WebTrader):
         return self.__fix_error_data(data)
 
     def __create_basic_params(self):
+        """生成基本的参数"""
         basic_params = dict(
             CSRF_Token='undefined',
             timestamp=random.random(),
@@ -180,5 +180,6 @@ class YJBTrader(WebTrader):
         return fun_data if header else fun_data[1:]
 
     def __fix_error_data(self, data):
+        """若是返回错误移除外层的列表"""
         return data[0] if type(data) == list and data[0].get('error_no') != None else data
 
