@@ -4,6 +4,7 @@ from . import helpers
 class WebTrader:
     def __init__(self):
         self.__read_config()
+        self.trade_prefix = self.config['prefix']
 
     def __read_config(self):
         """读取 config"""

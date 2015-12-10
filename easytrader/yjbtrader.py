@@ -14,7 +14,6 @@ class YJBTrader(WebTrader):
 
     def __init__(self, token=''):
         super().__init__()
-        self.url = self.config['prefix']
         self.cookie = dict(JSESSIONID=token)
         self.__keepalive()
 
@@ -164,7 +163,7 @@ class YJBTrader(WebTrader):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
-        r = requests.get(self.url, params=params, cookies=self.cookie, headers=headers)
+        r = requests.get(self.trade_prefix, params=params, cookies=self.cookie, headers=headers)
         return r.text
 
     def __format_reponse_data(self, data, header=False):
