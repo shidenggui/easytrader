@@ -1,3 +1,4 @@
+
 # coding: utf-8
 import json
 import random
@@ -7,26 +8,83 @@ import time
 import os
 from multiprocessing import Process
 from easytrader import WebTrader
+from . import helpers
+import faker
+import uuid
+import socket
 
 
-class YJBTrader(WebTrader):
-    config_path = os.path.dirname(__file__) + '/config/yjb.json'
+class HTTrader(WebTrader):
+    config_path = os.path.dirname(__file__) + '/config/ht.json'
 
-    def __init__(self, token=''):
+    def __init__(self, account='', password=''):
         super().__init__()
-        self.url = self.config['prefix']
-        self.cookie = dict(JSESSIONID=token)
-        self.__keepalive()
+        self.__set_ip_and_mac()
 
-    @property
-    def token(self):
-        return self.cookie['JSESSIONID']
+    def read_account_config(self, path):
+        account_config = helpers.file2dict(path)
+        self.__account = account_config['userName']
+        self.__encrypted_password = account_config['trdpwd']
+        self.__service_password = account_config['servicePwd']
 
-    @token.setter
-    def token(self, token):
-        self.exit()
-        self.cookie = dict(JSESSIONID=token)
-        self.__keepalive()
+    def autologin(self):
+        """实现华泰的自动登录"""
+        s = requests.session()
+        # 进入华泰登录页面
+        login_page_response = s.get(self.config['login_page'])
+        # 获取验证码
+        verify_code_response = s.get(self.config['verify_code_api'], data=dict(ran=random.random))
+        # 保存验证码
+        with open('vcode', 'wb') as f:
+            f.write(verify_code_response.content)
+        # 调用tesseract识别
+        os.system('export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract vcode result')
+        # os.system('tesseract vcode result')
+
+        # 获取识别的验证码
+        with open('result.txt') as f:
+            vcode = f.readline()
+            # 移除空格和换行符
+            vcode = vcode.replace(' ', '')[:-1]
+            if len(vcode) != 4:
+                return False
+
+        os.remove('result.txt')
+        os.remove('vcode')
+
+        # 设置登录所需参数
+        params = dict(
+            trdpwdEns=self.__encrypted_password,
+            macaddr=self.__mac,
+            lipInfo=self.__ip,
+            userName=self.__account,
+            servicePwd=self.__service_password,
+            trdpwd=self.__encrypted_password,
+            vcode=vcode
+        )
+        params.update(self.config['login'])
+
+        login_api_response = s.post(self.config['login_api'], params)
+
+        if login_api_response.text.find('欢迎您登录') == -1:
+            return False
+
+        
+
+        return r
+
+
+
+    def __set_ip_and_mac(self):
+        """获取本机IP和MAC地址"""
+        # 获取ip
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("baidu.com",80))
+        self.__ip = s.getsockname()[0]
+        s.close()
+
+        # 获取mac地址
+        self.__mac = ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
     def __keepalive(self):
         """启动保持在线的进程 """
@@ -39,7 +97,7 @@ class YJBTrader(WebTrader):
             data = self.get_balance()
             if type(data) == dict and data.get('error_no'):
                 break
-            time.sleep(10)
+            time.sleep(30)
 
     def exit(self):
         """结束保持 token 在线的进程"""

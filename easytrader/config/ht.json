@@ -1,0 +1,12 @@
+{
+  "login_page":"https://service.htsc.com.cn/service/login.jsp",
+  "login_api":"https://service.htsc.com.cn/service/loginAction.do?method=login",
+  "verify_code_api":"https://service.htsc.com.cn/service/pic/verifyCodeImage.jsp",
+  "login": {
+    "loginEvent": 1,
+    "topath": "null",
+    "accountType": 1,
+    "userType": "jy",
+    "hddInfo": "ST3250820AS"
+  }
+}
