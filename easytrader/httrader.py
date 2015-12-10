@@ -9,9 +9,12 @@ import os
 from multiprocessing import Process
 from easytrader import WebTrader
 from . import helpers
-import faker
 import uuid
 import socket
+import base64
+import urllib
+from logbook import Logger, StreamHandler
+import sys
 
 
 class HTTrader(WebTrader):
@@ -20,8 +23,10 @@ class HTTrader(WebTrader):
     def __init__(self, account='', password=''):
         super().__init__()
         self.__set_ip_and_mac()
+        StreamHandler(sys.stdout).push_application()
+        self.log = Logger('HTTrader')
 
-    def read_account_config(self, path):
+    def read_config(self, path):
         account_config = helpers.file2dict(path)
         self.__account = account_config['userName']
         self.__encrypted_password = account_config['trdpwd']
@@ -29,11 +34,11 @@ class HTTrader(WebTrader):
 
     def autologin(self):
         """实现华泰的自动登录"""
-        s = requests.session()
+        self.s = requests.session()
         # 进入华泰登录页面
-        login_page_response = s.get(self.config['login_page'])
+        login_page_response = self.s.get(self.config['login_page'])
         # 获取验证码
-        verify_code_response = s.get(self.config['verify_code_api'], data=dict(ran=random.random))
+        verify_code_response = self.s.get(self.config['verify_code_api'], data=dict(ran=random.random))
         # 保存验证码
         with open('vcode', 'wb') as f:
             f.write(verify_code_response.content)
@@ -54,26 +59,46 @@ class HTTrader(WebTrader):
 
         # 设置登录所需参数
         params = dict(
+            userName=self.__account,
+            trdpwd=self.__encrypted_password,
             trdpwdEns=self.__encrypted_password,
+            servicePwd=self.__service_password,
             macaddr=self.__mac,
             lipInfo=self.__ip,
-            userName=self.__account,
-            servicePwd=self.__service_password,
-            trdpwd=self.__encrypted_password,
             vcode=vcode
         )
         params.update(self.config['login'])
 
-        login_api_response = s.post(self.config['login_api'], params)
+        login_api_response = self.s.post(self.config['login_api'], params)
 
         if login_api_response.text.find('欢迎您登录') == -1:
             return False
 
-        
+        # 请求下列页面获取交易所需的 uid 和 password
+        trade_info_response = self.s.get(self.config['trade_info_page'])
 
-        return r
+        # 查找登录信息
+        search_data = re.search('var data = "([=\w\+]+)"', trade_info_response.text)
+        if search_data == None:
+            return False
 
+        need_data = search_data.groups()[0]
+        bytes_data = base64.b64decode(need_data)
+        str_data = bytes_data.decode('gbk')
+        json_data = json.loads(str_data)
 
+        self.__fund_account = json_data['fund_account']
+        self.__client_risklevel = json_data['branch_no']
+        self.__sh_stock_account = json_data['item'][0]['stock_account']
+        self.__sh_exchange_type = json_data['item'][0]['exchange_type']
+        self.__sz_stock_account = json_data['item'][1]['stock_account']
+        self.__sz_exchange_type = json_data['item'][1]['exchange_type']
+        self.__op_station = json_data['op_station']
+        self.__trdpwd = json_data['trdpwd']
+        self.__uid = json_data['uid']
+        self.__branch_no = json_data['branch_no']
+
+        return True
 
     def __set_ip_and_mac(self):
         """获取本机IP和MAC地址"""
@@ -132,18 +157,16 @@ class HTTrader(WebTrader):
     def cancel_order(self):
         pass
 
-
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
-        :param amount: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param amount: 卖出总金额 由 volume / price 取 100 整数， 若指定 price 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
             self.config['buy'],
-            entrust_bs=1,  # 买入1 卖出2
             entrust_amount=amount if amount else volume // price // 100 * 100
         )
         return self.__buy_or_sell(stock_code, price, entrust_prop=entrust_prop, other=params)
@@ -157,18 +180,12 @@ class HTTrader(WebTrader):
         """
         params = dict(
             self.config['sell'],
-            entrust_bs=2,  # 买入1 卖出2
             entrust_amount=amount if amount else volume // price
         )
         return self.__buy_or_sell(stock_code, price, entrust_prop=entrust_prop, other=params)
 
 
     def __buy_or_sell(self, stock_code, price, entrust_prop, other):
-        # 检查是否已经掉线
-        if not self.heart_process.is_alive():
-            check_data = self.get_balance()
-            if type(check_data) == dict:
-                return check_data
         need_info = self.__get_trade_need_info(stock_code)
         return self.__do(dict(
                 other,
@@ -176,26 +193,15 @@ class HTTrader(WebTrader):
                 exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
                 entrust_prop=0,  # 委托方式
                 stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
-                elig_riskmatch_flag=1,  # 用户风险等级
                 entrust_price=price,
             ))
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
-        # TODO: 如果知道股票代码跟沪深的关系可以优化省略一次请求，同理先获取沪深帐号也可以省略一次请求
         # 获取股票对应的证券市场
-        response_data = self.__do(dict(
-                self.config['exchangetype4stock'],
-                stock_code=stock_code
-            ))[0]
-        exchange_type = response_data['exchange_type']
+        exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else self.__sz_exchange_type
         # 获取股票对应的证券帐号
-        response_data = self.__do(dict(
-                self.config['account4stock'],
-                exchange_type=exchange_type,
-                stock_code=stock_code
-            ))[0]
-        stock_account = response_data['stock_account']
+        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type else self.__sz_exchange_type
         return dict(
             exchange_type=exchange_type,
             stock_account=stock_account
@@ -212,8 +218,17 @@ class HTTrader(WebTrader):
     def __create_basic_params(self):
         """生成基本的参数"""
         basic_params = dict(
-            CSRF_Token='undefined',
-            timestamp=random.random(),
+            uid=self.__uid,
+            version=1,
+            custid=self.__account,
+            op_branch_no=self.__branch_no,
+            branch_no=self.__branch_no,
+            op_entrust_way=7,
+            op_station=self.__op_station,
+            fund_account=self.__account,
+            password=self.__trdpwd,
+            identity_type='',
+            ram=random.random()
         )
         return basic_params
 
@@ -222,22 +237,27 @@ class HTTrader(WebTrader):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
-        r = requests.get(self.url, params=params, cookies=self.cookie, headers=headers)
-        return r.text
+        params_str = urllib.parse.urlencode(params)
+        unquote_str = urllib.parse.unquote(params_str)
 
-    def __format_reponse_data(self, data, header=False):
+        self.log.debug(unquote_str)
+
+        b64params = base64.b64encode(unquote_str.encode()).decode()
+        r = self.s.get('{prefix}/?{b64params}'.format(prefix=self.trade_prefix, b64params=b64params), headers=headers)
+        self.log.debug(r.url)
+        return r.content
+
+    def __format_reponse_data(self, data):
         """格式化返回的 json 数据"""
-        # 获取 returnJSON
-        returnJson = json.loads(data)['returnJson']
-        # 为 key 添加双引号
-        t1 = re.sub('\w+:', lambda x: '"%s":' % x.group().rstrip(':'), returnJson)
-        # 替换所有单引号到双引号
-        t2 = t1.replace("'", '"')
-        t3 = json.loads(t2)
-        fun_data = t3['Func%s' % t3['function_id']]
-        return fun_data if header else fun_data[1:]
+        bytes_str = base64.b64decode(data)
+        self.log.debug(bytes_str)
+        gbk_str = bytes_str.decode('gbk')
+        return json.loads(gbk_str)
 
     def __fix_error_data(self, data):
         """若是返回错误移除外层的列表"""
-        return data[0] if type(data) == list and data[0].get('error_no') != None else data
+        if data['cssweb_code'] == 'error':
+            return data
+        t1 = data['item']
+        return t1[:-1]
 
