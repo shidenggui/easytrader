@@ -3,6 +3,8 @@
 * 进行简单的 web 股票交易
 * **目前还很不完善,仅供测试**
 
+**开发环境** : `Ubuntu 15.10` / `Python 3.4`
+
 ### TODO
 
 * 支持更多券商
@@ -12,28 +14,51 @@
 ### 支持券商
 
 * 佣金宝
+* 华泰（支持自动登录，还在测试阶段）
 
 ### requirements
+
 > Python 3.4+
  
 > pip install -r requirements.txt
+
+> 华泰的自动登录需要安装 `tesseract`，并保证在命令行下 `tesseract` 可用
 
 ### 用法
 
 #### 引入:
 
 ```python
-from easytrader import YJBTrader
+from easytrader import YJBTrader, HTTrader
 ```
 
 #### 设置账户:
 
+##### 佣金宝
 ```python
 user = YJBTrader()
 user.token = 'ABC...CBA'
 ```
-
 [如何获取 token](http://www.jisilu.cn/question/42707)
+
+##### 华泰
+
+```python
+user = HTTrader()
+user.read_config('me.json')
+```
+
+**注**: 华泰需要配置 `me.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
+
+#### 自动登录 
+
+##### 华泰
+
+```python
+user.autologin()
+```
+### 交易相关
+以下用法以佣金宝为例，华泰类似
 
 #### 获取资金状况:
 
@@ -126,10 +151,15 @@ user.buy('162411', price=0.55, amount=100)
 ```python
 user.sell('162411', price=0.55, amount=100)
 ```
+#### 撤单（华泰特有）
 
-#### 掉线：
+```python
+user.cancel_entrust('委托单号')
+```
 
-后台开了一个进程30秒请求一次维持 token 的有效性，理论上是不会掉线的。
+#### 掉线(佣金宝特有)
+
+后台开了一个进程 30 秒请求一次维持 `token` 的有效性，理论上是不会掉线的。
 如果掉线了,请求会返回
 
 ```python
