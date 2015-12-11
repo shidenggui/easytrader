@@ -45,7 +45,7 @@ user = HTTrader()
 user.read_config('me.json')
 ```
 
-**注**: 华泰需要配置 `me.json` 填入相关信息
+**注**: 华泰需要配置 `me.json` 填入相关信息, trdpwd 加密后的密码首次需要登录后查看登录 post的trdpwd 值确定
 
 #### 自动登录 
 
