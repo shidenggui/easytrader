@@ -62,5 +62,14 @@
     "request_num":100,
     "identity_type": "",
     "entrust_bs": 2
+  },
+  "cancel_entrust": {
+    "cssweb_type": "STOCK_CANCEL",
+    "function_id": 304,
+    "exchange_type":"",
+    "stock_code":"",
+    "identity_type": "",
+    "entrust_bs": 2,
+    "batch_flag": 0
   }
 }

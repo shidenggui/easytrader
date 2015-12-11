@@ -27,24 +27,32 @@ class HTTrader(WebTrader):
         self.log = Logger('HTTrader')
 
     def read_config(self, path):
-        account_config = helpers.file2dict(path)
-        self.__account = account_config['userName']
-        self.__encrypted_password = account_config['trdpwd']
-        self.__service_password = account_config['servicePwd']
+        self.account_config = helpers.file2dict(path)
 
     def autologin(self):
+        """实现自动登录"""
+        isLoginOk = self.login()
+        if not isLoginOk:
+            time.sleep(1)
+            self.autologin()
+
+    # TODO: 待重构
+    def login(self):
         """实现华泰的自动登录"""
         self.s = requests.session()
         # 进入华泰登录页面
         login_page_response = self.s.get(self.config['login_page'])
         # 获取验证码
-        verify_code_response = self.s.get(self.config['verify_code_api'], data=dict(ran=random.random))
+        verify_code_response = self.s.get(self.config['verify_code_api'], data=dict(ran=random.random()))
         # 保存验证码
         with open('vcode', 'wb') as f:
             f.write(verify_code_response.content)
-        # 调用tesseract识别
-        os.system('export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract vcode result')
-        # os.system('tesseract vcode result')
+        # 调用 tesserac t识别
+        # ubuntu 15.10貌似无法export TESSDATA_PREFIX
+        # os.system('export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract vcode result -psm 7')
+        res = os.system('tesseract vcode result -psm 7')
+        if res != 0:
+            os.system('export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract vcode result -psm 7')
 
         # 获取识别的验证码
         with open('result.txt') as f:
@@ -59,10 +67,10 @@ class HTTrader(WebTrader):
 
         # 设置登录所需参数
         params = dict(
-            userName=self.__account,
-            trdpwd=self.__encrypted_password,
-            trdpwdEns=self.__encrypted_password,
-            servicePwd=self.__service_password,
+            userName=self.account_config['userName'],
+            trdpwd=self.account_config['trdpwd'],
+            trdpwdEns=self.account_config['trdpwd'],
+            servicePwd=self.account_config['servicePwd'],
             macaddr=self.__mac,
             lipInfo=self.__ip,
             vcode=vcode
@@ -78,15 +86,17 @@ class HTTrader(WebTrader):
         trade_info_response = self.s.get(self.config['trade_info_page'])
 
         # 查找登录信息
-        search_data = re.search('var data = "([=\w\+]+)"', trade_info_response.text)
-        if search_data == None:
+        search_result = re.search('var data = "([=\w\+]+)"', trade_info_response.text)
+        if search_result == None:
             return False
 
-        need_data = search_data.groups()[0]
+        need_data_index = 0
+        need_data = search_result.groups()[need_data_index]
         bytes_data = base64.b64decode(need_data)
         str_data = bytes_data.decode('gbk')
         json_data = json.loads(str_data)
 
+        # TODO 更好的实现方式？ 直接生成字典？
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
         self.__sh_stock_account = json_data['item'][0]['stock_account']
@@ -111,6 +121,7 @@ class HTTrader(WebTrader):
         # 获取mac地址
         self.__mac = ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
+    # TODO: 华泰未实现
     def __keepalive(self):
         """启动保持在线的进程 """
         self.heart_process = Process(target=self.__send_heartbeat)
@@ -153,9 +164,16 @@ class HTTrader(WebTrader):
         """获取当日委托列表"""
         return self.__do(self.config['entrust'])
 
-    # TODO: 实现撤单
-    def cancel_order(self):
-        pass
+    def cancel_entrust(self, entrust_no):
+        """撤单
+        :param entrust_no: 委托单号"""
+        cancel_params = dict(
+            self.config['cancel_entrust'],
+            password=self.__trdpwd,
+            entrust_no=entrust_no
+        )
+        return self.__do(cancel_params)
+
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
@@ -184,7 +202,6 @@ class HTTrader(WebTrader):
         )
         return self.__buy_or_sell(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-
     def __buy_or_sell(self, stock_code, price, entrust_prop, other):
         need_info = self.__get_trade_need_info(stock_code)
         return self.__do(dict(
@@ -193,7 +210,7 @@ class HTTrader(WebTrader):
                 exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
                 entrust_prop=0,  # 委托方式
                 stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
-                entrust_price=price,
+                entrust_price=price
             ))
 
     def __get_trade_need_info(self, stock_code):
@@ -201,7 +218,7 @@ class HTTrader(WebTrader):
         # 获取股票对应的证券市场
         exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else self.__sz_exchange_type
         # 获取股票对应的证券帐号
-        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type else self.__sz_exchange_type
+        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type else self.__sz_stock_account
         return dict(
             exchange_type=exchange_type,
             stock_account=stock_account
@@ -211,21 +228,21 @@ class HTTrader(WebTrader):
         """发起对 api 的请求并过滤返回结果"""
         basic_params = self.__create_basic_params()
         basic_params.update(params)
-        data = self.__request(basic_params)
-        data = self.__format_reponse_data(data)
-        return self.__fix_error_data(data)
+        response_data = self.__request(basic_params)
+        format_json_data = self.__format_reponse_data(response_data)
+        return self.__fix_error_data(format_json_data)
 
     def __create_basic_params(self):
         """生成基本的参数"""
         basic_params = dict(
             uid=self.__uid,
             version=1,
-            custid=self.__account,
+            custid=self.account_config['userName'],
             op_branch_no=self.__branch_no,
             branch_no=self.__branch_no,
             op_entrust_way=7,
             op_station=self.__op_station,
-            fund_account=self.__account,
+            fund_account=self.account_config['userName'],
             password=self.__trdpwd,
             identity_type='',
             ram=random.random()
@@ -255,7 +272,7 @@ class HTTrader(WebTrader):
         return json.loads(gbk_str)
 
     def __fix_error_data(self, data):
-        """若是返回错误移除外层的列表"""
+        """若是返回错误则不进行数据提取"""
         if data['cssweb_code'] == 'error':
             return data
         t1 = data['item']
