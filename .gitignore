@@ -6,7 +6,7 @@ untitled.txt
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-
+account.json
 # C extensions
 *.so
 
