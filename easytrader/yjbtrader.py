@@ -6,10 +6,12 @@ import requests
 import time
 import os
 from multiprocessing import Process
+from . import helpers
 from .webtrader import WebTrader
 import logging
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 class YJBTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yjb.json'
@@ -99,23 +101,24 @@ class YJBTrader(WebTrader):
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
-        # TODO: 如果知道股票代码跟沪深的关系可以优化省略一次请求，同理先获取沪深帐号也可以省略一次请求
         # 获取股票对应的证券市场
-        response_data = self.do(dict(
-                self.config['exchangetype4stock'],
-                stock_code=stock_code
-            ))[0]
-        exchange_type = response_data['exchange_type']
+        sh_exchange_type = 1
+        sz_exchange_type = 2
+        exchange_type = sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else sz_exchange_type
         # 获取股票对应的证券帐号
-        response_data = self.do(dict(
-                self.config['account4stock'],
-                exchange_type=exchange_type,
-                stock_code=stock_code
-            ))[0]
-        stock_account = response_data['stock_account']
+        if not hasattr(self, 'exchange_stock_account'):
+            self.exchange_stock_account = dict()
+        if exchange_type not in self.exchange_stock_account:
+            stock_account_index = 0
+            response_data = self.do(dict(
+                    self.config['account4stock'],
+                    exchange_type=exchange_type,
+                    stock_code=stock_code
+                ))[stock_account_index]
+            self.exchange_stock_account[exchange_type] = response_data['stock_account']
         return dict(
             exchange_type=exchange_type,
-            stock_account=stock_account
+            stock_account=self.exchange_stock_account[exchange_type]
         )
 
     def do(self, params):
