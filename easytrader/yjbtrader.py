@@ -7,7 +7,9 @@ import time
 import os
 from multiprocessing import Process
 from easytrader import WebTrader
+import logging
 
+log = logging.getLogger(__name__)
 
 class YJBTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yjb.json'
@@ -121,7 +123,7 @@ class YJBTrader(WebTrader):
         request_params = self.__create_basic_params()
         request_params.update(params)
         data = self.__request(request_params)
-        data = self.__format_reponse_data(data)
+        data = self.__format_response_data(data)
         return self.__fix_error_data(data)
 
     def __create_basic_params(self):
@@ -140,7 +142,7 @@ class YJBTrader(WebTrader):
         r = requests.get(self.trade_prefix, params=params, cookies=self.cookie, headers=headers)
         return r.text
 
-    def __format_reponse_data(self, data, header=False):
+    def __format_response_data(self, data, header=False):
         """格式化返回的 json 数据"""
         # 获取 returnJSON
         return_json = json.loads(data)['returnJson']

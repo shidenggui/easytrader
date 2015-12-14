@@ -8,9 +8,11 @@ import uuid
 import socket
 import base64
 import urllib
-from easytrader import WebTrader
 from . import helpers
+from easytrader import WebTrader
+import logging
 
+log = logging.getLogger(__name__)
 
 class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
@@ -99,6 +101,7 @@ class HTTrader(WebTrader):
         )
         params.update(self.config['login'])
 
+        logging.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
         if login_api_response.text.find('欢迎您登录') == -1:
@@ -118,6 +121,7 @@ class HTTrader(WebTrader):
         need_data = search_result.groups()[need_data_index]
         bytes_data = base64.b64decode(need_data)
         str_data = bytes_data.decode('gbk')
+        log.debug('trade info: %s' % str_data)
         json_data = json.loads(str_data)
         return json_data
 
@@ -200,7 +204,7 @@ class HTTrader(WebTrader):
         request_params = self.__create_basic_params()
         request_params.update(params)
         response_data = self.__request(request_params)
-        format_json_data = self.__format_reponse_data(response_data)
+        format_json_data = self.__format_response_data(response_data)
         return self.__fix_error_data(format_json_data)
 
     def __create_basic_params(self):
@@ -228,16 +232,19 @@ class HTTrader(WebTrader):
 
         params_str = urllib.parse.urlencode(params)
         unquote_str = urllib.parse.unquote(params_str)
+        log.debug('request params: %s' % unquote_str)
         b64params = base64.b64encode(unquote_str.encode()).decode()
         r = self.s.get('{prefix}/?{b64params}'.format(prefix=self.trade_prefix, b64params=b64params), headers=headers)
         return r.content
 
-    def __format_reponse_data(self, data):
+    def __format_response_data(self, data):
         """格式化返回的 json 数据"""
         bytes_str = base64.b64decode(data)
         gbk_str = bytes_str.decode('gbk')
+        log.debug('response data before format: %s' % gbk_str)
         filter_empty_list = gbk_str.replace('[]', 'null')
         filter_return = filter_empty_list.replace('\n', '')
+        log.debug('response data: %s' % filter_return)
         return json.loads(filter_return)
 
     def __fix_error_data(self, data):
