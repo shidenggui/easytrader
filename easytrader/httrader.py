@@ -13,6 +13,7 @@ from .webtrader import WebTrader
 import logging
 
 log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
@@ -113,7 +114,7 @@ class HTTrader(WebTrader):
         trade_info_response = self.s.get(self.config['trade_info_page'])
 
         # 查找登录信息
-        search_result = re.search('var data = "([=\w\+]+)"', trade_info_response.text)
+        search_result = re.search(r'var data = "([\\=\w\+]+)"', trade_info_response.text)
         if not search_result:
             return False
 

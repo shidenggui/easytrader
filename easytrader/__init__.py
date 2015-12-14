@@ -6,4 +6,4 @@ from .httrader import HTTrader
 
 import logging
 log_format = '%(asctime)-15s [%(levelname)s] %(filename)s:%(lineno)s %(message)s'
-logging.basicConfig(level=logging.DEBUG, format=log_format)
+logging.basicConfig(level=logging.WARNING, format=log_format)
