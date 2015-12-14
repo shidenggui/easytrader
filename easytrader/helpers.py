@@ -1,6 +1,7 @@
 # coding: utf-8
 import os
 import json
+import subprocess
 
 
 def file2dict(path):
@@ -21,12 +22,20 @@ def recognize_verify_code(image_path):
     """识别验证码，返回识别后的字符串，使用 tesseract 实现
     :param image_path
     :return recognized verify code string"""
+    # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
+    out_put = subprocess.getoutput('java -version')
+    if out_put.find('java version') is not -1:
+        out_put = subprocess.getoutput(
+            'java -jar %s/thirdlibrary/getcode_jdk1.5.jar %s' % (os.path.dirname(__file__), image_path))
+        verify_code_start = -4
+        return out_put[verify_code_start:]
     # 调用 tesseract 识别
     # ubuntu 15.10 无法识别的手动 export TESSDATA_PREFIX
     system_result = os.system('tesseract {} result -psm 7'.format(image_path))
     system_success = 0
     if system_result != system_success:
-        os.system('export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(image_path))
+        os.system(
+            'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(image_path))
 
     # 获取识别的验证码
     verify_code_result = 'result.txt'

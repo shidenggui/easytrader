@@ -22,7 +22,11 @@
  
 > pip install -r requirements.txt
 
-> 华泰的自动登录需要安装 `tesseract`，并保证在命令行下 `tesseract` 可用
+> 华泰的自动登录需要安装以下二者之一： 
+
+* `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
+* `tesseract` : 保证在命令行下 `tesseract` 可用
+
 
 ### 用法
 
