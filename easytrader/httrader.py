@@ -9,7 +9,7 @@ import socket
 import base64
 import urllib
 from . import helpers
-from easytrader import WebTrader
+from .webtrader import WebTrader
 import logging
 
 log = logging.getLogger(__name__)

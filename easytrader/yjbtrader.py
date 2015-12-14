@@ -6,7 +6,7 @@ import requests
 import time
 import os
 from multiprocessing import Process
-from easytrader import WebTrader
+from .webtrader import WebTrader
 import logging
 
 log = logging.getLogger(__name__)
