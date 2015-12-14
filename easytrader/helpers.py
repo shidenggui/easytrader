@@ -29,12 +29,17 @@ def recognize_verify_code(image_path):
         os.system('export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(image_path))
 
     # 获取识别的验证码
-    with open('result.txt') as f:
-        recognized_code = f.readline()
-        # 移除空格和换行符
-        return_index = -1
-        recognized_code = recognized_code.replace(' ', '')[:return_index]
+    verify_code_result = 'result.txt'
+    try:
+        with open(verify_code_result) as f:
+            recognized_code = f.readline()
+    except UnicodeDecodeError:
+        with open(verify_code_result, encoding='gbk') as f:
+            recognized_code = f.readline()
+    # 移除空格和换行符
+    return_index = -1
+    recognized_code = recognized_code.replace(' ', '')[:return_index]
 
-    os.remove('result.txt')
+    os.remove(verify_code_result)
 
     return recognized_code

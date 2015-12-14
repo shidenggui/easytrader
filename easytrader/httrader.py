@@ -132,10 +132,12 @@ class HTTrader(WebTrader):
         """
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
-        self.__sh_stock_account = json_data['item'][0]['stock_account']
-        self.__sh_exchange_type = json_data['item'][0]['exchange_type']
-        self.__sz_stock_account = json_data['item'][1]['stock_account']
-        self.__sz_exchange_type = json_data['item'][1]['exchange_type']
+        sh_item_index = 0
+        self.__sh_stock_account = json_data['item'][sh_item_index]['stock_account']
+        self.__sh_exchange_type = json_data['item'][sh_item_index]['exchange_type']
+        sz_item_index = 1
+        self.__sz_stock_account = json_data['item'][sz_item_index]['stock_account']
+        self.__sz_exchange_type = json_data['item'][sz_item_index]['exchange_type']
         self.__op_station = json_data['op_station']
         self.__trdpwd = json_data['trdpwd']
         self.__uid = json_data['uid']
