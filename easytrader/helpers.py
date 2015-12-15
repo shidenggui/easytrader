@@ -26,7 +26,7 @@ def recognize_verify_code(image_path):
     out_put = subprocess.getoutput('java -version')
     if out_put.find('java version') is not -1:
         out_put = subprocess.getoutput(
-            'java -jar %s/thirdlibrary/getcode_jdk1.5.jar %s' % (os.path.dirname(__file__), image_path))
+            'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', 'getcode_jdk1.5.jar'), image_path))
         verify_code_start = -4
         return out_put[verify_code_start:]
     # 调用 tesseract 识别
