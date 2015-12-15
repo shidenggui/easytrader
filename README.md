@@ -33,26 +33,38 @@
 #### 引入:
 
 ```python
-from easytrader import YJBTrader, HTTrader
+import easytrader
 ```
 
 #### 设置账户:
 
 ##### 佣金宝
 ```python
-user = YJBTrader()
+user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
+```
+
+##### 华泰
+```python
+user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
+```
+
+#### 登录
+
+##### 佣金宝
+```python
 user.token = 'ABC...CBA'
 ```
-[如何获取 token](http://www.jisilu.cn/question/42707)
+[如何获取 token, 即文章中的 `JSESSIONID`](http://www.jisilu.cn/question/42707)
 
 ##### 华泰
 
 ```python
-user = HTTrader()
 user.read_config('me.json')
 ```
 
 **注**: 华泰需要配置 `me.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
+
+[如何获取 `trdpwd`, 可参考此文章](http://www.jisilu.cn/question/42707)
 
 #### 自动登录 
 
