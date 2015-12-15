@@ -131,14 +131,18 @@ class HTTrader(WebTrader):
         """设置交易所需的一些基本参数
         :param json_data:登录成功返回的json数据
         """
+        # TODO: 账户存储方式考虑重构，改为字典
+        gbk_A = b'\xa3\xc1'
+        for account_info in json_data['item']:
+            if account_info['exchange_name'].encode('gbk') == '上海'.encode('gbk') + gbk_A:
+                self.__sh_exchange_type = account_info['exchange_type']
+                self.__sh_stock_account = account_info['stock_account']
+            elif account_info['exchange_name'].encode('gbk') == '深圳'.encode('gbk') + gbk_A:
+                self.__sz_exchange_type = account_info['exchange_type']
+                self.__sz_stock_account = account_info['stock_account']
+
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
-        sh_item_index = 0
-        self.__sh_stock_account = json_data['item'][sh_item_index]['stock_account']
-        self.__sh_exchange_type = json_data['item'][sh_item_index]['exchange_type']
-        sz_item_index = 1
-        self.__sz_stock_account = json_data['item'][sz_item_index]['stock_account']
-        self.__sz_exchange_type = json_data['item'][sz_item_index]['exchange_type']
         self.__op_station = json_data['op_station']
         self.__trdpwd = json_data['trdpwd']
         self.__uid = json_data['uid']
