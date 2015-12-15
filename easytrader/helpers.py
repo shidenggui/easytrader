@@ -2,6 +2,10 @@
 import os
 import json
 import subprocess
+import logging
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
 
 
 def file2dict(path):
@@ -24,9 +28,11 @@ def recognize_verify_code(image_path):
     :return recognized verify code string"""
     # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
     out_put = subprocess.getoutput('java -version')
+    log.debug('java detect result: %s' % out_put)
     if out_put.find('java version') is not -1:
         out_put = subprocess.getoutput(
             'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', 'getcode_jdk1.5.jar'), image_path))
+        log.debug('recognize output: %s' % out_put)
         verify_code_start = -4
         return out_put[verify_code_start:]
     # 调用 tesseract 识别

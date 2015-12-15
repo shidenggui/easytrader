@@ -82,6 +82,7 @@ class HTTrader(WebTrader):
             f.write(verify_code_response.content)
 
         verify_code = helpers.recognize_verify_code(image_path)
+        log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
         ht_verify_code_length = 4
@@ -114,7 +115,7 @@ class HTTrader(WebTrader):
         trade_info_response = self.s.get(self.config['trade_info_page'])
 
         # 查找登录信息
-        search_result = re.search(r'var data = "([\\=\w\+]+)"', trade_info_response.text)
+        search_result = re.search(r'var data = "([/=\w\+]+)"', trade_info_response.text)
         if not search_result:
             return False
 
