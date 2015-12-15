@@ -255,5 +255,7 @@ class HTTrader(WebTrader):
         if data['cssweb_code'] == 'error':
             return data
         available_data = data['item']
+        if not available_data:
+            return list()
         last_no_use_info_index = -1
         return available_data[:last_no_use_info_index]
