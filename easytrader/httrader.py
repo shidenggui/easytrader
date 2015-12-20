@@ -106,7 +106,7 @@ class HTTrader(WebTrader):
         logging.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
-        if login_api_response.text.find('欢迎您登录') == -1:
+        if login_api_response.text.find('欢迎您') == -1:
             return False
         return True
 
