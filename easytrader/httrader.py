@@ -15,6 +15,7 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+
 class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
 
@@ -45,6 +46,7 @@ class HTTrader(WebTrader):
         is_login_ok = self.login()
         if not is_login_ok:
             self.autologin()
+        self.keepalive()
 
     def login(self):
         """实现华泰的自动登录"""

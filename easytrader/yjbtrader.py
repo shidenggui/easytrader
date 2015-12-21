@@ -3,9 +3,7 @@ import json
 import random
 import re
 import requests
-import time
 import os
-from multiprocessing import Process
 from . import helpers
 from .webtrader import WebTrader
 import logging
@@ -13,13 +11,13 @@ import logging
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 
+
 class YJBTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yjb.json'
 
-    def __init__(self, token=''):
+    def __init__(self):
         super().__init__()
-        self.cookie = dict(JSESSIONID=token)
-        self.__keepalive()
+        self.cookie = None
 
     @property
     def token(self):
@@ -27,27 +25,8 @@ class YJBTrader(WebTrader):
 
     @token.setter
     def token(self, token):
-        self.exit()
         self.cookie = dict(JSESSIONID=token)
-        self.__keepalive()
-
-    def __keepalive(self):
-        """启动保持在线的进程 """
-        self.heart_process = Process(target=self.__send_heartbeat)
-        self.heart_process.start()
-
-    def __send_heartbeat(self):
-        """每隔30秒查询指定接口保持 token 的有效性"""
-        while True:
-            data = self.get_balance()
-            if type(data) == dict and data.get('error_no'):
-                break
-            time.sleep(10)
-
-    def exit(self):
-        """结束保持 token 在线的进程"""
-        if self.heart_process.is_alive():
-            self.heart_process.terminate()
+        self.keepalive()
 
     # TODO: 实现撤单
     def cancel_order(self):
@@ -84,7 +63,7 @@ class YJBTrader(WebTrader):
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
-        if not self.heart_process.is_alive():
+        if not self.heart_thread.is_alive():
             check_data = self.get_balance()
             if type(check_data) == dict:
                 return check_data
