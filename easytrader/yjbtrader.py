@@ -1,15 +1,17 @@
 # coding: utf-8
 import json
 import random
+# coding: utf-8
 import re
 import requests
 import os
+import sys
+from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
-import logging
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+StreamHandler(sys.stdout).push_application()
+log = Logger(os.path.basename(__file__))
 
 
 class YJBTrader(WebTrader):
@@ -37,7 +39,8 @@ class YJBTrader(WebTrader):
         """买入卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
-        :param amount: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param amount: 卖出股数
+        :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(

@@ -2,10 +2,12 @@
 import os
 import json
 import subprocess
-import logging
+import sys
+from logbook import Logger, StreamHandler
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+StreamHandler(sys.stdout).push_application()
+log = Logger(os.path.basename(__file__))
+
 
 
 def file2dict(path):

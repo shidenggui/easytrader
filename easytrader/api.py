@@ -1,4 +1,4 @@
-from .webtrader import WebTrader
+# coding=utf-8
 from .yjbtrader import YJBTrader
 from .httrader import HTTrader
 

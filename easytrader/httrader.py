@@ -8,12 +8,13 @@ import uuid
 import socket
 import base64
 import urllib
+import sys
+from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
-import logging
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+StreamHandler(sys.stdout).push_application()
+log = Logger(os.path.basename(__file__))
 
 
 class HTTrader(WebTrader):
@@ -77,7 +78,7 @@ class HTTrader(WebTrader):
         """获取并识别返回的验证码
         :return:失败返回 False 成功返回 验证码"""
         # 获取验证码
-        verify_code_response = self.s.get(self.config['verify_code_api'], data=dict(ran=random.random()))
+        verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
         image_path = os.path.join(os.getcwd(), 'vcode')
         with open(image_path, 'wb') as f:
@@ -105,7 +106,7 @@ class HTTrader(WebTrader):
         )
         params.update(self.config['login'])
 
-        logging.debug('login params: %s' % params)
+        log.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
         if login_api_response.text.find('欢迎您') == -1:
@@ -124,7 +125,11 @@ class HTTrader(WebTrader):
         need_data_index = 0
         need_data = search_result.groups()[need_data_index]
         bytes_data = base64.b64decode(need_data)
-        str_data = bytes_data.decode('gbk')
+        log.debug('trade info bytes data: ', bytes_data)
+        try:
+            str_data = bytes_data.decode('gbk')
+        except UnicodeDecodeError:
+            str_data = bytes_data.decode('gb2312', errors='ignore')
         log.debug('trade info: %s' % str_data)
         json_data = json.loads(str_data)
         return json_data
@@ -133,15 +138,15 @@ class HTTrader(WebTrader):
         """设置交易所需的一些基本参数
         :param json_data:登录成功返回的json数据
         """
-        # TODO: 账户存储方式考虑重构，改为字典
-        gbk_A = b'\xa3\xc1'
         for account_info in json_data['item']:
-            if account_info['exchange_name'].encode('gbk') == '上海'.encode('gbk') + gbk_A:
+            if account_info['stock_account'].startswith('A'):
                 self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']
-            elif account_info['exchange_name'].encode('gbk') == '深圳'.encode('gbk') + gbk_A:
+                log.debug('sh stock account %s' % self.__sh_stock_account)
+            elif account_info['stock_account'].isdigit():
                 self.__sz_exchange_type = account_info['exchange_type']
                 self.__sz_stock_account = account_info['stock_account']
+                log.debug('sz stock account %s' % self.__sz_stock_account)
 
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
