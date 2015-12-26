@@ -169,8 +169,9 @@ class HTTrader(WebTrader):
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
         :param stock_code: 股票代码
-        :param price: 卖出价格
-        :param amount: 卖出总金额 由 volume / price 取 100 整数， 若指定 price 则此参数无效
+        :param price: 买入价格
+        :param amount: 买入股数
+        :param volume: 买入总金额 由 volume / price 取 100 的整数， 若指定 amount 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
@@ -183,7 +184,8 @@ class HTTrader(WebTrader):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
-        :param amount: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param amount: 卖出股数
+        :param volume: 卖出总金额 由 volume / price 取整， 若指定 amount 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
@@ -206,24 +208,17 @@ class HTTrader(WebTrader):
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
         # 获取股票对应的证券市场
-        exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else self.__sz_exchange_type
+        exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' \
+            else self.__sz_exchange_type
         # 获取股票对应的证券帐号
-        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type else self.__sz_stock_account
+        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type \
+            else self.__sz_stock_account
         return dict(
             exchange_type=exchange_type,
             stock_account=stock_account
         )
 
-    def do(self, params):
-        """发起对 api 的请求并过滤返回结果"""
-        request_params = self.__create_basic_params()
-        request_params.update(params)
-        response_data = self.__request(request_params)
-        format_json_data = self.__format_response_data(response_data)
-        return self.__fix_error_data(format_json_data)
-
-    def __create_basic_params(self):
-        """生成基本的参数"""
+    def create_basic_params(self):
         basic_params = dict(
             uid=self.__uid,
             version=1,
@@ -239,8 +234,7 @@ class HTTrader(WebTrader):
         )
         return basic_params
 
-    def __request(self, params):
-        """请求并获取 JSON 数据"""
+    def request(self, params):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
@@ -252,8 +246,7 @@ class HTTrader(WebTrader):
         r = self.s.get('{prefix}/?{b64params}'.format(prefix=self.trade_prefix, b64params=b64params), headers=headers)
         return r.content
 
-    def __format_response_data(self, data):
-        """格式化返回的 json 数据"""
+    def format_response_data(self, data):
         bytes_str = base64.b64decode(data)
         gbk_str = bytes_str.decode('gbk')
         log.debug('response data before format: %s' % gbk_str)
@@ -262,8 +255,7 @@ class HTTrader(WebTrader):
         log.debug('response data: %s' % filter_return)
         return json.loads(filter_return)
 
-    def __fix_error_data(self, data):
-        """若是返回错误则不进行数据提取"""
+    def fix_error_data(self, data):
         if data['cssweb_code'] == 'error':
             return data
         available_data = data['item']

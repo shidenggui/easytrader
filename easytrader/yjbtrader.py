@@ -54,7 +54,8 @@ class YJBTrader(WebTrader):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
-        :param amount: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param amount: 卖出股数
+        :param volume: 卖出总金额 由 volume / price 取整， 若指定 amount 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
@@ -103,32 +104,21 @@ class YJBTrader(WebTrader):
             stock_account=self.exchange_stock_account[exchange_type]
         )
 
-    def do(self, params):
-        """发起对 api 的请求并过滤返回结果"""
-        request_params = self.__create_basic_params()
-        request_params.update(params)
-        data = self.__request(request_params)
-        data = self.__format_response_data(data)
-        return self.__fix_error_data(data)
-
-    def __create_basic_params(self):
-        """生成基本的参数"""
+    def create_basic_params(self):
         basic_params = dict(
             CSRF_Token='undefined',
             timestamp=random.random(),
         )
         return basic_params
 
-    def __request(self, params):
-        """请求并获取 JSON 数据"""
+    def request(self, params):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
         r = requests.get(self.trade_prefix, params=params, cookies=self.cookie, headers=headers)
         return r.text
 
-    def __format_response_data(self, data, header=False):
-        """格式化返回的 json 数据"""
+    def format_response_data(self, data):
         # 获取 returnJSON
         return_json = json.loads(data)['returnJson']
         add_key_quote = re.sub('\w+:', lambda x: '"%s":' % x.group().rstrip(':'), return_json)
@@ -137,13 +127,12 @@ class YJBTrader(WebTrader):
         raw_json_data = json.loads(change_single_double_quote)
         fun_data = raw_json_data['Func%s' % raw_json_data['function_id']]
         header_index = 1
-        return fun_data if header else fun_data[header_index:]
+        return fun_data[header_index:]
 
-    def __fix_error_data(self, data):
-        """若是返回错误移除外层的列表"""
+    def fix_error_data(self, data):
         error_index = 0
-        return data[error_index] if type(data) == list and data[error_index].get('error_no') != None else data
+        return data[error_index] if type(data) == list and data[error_index].get('error_no') is None else data
 
     def check_account_live(self, response):
-        if hasattr(response, 'get') and response.get('error_no') == -1:
+        if hasattr(response, 'get') and response.get('error_no') == '-1':
             self.heart_active = False
