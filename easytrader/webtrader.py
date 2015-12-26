@@ -7,7 +7,7 @@ class WebTrader:
     def __init__(self):
         self.__read_config()
         self.trade_prefix = self.config['prefix']
-        self.heart_active = False
+        self.heart_active = True
         self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
 
     def keepalive(self):
@@ -21,10 +21,14 @@ class WebTrader:
         """每隔10秒查询指定接口保持 token 的有效性"""
         while True:
             if self.heart_active:
-                self.get_balance()
+                response = self.get_balance()
+                self.check_account_live(response)
                 time.sleep(10)
             else:
                 time.sleep(1)
+
+    def check_account_live(self, response):
+        pass
 
     def exit(self):
         """结束保持 token 在线的进程"""

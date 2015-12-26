@@ -143,3 +143,7 @@ class YJBTrader(WebTrader):
         """若是返回错误移除外层的列表"""
         error_index = 0
         return data[error_index] if type(data) == list and data[error_index].get('error_no') != None else data
+
+    def check_account_live(self, response):
+        if hasattr(response, 'get') and response.get('error_no') == -1:
+            self.heart_active = False
