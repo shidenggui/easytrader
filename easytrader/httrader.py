@@ -9,12 +9,23 @@ import socket
 import base64
 import urllib
 import sys
+import threading
 from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
 
 StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
+
+# 移除心跳线程产生的日志
+debug_log = log.debug
+
+
+def remove_heart_log(*args, **kwargs):
+    if threading.current_thread() == threading.main_thread():
+        debug_log(*args, **kwargs)
+
+log.debug = remove_heart_log
 
 
 class HTTrader(WebTrader):

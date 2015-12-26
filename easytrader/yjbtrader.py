@@ -131,7 +131,7 @@ class YJBTrader(WebTrader):
 
     def fix_error_data(self, data):
         error_index = 0
-        return data[error_index] if type(data) == list and data[error_index].get('error_no') is None else data
+        return data[error_index] if type(data) == list and data[error_index].get('error_no') is not None else data
 
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
