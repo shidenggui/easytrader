@@ -1,0 +1,23 @@
+{
+  "response_format": {
+    "int": [
+      "current_amount",
+      "enable_amount",
+      "entrust_amount"
+    ],
+    "float": [
+      "current_balance",
+      "enable_balance",
+      "fetch_balance",
+      "market_value",
+      "asset_balance",
+      "av_buy_price",
+      "cost_price",
+      "income_balance",
+      "market_value",
+      "entrust_price",
+      "business_amount",
+      "business_price"
+    ]
+  }
+}

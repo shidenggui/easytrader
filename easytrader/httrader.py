@@ -82,6 +82,8 @@ class HTTrader(WebTrader):
 
     def __go_login_page(self):
         """访问登录页面获取 cookie"""
+        if self.s is not None:
+            self.s.get(self.config['logout_api'])
         self.s = requests.session()
         self.s.get(self.config['login_page'])
 
@@ -264,13 +266,13 @@ class HTTrader(WebTrader):
         filter_empty_list = gbk_str.replace('[]', 'null')
         filter_return = filter_empty_list.replace('\n', '')
         log.debug('response data: %s' % filter_return)
-        return json.loads(filter_return)
+        response_data =  json.loads(filter_return)
+        if response_data['cssweb_code'] == 'error':
+            return response_data
+        return_data = self.format_response_data_type(response_data['item'])
+        log.debug('response data: %s' % return_data)
+        return return_data
 
     def fix_error_data(self, data):
-        if data['cssweb_code'] == 'error':
-            return data
-        available_data = data['item']
-        if not available_data:
-            return list()
         last_no_use_info_index = -1
-        return available_data[:last_no_use_info_index]
+        return data[:last_no_use_info_index]

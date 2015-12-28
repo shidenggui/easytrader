@@ -4,6 +4,7 @@
   "trade_info_page":"https://service.htsc.com.cn/service/flashbusiness_new3.jsp?etfCode=",
   "verify_code_api":"https://service.htsc.com.cn/service/pic/verifyCodeImage.jsp",
   "prefix":"https://tradegw.htsc.com.cn",
+  "logout_api":"https://service.htsc.com.cn/service/login.jsp?logout=yes",
   "login": {
     "loginEvent": 1,
     "topath": "null",

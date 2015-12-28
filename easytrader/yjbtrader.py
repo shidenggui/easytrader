@@ -127,7 +127,8 @@ class YJBTrader(WebTrader):
         raw_json_data = json.loads(change_single_double_quote)
         fun_data = raw_json_data['Func%s' % raw_json_data['function_id']]
         header_index = 1
-        return fun_data[header_index:]
+        remove_header_data = fun_data[header_index:]
+        return self.format_response_data_type(remove_header_data)
 
     def fix_error_data(self, data):
         error_index = 0

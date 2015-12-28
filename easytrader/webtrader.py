@@ -1,9 +1,14 @@
 # coding: utf-8
 import time
+import os
+import re
 from threading import Thread
 from . import helpers
 
+
 class WebTrader:
+    global_config_path = os.path.dirname(__file__) + '/config/global.json'
+
     def __init__(self):
         self.__read_config()
         self.trade_prefix = self.config['prefix']
@@ -37,6 +42,8 @@ class WebTrader:
     def __read_config(self):
         """读取 config"""
         self.config = helpers.file2dict(self.config_path)
+        self.global_config = helpers.file2dict(self.global_config_path)
+        self.config.update(self.global_config)
 
     @property
     def balance(self):
@@ -89,3 +96,18 @@ class WebTrader:
         """若是返回错误移除外层的列表
         :param data: 需要判断是否包含错误信息的数据"""
         pass
+
+    def format_response_data_type(self, response_data):
+        """格式化返回的值为正确的类型"""
+        if type(response_data) is not list:
+            return response_data
+
+        int_match_str = '|'.join(self.config['response_format']['int'])
+        float_match_str = '|'.join(self.config['response_format']['float'])
+        for item in response_data:
+            for key in item:
+                if re.search(int_match_str, key) is not None:
+                    item[key] = int(float(item[key]))
+                elif re.search(float_match_str, key) is not None:
+                    item[key] = float(item[key])
+        return response_data
