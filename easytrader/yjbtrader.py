@@ -30,6 +30,9 @@ class YJBTrader(WebTrader):
         self.cookie = dict(JSESSIONID=token)
         self.keepalive()
 
+    def prepare(self, need_data):
+        self.token = need_data.strip()
+
     # TODO: 实现撤单
     def cancel_order(self):
         pass
