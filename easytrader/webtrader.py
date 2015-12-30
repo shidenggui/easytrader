@@ -15,6 +15,24 @@ class WebTrader:
         self.heart_active = True
         self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
 
+    def read_config(self, path):
+        self.account_config = helpers.file2dict(path)
+
+    def prepare(self, need_data):
+        """登录的统一接口"""
+        self.read_config(need_data)
+        self.autologin()
+
+    def autologin(self):
+        """实现自动登录"""
+        is_login_ok = self.login()
+        if not is_login_ok:
+            self.autologin()
+        self.keepalive()
+
+    def login(self):
+        pass
+
     def keepalive(self):
         """启动保持在线的进程 """
         if self.heart_thread.is_alive():

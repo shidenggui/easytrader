@@ -1,5 +1,22 @@
 {
+  "login_page": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/",
+  "login_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/exchange.action",
+  "verify_code_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/user/extraCode.jsp",
   "prefix": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/stock/exchange.action",
+  "logout_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/stock/exchange.action?function_id=20&login_type=stock",
+  "login": {
+    "function_id": 200,
+    "login_type": "stock",
+    "version": 200,
+    "identity_type": "",
+    "remember_me": "",
+    "input_content": 1,
+    "content_type": 0,
+    "loginPasswordType": "B64",
+    "disk_serial_id": "ST3250820AS",
+    "cpuid": "-41315-FA76141D",
+    "machinecode": "-41315-FA76141D"
+  },
   "buy": {
     "service_type": "stock",
     "request_id": "buystock_302"

@@ -1,19 +1,19 @@
 # easytrader
 
 * 进行简单的 web 股票交易
+* 实现自动登录
 * 有兴趣的可以加群 `429011814` 一起讨论
 
 **开发环境** : `Ubuntu 15.10` / `Python 3.4`
 
-### TODO
+### 相关
+[获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
 
-* 支持更多券商
-* 实现自动登录
-* 优化速度
+[简单的股票量化交易框架 使用 easytrader 和 easyquotation](https://github.com/shidenggui/easyquant)
 
 ### 支持券商
 
-* 佣金宝
+* 佣金宝（支持自动登录）
 * 华泰（支持自动登录）
 
 ### requirements
@@ -22,7 +22,7 @@
  
 > pip install -r requirements.txt
 
-> 华泰的自动登录需要安装以下二者之一： 
+> 华泰 / 佣金宝 的自动登录需要安装以下二者之一： 
 
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 保证在命令行下 `tesseract` 可用
@@ -44,35 +44,24 @@ user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 ```
 
 ##### 华泰
+
 ```python
 user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
 ```
 
-#### 登录
-
-##### 佣金宝
-```python
-user.token = 'ABC...CBA'
-```
-[如何获取 token, 即文章中的 `JSESSIONID`](http://www.jisilu.cn/question/42707)
-
-##### 华泰
+##### 自动登录
 
 ```python
-user.read_config('me.json')
+user.prepare('ht.json') // 或者 yjb.json 
 ```
 
-**注**: 华泰需要配置 `me.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
+**注**: 
 
-[如何获取 `trdpwd`, 可参考此文章](http://www.jisilu.cn/question/42707)
+* 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
+* 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
 
-#### 自动登录 
+[如何获取配置所需信息, 可参考此文章](http://www.jisilu.cn/question/42707)
 
-##### 华泰
-
-```python
-user.autologin()
-```
 ### 交易相关
 以下用法以佣金宝为例，华泰类似
 
@@ -188,7 +177,7 @@ user.cancel_entrust('委托单号')
 user.token='valid token'
 ```
 
-#### 其他
-其他可参考下面链接
+### 其他
+[交易接口分析以及其他开源量化相关论坛](http://www.celuetan.com) 
 
-[佣金宝](http://www.jisilu.cn/question/42707)
+[软件实现原理](http://www.jisilu.cn/question/42707)

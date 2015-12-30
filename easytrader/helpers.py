@@ -3,11 +3,11 @@ import os
 import json
 import subprocess
 import sys
+import uuid
 from logbook import Logger, StreamHandler
 
 StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
-
 
 
 def file2dict(path):
@@ -24,16 +24,17 @@ def get_stock_type(stock_code):
     return 'sz'
 
 
-def recognize_verify_code(image_path):
+def recognize_verify_code(image_path, broker='ht'):
     """识别验证码，返回识别后的字符串，使用 tesseract 实现
     :param image_path
     :return recognized verify code string"""
+    verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
     # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
     out_put = subprocess.getoutput('java -version')
     log.debug('java detect result: %s' % out_put)
     if out_put.find('java version') is not -1:
         out_put = subprocess.getoutput(
-            'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', 'getcode_jdk1.5.jar'), image_path))
+            'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
         log.debug('recognize output: %s' % out_put)
         verify_code_start = -4
         return out_put[verify_code_start:]
@@ -60,3 +61,9 @@ def recognize_verify_code(image_path):
     os.remove(verify_code_result)
 
     return recognized_code
+
+
+def get_mac():
+    # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
+    return ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
+            uuid.getnode())[2:].zfill(12)))[:-1]).upper()

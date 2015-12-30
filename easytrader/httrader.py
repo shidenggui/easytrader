@@ -50,20 +50,6 @@ class HTTrader(WebTrader):
         self.__mac = ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
             uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
-    def prepare(self, need_data):
-        self.read_config(need_data.strip())
-        self.autologin()
-
-    def read_config(self, path):
-        self.account_config = helpers.file2dict(path)
-
-    def autologin(self):
-        """实现自动登录"""
-        is_login_ok = self.login()
-        if not is_login_ok:
-            self.autologin()
-        self.keepalive()
-
     def login(self):
         """实现华泰的自动登录"""
         self.__go_login_page()

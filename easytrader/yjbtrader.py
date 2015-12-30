@@ -1,11 +1,11 @@
 # coding: utf-8
 import json
 import random
-# coding: utf-8
+import urllib
 import re
-import requests
 import os
 import sys
+import requests
 from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
@@ -20,6 +20,56 @@ class YJBTrader(WebTrader):
     def __init__(self):
         super().__init__()
         self.cookie = None
+        self.account_config = None
+        self.s = requests.session()
+
+    def login(self):
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
+        }
+        self.s.headers.update(headers)
+
+        self.s.get(self.config['login_page'])
+
+        verify_code = self.handle_recognize_code()
+        if not verify_code:
+            return False
+        login_status = self.post_login_data(verify_code)
+        return login_status
+
+    def handle_recognize_code(self):
+        """获取并识别返回的验证码
+        :return:失败返回 False 成功返回 验证码"""
+        # 获取验证码
+        verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
+        # 保存验证码
+        image_path = os.path.join(os.getcwd(), 'vcode')
+        with open(image_path, 'wb') as f:
+            f.write(verify_code_response.content)
+
+        verify_code = helpers.recognize_verify_code(image_path, 'yjb')
+        log.debug('verify code detect result: %s' % verify_code)
+        os.remove(image_path)
+
+        ht_verify_code_length = 4
+        if len(verify_code) != ht_verify_code_length:
+            return False
+        return verify_code
+
+    def post_login_data(self, verify_code):
+        login_params = dict(
+                self.config['login'],
+                mac_addr=helpers.get_mac(),
+                account_content=self.account_config['account'],
+                password=urllib.parse.unquote(self.account_config['password']),
+                validateCode=verify_code
+        )
+        login_response = self.s.post(self.config['login_api'], params=login_params)
+        log.debug('login response: %s' % login_response.text)
+
+        if login_response.text.find('上次登陆') != -1:
+            return True
+        return False
 
     @property
     def token(self):
@@ -29,9 +79,6 @@ class YJBTrader(WebTrader):
     def token(self, token):
         self.cookie = dict(JSESSIONID=token)
         self.keepalive()
-
-    def prepare(self, need_data):
-        self.token = need_data.strip()
 
     # TODO: 实现撤单
     def cancel_order(self):
@@ -115,10 +162,7 @@ class YJBTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
-        }
-        r = requests.get(self.trade_prefix, params=params, cookies=self.cookie, headers=headers)
+        r = self.s.get(self.trade_prefix, params=params, cookies=self.cookie)
         return r.text
 
     def format_response_data(self, data):
