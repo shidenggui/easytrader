@@ -10,6 +10,7 @@ import base64
 import urllib
 import sys
 import threading
+from collections import OrderedDict
 from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
@@ -222,7 +223,7 @@ class HTTrader(WebTrader):
         )
 
     def create_basic_params(self):
-        basic_params = dict(
+        basic_params = OrderedDict(
             uid=self.__uid,
             version=1,
             custid=self.account_config['userName'],
@@ -241,7 +242,7 @@ class HTTrader(WebTrader):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
-
+        params.move_to_end('ram')
         params_str = urllib.parse.urlencode(params)
         unquote_str = urllib.parse.unquote(params_str)
         log.debug('request params: %s' % unquote_str)

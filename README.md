@@ -162,21 +162,6 @@ user.sell('162411', price=0.55, amount=100)
 user.cancel_entrust('委托单号')
 ```
 
-#### 掉线(佣金宝特有)
-
-后台开了一个进程 30 秒请求一次维持 `token` 的有效性，理论上是不会掉线的。
-如果掉线了,请求会返回
-
-```python
-{'error_info': '登陆已经超时，请重新登陆！', 'error_no': '-1'}
-```
-
-这时只需要重新设置token就可以了
-
-```python
-user.token='valid token'
-```
-
 ### 其他
 [交易接口分析以及其他开源量化相关论坛](http://www.celuetan.com) 
 
