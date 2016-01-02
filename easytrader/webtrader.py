@@ -124,8 +124,11 @@ class WebTrader:
         float_match_str = '|'.join(self.config['response_format']['float'])
         for item in response_data:
             for key in item:
-                if re.search(int_match_str, key) is not None:
-                    item[key] = int(float(item[key]))
-                elif re.search(float_match_str, key) is not None:
-                    item[key] = float(item[key])
+                try:
+                    if re.search(int_match_str, key) is not None:
+                        item[key] = int(float(item[key]))
+                    elif re.search(float_match_str, key) is not None:
+                        item[key] = float(item[key])
+                except ValueError:
+                    break
         return response_data

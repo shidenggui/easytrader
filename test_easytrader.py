@@ -27,5 +27,19 @@ class TestEasytrader(unittest.TestCase):
         self.assertIs(type(result[0]['current_balance']), float)
         self.assertIs(type(result[0]['stock_code']), str)
 
+        test_data = [{'position_str': '',
+                      'date':'',
+                      'fund_account': '',
+                      'stock_account': '',
+                      'stock_code': '',
+                      'entrust_bs': '',
+                      'business_price':'',
+                      'business_amount':'',
+                      'business_time':'',
+                      'stock_name': '',
+                      'business_status': '',
+                      'business_type':''}]
+        result = user.format_response_data_type(test_data)
+
 if __name__ == '__main__':
     unittest.main()
