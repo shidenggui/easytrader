@@ -266,4 +266,4 @@ class HTTrader(WebTrader):
 
     def fix_error_data(self, data):
         last_no_use_info_index = -1
-        return data[:last_no_use_info_index]
+        return data if hasattr(data, 'get') else data[:last_no_use_info_index]

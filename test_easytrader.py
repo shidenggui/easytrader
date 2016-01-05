@@ -41,5 +41,28 @@ class TestEasytrader(unittest.TestCase):
                       'business_type':''}]
         result = user.format_response_data_type(test_data)
 
+    def test_ht_fix_error_data(self):
+        user = easytrader.use('ht')
+        test_data = {
+            'cssweb_code': 'error',
+            'cssweb_type': 'GET_STOCK_POSITON'
+        }
+
+        return_data = user.fix_error_data(test_data)
+        self.assertEqual(test_data, return_data)
+
+        test_data = [{
+            'stock_code': '162411',
+            'entrust_bs': '2'},
+            {'nouse_index': 'hello'}]
+
+        normal_return_data = [{
+        'stock_code': '162411',
+        'entrust_bs': '2'}]
+
+        return_data = user.fix_error_data(test_data)
+        self.assertEqual(return_data, normal_return_data)
+
+
 if __name__ == '__main__':
     unittest.main()

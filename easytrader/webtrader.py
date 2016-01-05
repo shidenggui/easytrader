@@ -98,7 +98,7 @@ class WebTrader:
         request_params.update(params)
         response_data = self.request(request_params)
         format_json_data = self.format_response_data(response_data)
-        return_data =  self.fix_error_data(format_json_data)
+        return_data = self.fix_error_data(format_json_data)
         try:
             self.check_login_status(return_data)
         except NotLoginError:
