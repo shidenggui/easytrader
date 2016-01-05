@@ -156,10 +156,17 @@ user.buy('162411', price=0.55, amount=100)
 ```python
 user.sell('162411', price=0.55, amount=100)
 ```
-#### 撤单（华泰特有）
+#### 撤单
+
+##### 华泰
 
 ```python
 user.cancel_entrust('委托单号')
+```
+##### 佣金宝
+
+```python
+user.cancel_entrust('委托单号', '股票代码')
 ```
 
 ### 其他
