@@ -37,6 +37,9 @@
     "deliver_type": "",
     "service_type": "stock"
   },
+  "cancel_entrust": {
+    "request_id": "chedan_304"
+  },
   "exchangetype4stock": {
     "service_type": "stock",
     "function_id": "105"

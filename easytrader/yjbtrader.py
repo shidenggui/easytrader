@@ -81,9 +81,16 @@ class YJBTrader(WebTrader):
         self.cookie = dict(JSESSIONID=token)
         self.keepalive()
 
-    # TODO: 实现撤单
-    def cancel_order(self):
-        pass
+    def cancel_entrust(self, entrust_no, stock_code):
+        """撤单
+        :param entrust_no: 委托单号
+        :param stock_code: 股票代码"""
+        cancel_params = dict(
+            self.config['cancel_entrust'],
+            entrust_no=entrust_no,
+            stock_code=stock_code
+        )
+        return self.do(cancel_params)
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
