@@ -6,6 +6,10 @@ from threading import Thread
 from . import helpers
 
 
+class NotLoginError(Exception):
+    pass
+
+
 class WebTrader:
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
 
@@ -94,7 +98,12 @@ class WebTrader:
         request_params.update(params)
         response_data = self.request(request_params)
         format_json_data = self.format_response_data(response_data)
-        return self.fix_error_data(format_json_data)
+        return_data =  self.fix_error_data(format_json_data)
+        try:
+            self.check_login_status(return_data)
+        except NotLoginError:
+            self.autologin()
+        return return_data
 
     def create_basic_params(self):
         """生成基本的参数"""
@@ -132,3 +141,6 @@ class WebTrader:
                 except ValueError:
                     break
         return response_data
+
+    def check_login_status(self, return_data):
+        pass

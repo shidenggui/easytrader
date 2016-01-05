@@ -9,6 +9,7 @@ import requests
 from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
+from .webtrader import NotLoginError
 
 StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
@@ -180,6 +181,10 @@ class YJBTrader(WebTrader):
     def fix_error_data(self, data):
         error_index = 0
         return data[error_index] if type(data) == list and data[error_index].get('error_no') is not None else data
+
+    def check_login_status(self, return_data):
+        if hasattr(return_data, 'get') and return_data.get('error_no') == '-1':
+            raise NotLoginError
 
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
