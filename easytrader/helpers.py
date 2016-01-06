@@ -26,8 +26,9 @@ def get_stock_type(stock_code):
 
 def recognize_verify_code(image_path, broker='ht'):
     """识别验证码，返回识别后的字符串，使用 tesseract 实现
-    :param image_path
-    :return recognized verify code string"""
+    :param image_path: 图片路径
+    :param broker: 券商
+    :return recognized: verify code string"""
     verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
     # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
     out_put = subprocess.getoutput('java -version')
@@ -44,7 +45,8 @@ def recognize_verify_code(image_path, broker='ht'):
     system_success = 0
     if system_result != system_success:
         os.system(
-            'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(image_path))
+            'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(
+                    image_path))
 
     # 获取识别的验证码
     verify_code_result = 'result.txt'
@@ -67,3 +69,12 @@ def get_mac():
     # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
     return ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
             uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+
+
+def grep_comma(num_str):
+    return num_str.replace(',', '')
+
+
+def str2num(num_str, convert_type='float'):
+    num = float(grep_comma(num_str))
+    return num if convert_type == 'float' else int(num)

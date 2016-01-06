@@ -262,8 +262,8 @@ class HTTrader(WebTrader):
         filter_empty_list = gbk_str.replace('[]', 'null')
         filter_return = filter_empty_list.replace('\n', '')
         log.debug('response data: %s' % filter_return)
-        response_data =  json.loads(filter_return)
-        if response_data['cssweb_code'] == 'error':
+        response_data = json.loads(filter_return)
+        if response_data['cssweb_code'] == 'error' or response_data['item'] is None:
             return response_data
         return_data = self.format_response_data_type(response_data['item'])
         log.debug('response data: %s' % return_data)

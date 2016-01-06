@@ -125,7 +125,9 @@ class WebTrader:
         pass
 
     def format_response_data_type(self, response_data):
-        """格式化返回的值为正确的类型"""
+        """格式化返回的值为正确的类型
+        :param response_data: 返回的数据
+        """
         if type(response_data) is not list:
             return response_data
 
@@ -135,11 +137,11 @@ class WebTrader:
             for key in item:
                 try:
                     if re.search(int_match_str, key) is not None:
-                        item[key] = int(float(item[key]))
+                        item[key] = helpers.str2num(item[key], 'int')
                     elif re.search(float_match_str, key) is not None:
-                        item[key] = float(item[key])
+                        item[key] = helpers.str2num(item[key], 'float')
                 except ValueError:
-                    break
+                    continue
         return response_data
 
     def check_login_status(self, return_data):
