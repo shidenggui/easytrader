@@ -6,11 +6,13 @@ import re
 import os
 import sys
 import requests
+import logbook
 from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
 from .webtrader import NotLoginError
 
+logbook.set_datetime_format('local')
 StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
 
