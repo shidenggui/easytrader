@@ -2,6 +2,7 @@
 
 * 进行简单的 web 股票交易
 * 实现自动登录
+* 支持命令行调用，方便其他语言适配
 * 有兴趣的可以加群 `429011814` 一起讨论
 
 **开发环境** : `Ubuntu 15.10` / `Python 3.4`
@@ -167,6 +168,33 @@ user.cancel_entrust('委托单号')
 
 ```python
 user.cancel_entrust('委托单号', '股票代码')
+```
+
+### 命令行模式
+
+#### 登录
+
+```
+ python cli.py --use ht --prepare ht.json 
+```
+
+注: 此时会生成 `account.session` 文件保存生成的 `user` 对象
+
+#### 获取余额 / 持仓 / 以及其他变量
+
+```
+ python cli.py --get balance
+```
+
+#### 买卖 / 撤单
+
+```
+ python cli.py --do buy 162411 0.450 100
+```
+#### 查看帮助 
+
+```
+ python cli.py --help
 ```
 
 ### 其他
