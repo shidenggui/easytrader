@@ -48,7 +48,10 @@ class WebTrader:
         """每隔10秒查询指定接口保持 token 的有效性"""
         while True:
             if self.heart_active:
-                response = self.get_balance()
+                try:
+                    response = self.get_balance()
+                except:
+                    pass
                 self.check_account_live(response)
                 time.sleep(10)
             else:

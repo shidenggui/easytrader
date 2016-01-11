@@ -118,7 +118,7 @@ user.entrust
   'entrust_bs': '买卖方向',
   'entrust_no': '委托编号',
   'entrust_price': '委托价格',
-  'entrust_status': '委托状态',  # 废单 / 已报
+  'entrust_status': '委托状态',  # 废单 / 已报
   'report_time': '申报时间',
   'stock_code': '证券代码',
   'stock_name': '证券名称'}]
