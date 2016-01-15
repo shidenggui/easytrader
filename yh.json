@@ -1,4 +1,5 @@
 {
     "inputaccount":"客户号",
-    "trdpwd":"加密后的密码"
+    "trdpwd":"加密后的密码",
+    "hardinfo":"硬件加密信息"
 }
