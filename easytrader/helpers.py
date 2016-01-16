@@ -29,16 +29,17 @@ def recognize_verify_code(image_path, broker='ht'):
     :param image_path: 图片路径
     :param broker: 券商
     :return recognized: verify code string"""
-    verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
-    # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
-    out_put = subprocess.getoutput('java -version')
-    log.debug('java detect result: %s' % out_put)
-    if out_put.find('java version') is not -1:
-        out_put = subprocess.getoutput(
-            'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
-        log.debug('recognize output: %s' % out_put)
-        verify_code_start = -4
-        return out_put[verify_code_start:]
+    if broker in ['ht', 'yjb']:
+        verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
+        # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
+        out_put = subprocess.getoutput('java -version')
+        log.debug('java detect result: %s' % out_put)
+        if out_put.find('java version') is not -1:
+            out_put = subprocess.getoutput(
+                'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
+            log.debug('recognize output: %s' % out_put)
+            verify_code_start = -4
+            return out_put[verify_code_start:]
     # 调用 tesseract 识别
     # ubuntu 15.10 无法识别的手动 export TESSDATA_PREFIX
     system_result = os.system('tesseract {} result -psm 7'.format(image_path))
