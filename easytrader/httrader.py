@@ -8,17 +8,12 @@ import uuid
 import socket
 import base64
 import urllib
-import sys
 import threading
 from collections import OrderedDict
-import logbook
-from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
 
-logbook.set_datetime_format('local')
-StreamHandler(sys.stdout).push_application()
-log = Logger(os.path.basename(__file__))
+log = helpers.get_logger(__file__)
 
 # 移除心跳线程产生的日志
 debug_log = log.debug

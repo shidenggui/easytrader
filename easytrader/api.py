@@ -12,6 +12,7 @@ def use(broker):
 
         >>> import easytrader
         >>> user = easytrader.use('ht')
+        >>> user.prepare('ht.json')
     """
     if broker.lower() in ['ht', 'HT', '华泰']:
         return HTTrader()

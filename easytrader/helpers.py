@@ -4,8 +4,10 @@ import json
 import subprocess
 import sys
 import uuid
+import logbook
 from logbook import Logger, StreamHandler
 
+logbook.set_datetime_format('local')
 StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
 
@@ -79,3 +81,9 @@ def grep_comma(num_str):
 def str2num(num_str, convert_type='float'):
     num = float(grep_comma(num_str))
     return num if convert_type == 'float' else int(num)
+
+
+def get_logger(name):
+    logbook.set_datetime_format('local')
+    StreamHandler(sys.stdout).push_application()
+    return Logger(os.path.basename(name))
