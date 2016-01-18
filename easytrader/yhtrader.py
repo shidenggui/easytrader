@@ -19,6 +19,7 @@ StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
 
 VERIFY_CODE_POS = 0
+BALANCE_NUM = 7
 
 class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
@@ -172,39 +173,35 @@ class YHTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        url = self.trade_prefix + params['service_asp']
+        url = self.trade_prefix + params['service_jsp']
         r = self.s.get(url, cookies=self.cookie)
-        log.debug(r.text)
         return r.text
 
     def format_response_data(self, data):
-        # 获取原始data的html源码 
-        #return_json = json.loads(data)['returnJson']
-        #add_key_quote = re.sub('\w+:', lambda x: '"%s":' % x.group().rstrip(':'), return_json)
-
-        # 替换所有单引号到双引号
-        """
-        change_single_double_quote = add_key_quote.replace("'", '"')
-        raw_json_data = json.loads(change_single_double_quote)
-        fun_data = raw_json_data['Func%s' % raw_json_data['function_id']]
-        header_index = 1
-        remove_header_data = fun_data[header_index:]
-        return self.format_response_data_type(remove_header_data)
-        """
+        # 获取原始data的html源码并且解析得到一个可读json格式 
+        search_result = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data) 
+        if len(search_result) < BALANCE_NUM:
+            log.error("Can not fetch balance info")
+            retdata = json.dumps(search_result)
+            retjsonobj = json.loads(retdata)
+        else:
+            retdict = dict()
+            retdict['account'] = search_result[0]
+            retdict['currency'] = search_result[1]
+            retdict['fundbalance'] = search_result[2]
+            retdict['available'] = search_result[3]
+            retdict['refmarket'] = search_result[4]
+            retdict['totalasset'] = search_result[5]
+            retdict['refratio'] = search_result[6]
+            retdata = json.dumps(retdict)
+            retjsonobj = json.loads(retdata)
+        return retjsonobj
 
     def fix_error_data(self, data):
-        """
-        error_index = 0
-        return data[error_index] if type(data) == list and data[error_index].get('error_no') is not None else data
-        """
-        pass
+        return data
 
     def check_login_status(self, return_data):
         pass
-        """
-        if hasattr(return_data, 'get') and return_data.get('error_no') == '-1':
-            raise NotLoginError
-        """
 
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
