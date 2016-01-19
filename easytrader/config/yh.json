@@ -1,6 +1,7 @@
 {
   "login_page":"https://www.chinastock.com.cn/trade/webtrade/login.jsp",
   "login_api":"https://www.chinastock.com.cn/trade/LoginServlet?ajaxFlag=mainlogin",
+  "trade_api":"https://www.chinastock.com.cn/trade/AjaxServlet",
   "trade_info_page":"https://www.chinastock.com.cn/trade/webtrade/tradeindex.jsp",
   "verify_code_api":"https://www.chinastock.com.cn/trade/webtrade/verifyCodeImage.jsp",
   "prefix":"https://www.chinastock.com.cn",
@@ -26,14 +27,24 @@
   },
 
   "entrust": {
+    "service_jsp":"/trade/webtrade/stock/stock_wt_query.jsp"
   },
 
   "buy": {
+    "marktype":"",
+    "ajaxFlag":"wt"
   },
 
   "sell": {
+    "ajaxFlag":"wt"
   },
 
   "cancel_entrust": {
+    "ajaxFlag":"stock_cancel"
+  },
+  
+  "account4stock": {
+    "0":"",
+    "1":""
   }
 }
