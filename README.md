@@ -197,6 +197,21 @@ user.cancel_entrust('委托单号', '股票代码')
  python cli.py --help
 ```
 
+#### Q&A
+
+##### Question 
+
+编辑完配置文件，运行后出现 `json` 解码报错的信息。类似于下面
+
+```python
+raise JSONDecodeError("Expecting value", s, err.value) from None
+
+JSONDecodeError: Expecting value
+```
+
+##### Answer
+请勿使用 `记事本` 编辑账户的 `json` 配置文件，推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
+
 ### 其他
 [交易接口分析以及其他开源量化相关论坛](http://www.celuetan.com) 
 
