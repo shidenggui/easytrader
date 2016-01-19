@@ -29,6 +29,9 @@ class YHTrader(WebTrader):
         self.cookie = None
         self.account_config = None
         self.s = None
+        self.exchange_stock_account = self.config['account4stock']
+        print(self.exchange_stock_account)
+
 
     def login(self):
         headers = {
@@ -88,12 +91,20 @@ class YHTrader(WebTrader):
         """撤单
         :param entrust_no: 委托单号
         :param stock_code: 股票代码"""
+        need_info = self.__get_trade_need_info(stock_code)
         cancel_params = dict(
             self.config['cancel_entrust'],
-            entrust_no=entrust_no,
-            stock_code=stock_code
+            orderSno=entrust_no,
+            secuid=need_info['stock_account']
         )
-        return self.do(cancel_params)
+        s = Session()
+        req = Request('POSt', self.config['trade_api'], data=cancel_params)
+        preped = s.prepare_request(req)
+        log.debug(preped.body)
+        log.debug(preped.headers)
+        cancel_response = self.s.post(self.config['trade_api'], params=cancel_params)
+        log.debug('cancel trust: %s' % cancel_response.text)
+        return True
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
@@ -106,8 +117,8 @@ class YHTrader(WebTrader):
         """
         params = dict(
             self.config['buy'],
-            entrust_bs=1,  # 买入1 卖出2
-            entrust_amount=amount if amount else volume // price // 100 * 100
+            bsflag='0B',  # 买入0B 卖出0S
+            qty=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -121,8 +132,8 @@ class YHTrader(WebTrader):
         """
         params = dict(
             self.config['sell'],
-            entrust_bs=2,  # 买入1 卖出2
-            entrust_amount=amount if amount else volume // price
+            bsflag='0S',  # 买入0B 卖出0S
+            qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -133,33 +144,32 @@ class YHTrader(WebTrader):
             if type(check_data) == dict:
                 return check_data
         need_info = self.__get_trade_need_info(stock_code)
-        return self.do(dict(
+        trade_params = dict(
                 other,
-                stock_account=need_info['stock_account'],  # '沪深帐号'
-                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
-                entrust_prop=entrust_prop,  # 委托方式
-                stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
-                elig_riskmatch_flag=1,  # 用户风险等级
-                entrust_price=price,
-            ))
+                stockCode=stock_code,
+                price=price,
+                market=need_info['exchange_type'],
+                secuid=need_info['stock_account']
+        )
+        #调试信息
+        """
+        s = Session()
+        req = Request('POSt', self.config['trade_api'], data=trade_params)
+        preped = s.prepare_request(req)
+        log.debug(preped.body)
+        log.debug(preped.headers)
+        """
+        trade_response = self.s.post(self.config['trade_api'], params=trade_params)
+        log.debug('trade response: %s' % trade_response.text)
+        return True
+                  
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
         # 获取股票对应的证券市场
-        sh_exchange_type = 1
-        sz_exchange_type = 2
+        sh_exchange_type = '1'
+        sz_exchange_type = '0'
         exchange_type = sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else sz_exchange_type
-        # 获取股票对应的证券帐号
-        if not hasattr(self, 'exchange_stock_account'):
-            self.exchange_stock_account = dict()
-        if exchange_type not in self.exchange_stock_account:
-            stock_account_index = 0
-            response_data = self.do(dict(
-                    self.config['account4stock'],
-                    exchange_type=exchange_type,
-                    stock_code=stock_code
-                ))[stock_account_index]
-            self.exchange_stock_account[exchange_type] = response_data['stock_account']
         return dict(
             exchange_type=exchange_type,
             stock_account=self.exchange_stock_account[exchange_type]
@@ -179,22 +189,24 @@ class YHTrader(WebTrader):
 
     def format_response_data(self, data):
         # 获取原始data的html源码并且解析得到一个可读json格式 
-        search_result = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data) 
-        if len(search_result) < BALANCE_NUM:
+        search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head\">(.*)</td>', data)
+        search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data) 
+        columnlen = len(search_result_name)
+        if len(search_result_content) % columnlen != 0:
             log.error("Can not fetch balance info")
             retdata = json.dumps(search_result)
             retjsonobj = json.loads(retdata)
         else:
-            retdict = dict()
-            retdict['account'] = search_result[0]
-            retdict['currency'] = search_result[1]
-            retdict['fundbalance'] = search_result[2]
-            retdict['available'] = search_result[3]
-            retdict['refmarket'] = search_result[4]
-            retdict['totalasset'] = search_result[5]
-            retdict['refratio'] = search_result[6]
-            retdata = json.dumps(retdict)
-            retjsonobj = json.loads(retdata)
+            rowlen = len(search_result_content) // columnlen
+
+        retdata = list()
+        for i in range(rowlen):
+            for j in range(columnlen):
+                retdict = dict()
+                retdict[search_result_name[j]] = search_result_content[i * columnlen + j]
+                retdata.append(retdict)
+        retlist = json.dumps(retdata)
+        retjsonobj = json.loads(retlist)
         return retjsonobj
 
     def fix_error_data(self, data):
