@@ -16,7 +16,6 @@
 
 * 佣金宝（支持自动登录）
 * 华泰（支持自动登录）
-* 银河（支持自动登录） 
 
 ### requirements
 
@@ -50,24 +49,17 @@ user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 ```python
 user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
 ```
-##### 银河 
-
-```python
-user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
-```
 
 ##### 自动登录
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json // 或者 yh.json 
+user.prepare('ht.json') // 或者 yjb.json 
 ```
 
 **注**: 
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
-* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 以及登录`POST`请求里面的`hardinfo`字段 
-
 
 [如何获取配置所需信息, 可参考此文章](http://www.jisilu.cn/question/42707)
 
@@ -177,10 +169,7 @@ user.cancel_entrust('委托单号')
 ```python
 user.cancel_entrust('委托单号', '股票代码')
 ```
-##### 银河证券
-```python
-user.cancel_entrust('委托单号', '股票代码')
-```
+
 ### 命令行模式
 
 #### 登录
