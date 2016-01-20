@@ -66,12 +66,7 @@ user.prepare('ht.json') // 或者 yjb.json // 或者 yh.json
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
-* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 另外在`yhtrader.py`同级目录的`config`下面`yh.json`配置自己的沪深帐户号格式如下:
-
-"account4stock": {
-    "0":"深市帐号",
-    "1":"沪市帐号"
-}
+* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 以及登录`POST`请求里面的`hardinfo`字段 
 
 
 [如何获取配置所需信息, 可参考此文章](http://www.jisilu.cn/question/42707)

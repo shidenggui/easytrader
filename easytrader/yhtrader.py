@@ -19,7 +19,9 @@ StreamHandler(sys.stdout).push_application()
 log = Logger(os.path.basename(__file__))
 
 VERIFY_CODE_POS = 0
-BALANCE_NUM = 7
+TRADE_MARKET = 1
+HOLDER_NAME = 0
+
 
 class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
@@ -29,9 +31,7 @@ class YHTrader(WebTrader):
         self.cookie = None
         self.account_config = None
         self.s = None
-        self.exchange_stock_account = self.config['account4stock']
-        print(self.exchange_stock_account)
-
+        self.exchange_stock_account = dict()
 
     def login(self):
         headers = {
@@ -55,6 +55,13 @@ class YHTrader(WebTrader):
             return False
 
         login_status = self.post_login_data(verify_code)
+        exchangeinfo = list((self.do(dict(self.config['account4stock']))))
+        if len(exchangeinfo) >= 2:
+            for i in range(2):
+                if exchangeinfo[i][TRADE_MARKET]['交易市场'] == '深A':
+                    self.exchange_stock_account['0'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
+                else:
+                    self.exchange_stock_account['1'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
         return login_status
 
     def post_login_data(self, verify_code):
@@ -74,6 +81,7 @@ class YHTrader(WebTrader):
         log.debug(preped.headers)
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
+        
         if login_response.text.find('success') != -1:
             return True
         return False
@@ -97,11 +105,6 @@ class YHTrader(WebTrader):
             orderSno=entrust_no,
             secuid=need_info['stock_account']
         )
-        s = Session()
-        req = Request('POSt', self.config['trade_api'], data=cancel_params)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
         cancel_response = self.s.post(self.config['trade_api'], params=cancel_params)
         log.debug('cancel trust: %s' % cancel_response.text)
         return True
@@ -151,7 +154,7 @@ class YHTrader(WebTrader):
                 market=need_info['exchange_type'],
                 secuid=need_info['stock_account']
         )
-        #调试信息
+        # 调试信息
         """
         s = Session()
         req = Request('POSt', self.config['trade_api'], data=trade_params)
@@ -189,24 +192,26 @@ class YHTrader(WebTrader):
 
     def format_response_data(self, data):
         # 获取原始data的html源码并且解析得到一个可读json格式 
-        search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head\">(.*)</td>', data)
+        search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
         search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data) 
         columnlen = len(search_result_name)
         if len(search_result_content) % columnlen != 0:
             log.error("Can not fetch balance info")
-            retdata = json.dumps(search_result)
+            retdata = json.dumps(search_result_name)
             retjsonobj = json.loads(retdata)
         else:
             rowlen = len(search_result_content) // columnlen
-
-        retdata = list()
-        for i in range(rowlen):
-            for j in range(columnlen):
-                retdict = dict()
-                retdict[search_result_name[j]] = search_result_content[i * columnlen + j]
-                retdata.append(retdict)
-        retlist = json.dumps(retdata)
-        retjsonobj = json.loads(retlist)
+            retrowdata = list()
+            retdata = list()
+            for i in range(rowlen):
+                retrowdata = list()
+                for j in range(columnlen):
+                    retdict = dict()
+                    retdict[search_result_name[j]] = search_result_content[i * columnlen + j]
+                    retrowdata.append(retdict)
+                retdata.append(retrowdata)
+            retlist = json.dumps(retdata)
+            retjsonobj = json.loads(retlist)
         return retjsonobj
 
     def fix_error_data(self, data):

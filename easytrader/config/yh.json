@@ -44,7 +44,6 @@
   },
   
   "account4stock": {
-    "0":"",
-    "1":""
+    "service_jsp":"/trade/webtrade/zhgl/holderQuery.jsp"
   }
 }
