@@ -1,22 +1,13 @@
 # coding: utf-8
 import json
 import random
-import urllib
 import re
 import os
-import sys
-import ssl
 import requests
-import logbook
-from logbook import Logger, StreamHandler
 from . import helpers
 from .webtrader import WebTrader
-from .webtrader import NotLoginError
-from requests import Request, Session
 
-logbook.set_datetime_format('local')
-StreamHandler(sys.stdout).push_application()
-log = Logger(os.path.basename(__file__))
+log = helpers.get_logger(__file__)
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
@@ -43,7 +34,7 @@ class YHTrader(WebTrader):
         self.s.headers.update(headers)
         data = self.s.get(self.config['login_page'])
 
-        #查找验证码
+        # 查找验证码
         search_result = re.search(r'src=\"verifyCodeImage.jsp\?rd=([0-9]{4})\"', data.text)
         if not search_result:
             log.debug("Can not find verify code, stop login")
@@ -74,11 +65,6 @@ class YHTrader(WebTrader):
                 checkword=verify_code
         )
         log.debug('login params: %s' % login_params)
-        s = Session()
-        req = Request('POST', self.config['login_api'], data=login_params, headers=self.s.headers)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
         
@@ -154,19 +140,10 @@ class YHTrader(WebTrader):
                 market=need_info['exchange_type'],
                 secuid=need_info['stock_account']
         )
-        # 调试信息
-        """
-        s = Session()
-        req = Request('POSt', self.config['trade_api'], data=trade_params)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
-        """
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
         log.debug('trade response: %s' % trade_response.text)
         return True
                   
-
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
         # 获取股票对应的证券市场
@@ -201,7 +178,6 @@ class YHTrader(WebTrader):
             retjsonobj = json.loads(retdata)
         else:
             rowlen = len(search_result_content) // columnlen
-            retrowdata = list()
             retdata = list()
             for i in range(rowlen):
                 retrowdata = list()

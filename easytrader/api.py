@@ -21,4 +21,3 @@ def use(broker):
         return YJBTrader()
     if broker.lower() in ['yh', 'YH', '银河']:
         return YHTrader()
-

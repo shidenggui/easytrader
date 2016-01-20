@@ -5,6 +5,7 @@ import easytrader
 
 ACCOUNT_OBJECT_FILE = 'account.session'
 
+
 @click.command()
 @click.option('--use', help='指定券商 [ht, yjb]')
 @click.option('--prepare', type=click.Path(exists=True), help='指定登录账户文件路径')
@@ -30,10 +31,6 @@ def main(prepare, use, do, get, params):
 
         json_result = json.dumps(result)
         click.echo(json_result)
-
-
-
-
 
 
 if __name__ == '__main__':

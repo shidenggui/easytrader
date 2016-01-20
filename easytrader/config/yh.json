@@ -18,31 +18,24 @@
     "certdata9322":"",
     "ftype": "bsn"
   },
-
   "position": {
   },
-
   "balance": {
     "service_jsp":"/trade/webtrade/stock/stock_zjgf_query.jsp"
   },
-
   "entrust": {
     "service_jsp":"/trade/webtrade/stock/stock_wt_query.jsp"
   },
-
   "buy": {
     "marktype":"",
     "ajaxFlag":"wt"
   },
-
   "sell": {
     "ajaxFlag":"wt"
   },
-
   "cancel_entrust": {
     "ajaxFlag":"stock_cancel"
   },
-  
   "account4stock": {
     "service_jsp":"/trade/webtrade/zhgl/holderQuery.jsp"
   }

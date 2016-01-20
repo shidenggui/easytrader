@@ -14,9 +14,9 @@
 
 ### 支持券商
 
-* 佣金宝（支持自动登录）
-* 华泰（支持自动登录）
-* 银河（支持自动登录） 
+* 佣金宝
+* 华泰
+* 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
 
 ### requirements
 
@@ -59,7 +59,7 @@ user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ##### 自动登录
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json // 或者 yh.json 
+user.prepare('ht.json') // 或者 yjb.json || yh.json 
 ```
 
 **注**: 
