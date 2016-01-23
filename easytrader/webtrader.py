@@ -3,7 +3,10 @@ import time
 import os
 import re
 from threading import Thread
+import json
 from . import helpers
+
+log = helpers.get_logger(__file__)
 
 
 class NotLoginError(Exception):
@@ -12,18 +15,27 @@ class NotLoginError(Exception):
 
 class WebTrader:
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
+    config_path = ''
 
     def __init__(self):
         self.__read_config()
         self.trade_prefix = self.config['prefix']
+        self.account_config = ''
         self.heart_active = True
         self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
 
     def read_config(self, path):
-        self.account_config = helpers.file2dict(path)
+        try:
+            self.account_config = helpers.file2dict(path)
+        except json.JSONDecodeError:
+            log.error('配置文件格式有误，请勿使用记事本编辑，推荐使用 notepad++ 或者 sublime text')
+        for v in self.account_config:
+            if type(v) is int:
+                log.warn('配置文件的值最好使用双引号包裹，使用字符串类型，否则可能导致不可知的问题')
 
     def prepare(self, need_data):
-        """登录的统一接口"""
+        """登录的统一接口
+        :param need_data 登录所需数据"""
         self.read_config(need_data)
         self.autologin()
 
@@ -49,7 +61,7 @@ class WebTrader:
         while True:
             if self.heart_active:
                 try:
-                    response = self.get_balance()
+                    response = self.balance
                 except:
                     pass
                 self.check_account_live(response)

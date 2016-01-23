@@ -67,7 +67,7 @@ class YHTrader(WebTrader):
         log.debug('login params: %s' % login_params)
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
-        
+
         if login_response.text.find('success') != -1:
             return True
         return False
@@ -87,9 +87,9 @@ class YHTrader(WebTrader):
         :param stock_code: 股票代码"""
         need_info = self.__get_trade_need_info(stock_code)
         cancel_params = dict(
-            self.config['cancel_entrust'],
-            orderSno=entrust_no,
-            secuid=need_info['stock_account']
+                self.config['cancel_entrust'],
+                orderSno=entrust_no,
+                secuid=need_info['stock_account']
         )
         cancel_response = self.s.post(self.config['trade_api'], params=cancel_params)
         log.debug('cancel trust: %s' % cancel_response.text)
@@ -105,9 +105,9 @@ class YHTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['buy'],
-            bsflag='0B',  # 买入0B 卖出0S
-            qty=amount if amount else volume // price // 100 * 100
+                self.config['buy'],
+                bsflag='0B',  # 买入0B 卖出0S
+                qty=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -120,9 +120,9 @@ class YHTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['sell'],
-            bsflag='0S',  # 买入0B 卖出0S
-            qty=amount if amount else volume // price
+                self.config['sell'],
+                bsflag='0S',  # 买入0B 卖出0S
+                qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -143,7 +143,7 @@ class YHTrader(WebTrader):
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
         log.debug('trade response: %s' % trade_response.text)
         return True
-                  
+
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
         # 获取股票对应的证券市场
@@ -151,14 +151,14 @@ class YHTrader(WebTrader):
         sz_exchange_type = '0'
         exchange_type = sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else sz_exchange_type
         return dict(
-            exchange_type=exchange_type,
-            stock_account=self.exchange_stock_account[exchange_type]
+                exchange_type=exchange_type,
+                stock_account=self.exchange_stock_account[exchange_type]
         )
 
     def create_basic_params(self):
         basic_params = dict(
-            CSRF_Token='undefined',
-            timestamp=random.random(),
+                CSRF_Token='undefined',
+                timestamp=random.random(),
         )
         return basic_params
 
@@ -170,7 +170,7 @@ class YHTrader(WebTrader):
     def format_response_data(self, data):
         # 获取原始data的html源码并且解析得到一个可读json格式 
         search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
-        search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data) 
+        search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
         columnlen = len(search_result_name)
         if len(search_result_content) % columnlen != 0:
             log.error("Can not fetch balance info")

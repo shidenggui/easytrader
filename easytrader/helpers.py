@@ -38,7 +38,8 @@ def recognize_verify_code(image_path, broker='ht'):
         log.debug('java detect result: %s' % out_put)
         if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
             out_put = subprocess.getoutput(
-                'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
+                    'java -jar %s %s' % (
+                    os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
             log.debug('recognize output: %s' % out_put)
             verify_code_start = -4
             return out_put[verify_code_start:]
@@ -48,8 +49,8 @@ def recognize_verify_code(image_path, broker='ht'):
     system_success = 0
     if system_result != system_success:
         os.system(
-            'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(
-                    image_path))
+                'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(
+                        image_path))
 
     # 获取识别的验证码
     verify_code_result = 'result.txt'

@@ -23,6 +23,7 @@ def remove_heart_log(*args, **kwargs):
     if threading.current_thread() == threading.main_thread():
         debug_log(*args, **kwargs)
 
+
 log.debug = remove_heart_log
 
 
@@ -46,7 +47,7 @@ class HTTrader(WebTrader):
 
         # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
         self.__mac = ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-            uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+                uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
     def login(self):
         """实现华泰的自动登录"""
@@ -97,13 +98,13 @@ class HTTrader(WebTrader):
     def __check_login_status(self, verify_code):
         # 设置登录所需参数
         params = dict(
-            userName=self.account_config['userName'],
-            trdpwd=self.account_config['trdpwd'],
-            trdpwdEns=self.account_config['trdpwd'],
-            servicePwd=self.account_config['servicePwd'],
-            macaddr=self.__mac,
-            lipInfo=self.__ip,
-            vcode=verify_code
+                userName=self.account_config['userName'],
+                trdpwd=self.account_config['trdpwd'],
+                trdpwdEns=self.account_config['trdpwd'],
+                servicePwd=self.account_config['servicePwd'],
+                macaddr=self.__mac,
+                lipInfo=self.__ip,
+                vcode=verify_code
         )
         params.update(self.config['login'])
 
@@ -160,9 +161,9 @@ class HTTrader(WebTrader):
         """撤单
         :param entrust_no: 委托单号"""
         cancel_params = dict(
-            self.config['cancel_entrust'],
-            password=self.__trdpwd,
-            entrust_no=entrust_no
+                self.config['cancel_entrust'],
+                password=self.__trdpwd,
+                entrust_no=entrust_no
         )
         return self.do(cancel_params)
 
@@ -176,8 +177,8 @@ class HTTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['buy'],
-            entrust_amount=amount if amount else volume // price // 100 * 100
+                self.config['buy'],
+                entrust_amount=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -190,8 +191,8 @@ class HTTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['sell'],
-            entrust_amount=amount if amount else volume // price
+                self.config['sell'],
+                entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -204,7 +205,7 @@ class HTTrader(WebTrader):
                 entrust_prop=entrust_prop,  # 委托方式
                 stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
                 entrust_price=price
-            ))
+        ))
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
@@ -215,8 +216,8 @@ class HTTrader(WebTrader):
         stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type \
             else self.__sz_stock_account
         return dict(
-            exchange_type=exchange_type,
-            stock_account=stock_account
+                exchange_type=exchange_type,
+                stock_account=stock_account
         )
 
     def create_basic_params(self):
@@ -224,17 +225,17 @@ class HTTrader(WebTrader):
         use_index_start = 1
         user_name = raw_name[use_index_start:] if raw_name.startswith('0') else raw_name
         basic_params = OrderedDict(
-            uid=self.__uid,
-            version=1,
-            custid=self.account_config['userName'],
-            op_branch_no=self.__branch_no,
-            branch_no=self.__branch_no,
-            op_entrust_way=7,
-            op_station=self.__op_station,
-            fund_account=user_name,
-            password=self.__trdpwd,
-            identity_type='',
-            ram=random.random()
+                uid=self.__uid,
+                version=1,
+                custid=self.account_config['userName'],
+                op_branch_no=self.__branch_no,
+                branch_no=self.__branch_no,
+                op_entrust_way=7,
+                op_station=self.__op_station,
+                fund_account=user_name,
+                password=self.__trdpwd,
+                identity_type='',
+                ram=random.random()
         )
         return basic_params
 
