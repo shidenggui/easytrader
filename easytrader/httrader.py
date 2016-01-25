@@ -20,9 +20,8 @@ debug_log = log.debug
 
 
 def remove_heart_log(*args, **kwargs):
-    if threading.current_thread() == threading.main_thread():
+    if threading.currentThread().name == "MainThread":
         debug_log(*args, **kwargs)
-
 
 log.debug = remove_heart_log
 
@@ -31,12 +30,12 @@ class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
 
     def __init__(self):
-        super().__init__()
+        super(HTTrader, self).__init__()
         self.account_config = None
         self.s = None
 
         self.__set_ip_and_mac()
-        self.fund_account = self.__get_user_name()
+        self.fund_account = None
 
     def __set_ip_and_mac(self):
         """获取本机IP和MAC地址"""
@@ -55,6 +54,13 @@ class HTTrader(WebTrader):
         raw_name = self.account_config['userName']
         use_index_start = 1
         return raw_name[use_index_start:] if raw_name.startswith('08') else raw_name
+
+    def prepare(self, need_data):
+        """登录的统一接口
+        :param need_data 登录所需数据"""
+        self.read_config(need_data)
+        self.fund_account = self.__get_user_name()
+        self.autologin()
 
     def login(self):
         """实现华泰的自动登录"""
@@ -118,7 +124,7 @@ class HTTrader(WebTrader):
         log.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
-        if login_api_response.text.find('欢迎您') == -1:
+        if login_api_response.text.find(u'欢迎您') == -1:
             return False
         return True
 
@@ -168,9 +174,9 @@ class HTTrader(WebTrader):
         """撤单
         :param entrust_no: 委托单号"""
         cancel_params = dict(
-                self.config['cancel_entrust'],
-                password=self.__trdpwd,
-                entrust_no=entrust_no
+            self.config['cancel_entrust'],
+            password=self.__trdpwd,
+            entrust_no=entrust_no
         )
         return self.do(cancel_params)
 
@@ -247,9 +253,14 @@ class HTTrader(WebTrader):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
-        params.move_to_end('ram')
-        params_str = urllib.parse.urlencode(params)
-        unquote_str = urllib.parse.unquote(params_str)
+
+        key = "ram"
+        val = params[key]
+        del params[key]
+        params[key] = val
+
+        params_str = urllib.urlencode(params)
+        unquote_str = urllib.unquote(params_str)
         log.debug('request params: %s' % unquote_str)
         b64params = base64.b64encode(unquote_str.encode()).decode()
         r = self.s.get('{prefix}/?{b64params}'.format(prefix=self.trade_prefix, b64params=b64params), headers=headers)

@@ -1,7 +1,7 @@
 # coding: utf-8
 import os
 import json
-import subprocess
+import commands
 import sys
 import uuid
 import logbook
@@ -34,12 +34,12 @@ def recognize_verify_code(image_path, broker='ht'):
     if broker in ['ht', 'yjb']:
         verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
         # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
-        out_put = subprocess.getoutput('java -version')
+        # 2.7版本
+        out_put = commands.getoutput('java -version')
         log.debug('java detect result: %s' % out_put)
         if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
-            out_put = subprocess.getoutput(
-                    'java -jar %s %s' % (
-                    os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
+            out_put = commands.getoutput(
+                'java -jar %s %s' % (os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
             log.debug('recognize output: %s' % out_put)
             verify_code_start = -4
             return out_put[verify_code_start:]
