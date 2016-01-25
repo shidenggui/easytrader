@@ -36,7 +36,7 @@ class HTTrader(WebTrader):
         self.s = None
 
         self.__set_ip_and_mac()
-        self.fund_account = self.__get_user_name()
+        self.fund_account = None
 
     def __set_ip_and_mac(self):
         """获取本机IP和MAC地址"""
@@ -55,6 +55,13 @@ class HTTrader(WebTrader):
         raw_name = self.account_config['userName']
         use_index_start = 1
         return raw_name[use_index_start:] if raw_name.startswith('08') else raw_name
+
+    def prepare(self, need_data):
+        """登录的统一接口
+        :param need_data 登录所需数据"""
+        self.read_config(need_data)
+        self.fund_account = self.__get_user_name()
+        self.autologin()
 
     def login(self):
         """实现华泰的自动登录"""
