@@ -18,7 +18,8 @@ class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
 
     def __init__(self):
-        super().__init__()
+        # super().__init__()
+        super(YHTrader, self).__init__()
         self.cookie = None
         self.account_config = None
         self.s = None
@@ -128,10 +129,10 @@ class YHTrader(WebTrader):
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
-        if not self.heart_thread.is_alive():
-            check_data = self.get_balance()
-            if type(check_data) == dict:
-                return check_data
+        # if not self.heart_thread.is_alive():
+        #     check_data = self.get_balance()
+        #     if type(check_data) == dict:
+        #         return check_data
         need_info = self.__get_trade_need_info(stock_code)
         trade_params = dict(
                 other,

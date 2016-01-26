@@ -6,6 +6,10 @@ from threading import Thread
 import json
 from . import helpers
 
+# 解决字符编码
+import sys
+reload(sys)
+sys.setdefaultencoding("utf8")
 log = helpers.get_logger(__file__)
 
 
@@ -13,7 +17,7 @@ class NotLoginError(Exception):
     pass
 
 
-class WebTrader:
+class WebTrader(object):
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
     config_path = ''
 
@@ -22,7 +26,9 @@ class WebTrader:
         self.trade_prefix = self.config['prefix']
         self.account_config = ''
         self.heart_active = True
-        self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
+        # 2.7版本
+        self.heart_thread = Thread(target=self.send_heartbeat, name='heart')
+        self.heart_thread.setDaemon(True)
 
     def read_config(self, path):
         try:

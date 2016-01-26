@@ -3,5 +3,6 @@ logbook
 anyjson
 dill
 click
+ndg-httpsclient==0.4.0
 
 
