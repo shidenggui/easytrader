@@ -1,9 +1,11 @@
 # coding: utf-8
 import json
+import os
 import random
 import re
-import os
+
 import requests
+
 from . import helpers
 from .webtrader import WebTrader
 

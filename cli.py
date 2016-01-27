@@ -1,6 +1,7 @@
-import dill
-import click
 import anyjson as json
+import click
+import dill
+
 import easytrader
 
 ACCOUNT_OBJECT_FILE = 'account.session'
@@ -19,7 +20,7 @@ def main(prepare, use, do, get, params):
         user = easytrader.use(use)
         user.prepare(prepare)
         with open(ACCOUNT_OBJECT_FILE, 'wb') as f:
-            dill.dump(user,f)
+            dill.dump(user, f)
     if do is not None:
         with open(ACCOUNT_OBJECT_FILE, 'rb') as f:
             user = dill.load(f)

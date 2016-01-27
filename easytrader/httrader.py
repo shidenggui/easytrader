@@ -1,15 +1,17 @@
 # coding: utf-8
+import base64
 import json
+import os
 import random
 import re
-import requests
-import os
-import uuid
 import socket
-import base64
-import urllib
 import threading
+import urllib
+import uuid
 from collections import OrderedDict
+
+import requests
+
 from . import helpers
 from .webtrader import WebTrader
 

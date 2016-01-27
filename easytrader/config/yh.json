@@ -1,42 +1,42 @@
 {
-  "login_page":"https://www.chinastock.com.cn/trade/webtrade/login.jsp",
-  "login_api":"https://www.chinastock.com.cn/trade/LoginServlet?ajaxFlag=mainlogin",
-  "trade_api":"https://www.chinastock.com.cn/trade/AjaxServlet",
-  "trade_info_page":"https://www.chinastock.com.cn/trade/webtrade/tradeindex.jsp",
-  "verify_code_api":"https://www.chinastock.com.cn/trade/webtrade/verifyCodeImage.jsp",
-  "prefix":"https://www.chinastock.com.cn",
-  "logout_api":"https://www.chinastock.com.cn/trade/webtrade/commons/keepalive.jsp?type=go",
+  "login_page": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
+  "login_api": "https://www.chinastock.com.cn/trade/LoginServlet?ajaxFlag=mainlogin",
+  "trade_api": "https://www.chinastock.com.cn/trade/AjaxServlet",
+  "trade_info_page": "https://www.chinastock.com.cn/trade/webtrade/tradeindex.jsp",
+  "verify_code_api": "https://www.chinastock.com.cn/trade/webtrade/verifyCodeImage.jsp",
+  "prefix": "https://www.chinastock.com.cn",
+  "logout_api": "https://www.chinastock.com.cn/trade/webtrade/commons/keepalive.jsp?type=go",
   "login": {
-    "logintype_rzrq":0,
-    "orgid":"",
-    "inputtype":"C",
-    "identifytype":0,
-    "isonlytrade":1,
-    "trdpwdjtws":"",
-    "Authplain9320":"",
-    "Authsign9321":"",
-    "certdata9322":"",
+    "logintype_rzrq": 0,
+    "orgid": "",
+    "inputtype": "C",
+    "identifytype": 0,
+    "isonlytrade": 1,
+    "trdpwdjtws": "",
+    "Authplain9320": "",
+    "Authsign9321": "",
+    "certdata9322": "",
     "ftype": "bsn"
   },
   "position": {
   },
   "balance": {
-    "service_jsp":"/trade/webtrade/stock/stock_zjgf_query.jsp"
+    "service_jsp": "/trade/webtrade/stock/stock_zjgf_query.jsp"
   },
   "entrust": {
-    "service_jsp":"/trade/webtrade/stock/stock_wt_query.jsp"
+    "service_jsp": "/trade/webtrade/stock/stock_wt_query.jsp"
   },
   "buy": {
-    "marktype":"",
-    "ajaxFlag":"wt"
+    "marktype": "",
+    "ajaxFlag": "wt"
   },
   "sell": {
-    "ajaxFlag":"wt"
+    "ajaxFlag": "wt"
   },
   "cancel_entrust": {
-    "ajaxFlag":"stock_cancel"
+    "ajaxFlag": "stock_cancel"
   },
   "account4stock": {
-    "service_jsp":"/trade/webtrade/zhgl/holderQuery.jsp"
+    "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"
   }
 }

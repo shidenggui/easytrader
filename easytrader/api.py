@@ -1,7 +1,7 @@
 # coding=utf-8
-from .yjbtrader import YJBTrader
 from .httrader import HTTrader
 from .yhtrader import YHTrader
+from .yjbtrader import YJBTrader
 
 
 def use(broker):

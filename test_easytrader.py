@@ -1,6 +1,8 @@
 import unittest
+
 import easytrader
 from easytrader import helpers
+
 
 class TestEasytrader(unittest.TestCase):
     def test_helpers(self):
@@ -19,7 +21,7 @@ class TestEasytrader(unittest.TestCase):
         test_data = [{
             'current_amount': '187.00',
             'current_balance': '200.03',
-            'stock_code' : '000001'
+            'stock_code': '000001'
         }]
         result = user.format_response_data_type(test_data)
 
@@ -28,17 +30,17 @@ class TestEasytrader(unittest.TestCase):
         self.assertIs(type(result[0]['stock_code']), str)
 
         test_data = [{'position_str': '',
-                      'date':'',
+                      'date': '',
                       'fund_account': '',
                       'stock_account': '',
                       'stock_code': '',
                       'entrust_bs': '',
-                      'business_price':'',
-                      'business_amount':'',
-                      'business_time':'',
+                      'business_price': '',
+                      'business_amount': '',
+                      'business_time': '',
                       'stock_name': '',
                       'business_status': '',
-                      'business_type':''}]
+                      'business_type': ''}]
         result = user.format_response_data_type(test_data)
 
     def test_ht_fix_error_data(self):
@@ -94,14 +96,6 @@ class TestEasytrader(unittest.TestCase):
         normal_data = 1023.05
         result = helpers.str2num(test_data, 'float')
         self.assertAlmostEqual(result, normal_data)
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
