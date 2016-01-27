@@ -1,13 +1,15 @@
 # coding: utf-8
 import json
-import random
-import urllib
-import re
 import os
+import random
+import re
+import urllib
+
 import requests
+
 from . import helpers
-from .webtrader import WebTrader
 from .webtrader import NotLoginError
+from .webtrader import WebTrader
 
 log = helpers.get_logger(__file__)
 
@@ -20,6 +22,7 @@ class YJBTrader(WebTrader):
         self.cookie = None
         self.account_config = None
         self.s = requests.session()
+        self.s.mount('https//', helpers.Ssl3HttpAdapter)
 
     def login(self):
         headers = {
