@@ -33,7 +33,7 @@ class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
 
     def __init__(self):
-        super().__init__()
+        super(HTTrader, self).__init__()
         self.account_config = None
         self.s = None
 
@@ -58,12 +58,9 @@ class HTTrader(WebTrader):
         use_index_start = 1
         return raw_name[use_index_start:] if raw_name.startswith('08') else raw_name
 
-    def prepare(self, need_data):
-        """登录的统一接口
-        :param need_data 登录所需数据"""
-        self.read_config(need_data)
+    def read_config(self, path):
+        super(HTTrader, self).read_config(path)
         self.fund_account = self.__get_user_name()
-        self.autologin()
 
     def login(self):
         """实现华泰的自动登录"""
