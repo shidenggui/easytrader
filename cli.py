@@ -8,7 +8,7 @@ ACCOUNT_OBJECT_FILE = 'account.session'
 
 
 @click.command()
-@click.option('--use', help='指定券商 [ht, yjb]')
+@click.option('--use', help='指定券商 [ht, yjb, yh]')
 @click.option('--prepare', type=click.Path(exists=True), help='指定登录账户文件路径')
 @click.option('--get', help='调用 easytrader 中对应的变量')
 @click.option('--do', help='调用 easytrader 中对应的函数名')
