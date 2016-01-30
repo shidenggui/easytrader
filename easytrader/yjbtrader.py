@@ -30,6 +30,7 @@ class YJBTrader(WebTrader):
         self.cookie = None
         self.account_config = None
         self.s = requests.session()
+        self.s.mount('https//', helpers.Ssl3HttpAdapter)
 
     def login(self):
         headers = {
