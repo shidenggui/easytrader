@@ -6,6 +6,7 @@ import re
 import urllib
 
 import requests
+import six
 
 from . import helpers
 from .webtrader import NotLoginError
@@ -58,11 +59,15 @@ class YJBTrader(WebTrader):
         return verify_code
 
     def post_login_data(self, verify_code):
+        if six.PY2:
+            password = urllib.unquote(self.account_config['password'])
+        else:
+            password = urllib.parse.unquote(self.account_config['password'])
         login_params = dict(
                 self.config['login'],
                 mac_addr=helpers.get_mac(),
                 account_content=self.account_config['account'],
-                password=urllib.parse.unquote(self.account_config['password']),
+                password=password,
                 validateCode=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
