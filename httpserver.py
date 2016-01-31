@@ -4,7 +4,6 @@ import anyjson as json
 
 import easytrader
 
-
 app = Flask(__name__)
 user = None
 
@@ -23,13 +22,14 @@ def do():
     global user
     target = request.args.get('func')
     params_str = request.args.get('params', None)
-    params = params_str.split(',')
 
-    if params:
+    if params_str:
+        params = params_str.split(',')
         result = getattr(user, target)(**params)
     else:
         result = getattr(user, target)
     return json.dumps(result)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
