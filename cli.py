@@ -16,7 +16,7 @@ ACCOUNT_OBJECT_FILE = 'account.session'
 def main(prepare, use, do, get, params):
     if get is not None:
         do = get
-    if prepare is not None and use in ['ht', 'yjb']:
+    if prepare is not None and use in ['ht', 'yjb', 'yh']:
         user = easytrader.use(use)
         user.prepare(prepare)
         with open(ACCOUNT_OBJECT_FILE, 'wb') as f:
