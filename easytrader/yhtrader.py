@@ -174,7 +174,7 @@ class YHTrader(WebTrader):
         search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
         search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
         columnlen = len(search_result_name)
-        if len(search_result_content) % columnlen != 0:
+        if columnlen == 0 or len(search_result_content) % columnlen != 0:
             log.error("Can not fetch balance info")
             retdata = json.dumps(search_result_name)
             retjsonobj = json.loads(retdata)
