@@ -144,7 +144,7 @@ class YHTrader(WebTrader):
         )
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
         log.debug('trade response: %s' % trade_response.text)
-        return True
+        return trade_response.text
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
