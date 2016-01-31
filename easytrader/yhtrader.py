@@ -20,7 +20,7 @@ class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
 
     def __init__(self):
-        super().__init__()
+        super(YHTrader, self).__init__()
         self.cookie = None
         self.account_config = None
         self.s = None

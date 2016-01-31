@@ -11,6 +11,7 @@ import uuid
 from collections import OrderedDict
 
 import requests
+import six
 
 from . import helpers
 from .webtrader import WebTrader
@@ -22,9 +23,12 @@ debug_log = log.debug
 
 
 def remove_heart_log(*args, **kwargs):
-    if threading.current_thread() == threading.main_thread():
-        debug_log(*args, **kwargs)
-
+    if six.PY2:
+        if threading.current_thread().name == 'MainThread':
+            debug_log(*args, **kwargs)
+    else:
+        if threading.current_thread() == threading.main_thread():
+            debug_log(*args, **kwargs)
 
 log.debug = remove_heart_log
 
@@ -253,9 +257,17 @@ class HTTrader(WebTrader):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
-        params.move_to_end('ram')
-        params_str = urllib.parse.urlencode(params)
-        unquote_str = urllib.parse.unquote(params_str)
+        if six.PY2:
+            item = params.pop('ram')
+            params['ram'] = item
+        else:
+            params.move_to_end('ram')
+        if six.PY2:
+            params_str = urllib.urlencode(params)
+            unquote_str = urllib.unquote(params_str)
+        else:
+            params_str = urllib.parse.urlencode(params)
+            unquote_str = urllib.parse.unquote(params_str)
         log.debug('request params: %s' % unquote_str)
         b64params = base64.b64encode(unquote_str.encode()).decode()
         r = self.s.get('{prefix}/?{b64params}'.format(prefix=self.trade_prefix, b64params=b64params), headers=headers)

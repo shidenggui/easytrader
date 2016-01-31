@@ -5,6 +5,7 @@ import ssl
 import subprocess
 import sys
 import uuid
+import six
 
 import logbook
 from logbook import Logger, StreamHandler
@@ -46,10 +47,15 @@ def recognize_verify_code(image_path, broker='ht'):
     if broker in ['ht', 'yjb']:
         verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
         # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
-        out_put = subprocess.getoutput('java -version')
+        if six.PY2:
+            import commands
+            getcmdout_func = commands
+        else:
+            getcmdout_func = subprocess
+        out_put = getcmdout_func.getoutput('java -version')
         log.debug('java detect result: %s' % out_put)
         if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
-            out_put = subprocess.getoutput(
+            out_put = getcmdout_func.getoutput(
                     'java -jar %s %s' % (
                         os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
             log.debug('recognize output: %s' % out_put)
