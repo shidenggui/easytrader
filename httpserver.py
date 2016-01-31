@@ -1,6 +1,8 @@
 from __future__ import print_function
+
+import json
+
 from flask import Flask, request, jsonify
-import anyjson as json
 
 import easytrader
 
@@ -25,10 +27,13 @@ def do():
 
     if params_str:
         params = params_str.split(',')
-        result = getattr(user, target)(**params)
+        if target in ['buy', 'sell']:
+            params[-1] = int(params[-1])
+            params[-2] = float(params[-2])
+        result = getattr(user, target)(*params)
     else:
         result = getattr(user, target)
-    return json.dumps(result)
+    return json.dumps({'return': result}, ensure_ascii=False)
 
 
 if __name__ == '__main__':
