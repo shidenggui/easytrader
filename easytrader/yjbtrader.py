@@ -1,4 +1,5 @@
 # coding: utf-8
+from __future__ import division
 import json
 import os
 import random
