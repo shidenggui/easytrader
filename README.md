@@ -22,8 +22,6 @@
 
 ### requirements
 
-> Python 3.4+
- 
 > pip install -r requirements.txt
 
 > 华泰 / 佣金宝 的自动登录需要安装以下二者之一： 
