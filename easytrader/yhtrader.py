@@ -8,7 +8,7 @@ import re
 import requests
 
 from . import helpers
-from .webtrader import WebTrader
+from .webtrader import WebTrader, NotLoginError
 
 log = helpers.get_logger(__file__)
 
@@ -27,7 +27,7 @@ class YHTrader(WebTrader):
         self.s = None
         self.exchange_stock_account = dict()
 
-    def login(self):
+    def login(self, throw=False):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
         }
@@ -48,7 +48,7 @@ class YHTrader(WebTrader):
         if not verify_code:
             return False
 
-        login_status = self.post_login_data(verify_code)
+        login_status = self.post_login_data(verify_code, throw)
         exchangeinfo = list((self.do(dict(self.config['account4stock']))))
         if len(exchangeinfo) >= 2:
             for i in range(2):
@@ -58,7 +58,7 @@ class YHTrader(WebTrader):
                     self.exchange_stock_account['1'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
         return login_status
 
-    def post_login_data(self, verify_code):
+    def post_login_data(self, verify_code, throw=False):
         login_params = dict(
                 self.config['login'],
                 mac=helpers.get_mac(),
@@ -73,6 +73,8 @@ class YHTrader(WebTrader):
 
         if login_response.text.find('success') != -1:
             return True
+        if throw:
+            raise NotLoginError(login_response.text)
         return False
 
     @property

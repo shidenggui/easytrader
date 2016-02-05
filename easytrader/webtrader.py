@@ -18,7 +18,9 @@ log = helpers.get_logger(__file__)
 
 
 class NotLoginError(Exception):
-    pass
+    def __init__(self, result=None):
+        super(NotLoginError, self).__init__()
+        self.result = result
 
 
 class WebTrader(object):

@@ -26,7 +26,7 @@ class YJBTrader(WebTrader):
         self.s = requests.session()
         self.s.mount('https://', helpers.Ssl3HttpAdapter())
 
-    def login(self):
+    def login(self, throw=False):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
@@ -37,7 +37,7 @@ class YJBTrader(WebTrader):
         verify_code = self.handle_recognize_code()
         if not verify_code:
             return False
-        login_status = self.post_login_data(verify_code)
+        login_status = self.post_login_data(verify_code, throw=True)
         return login_status
 
     def handle_recognize_code(self):
@@ -59,7 +59,7 @@ class YJBTrader(WebTrader):
             return False
         return verify_code
 
-    def post_login_data(self, verify_code):
+    def post_login_data(self, verify_code, throw=False):
         if six.PY2:
             password = urllib.unquote(self.account_config['password'])
         else:
@@ -76,6 +76,8 @@ class YJBTrader(WebTrader):
 
         if login_response.text.find('上次登陆') != -1:
             return True
+        if throw:
+            raise NotLoginError(login_response.text)
         return False
 
     @property

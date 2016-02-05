@@ -15,7 +15,7 @@ import requests
 import six
 
 from . import helpers
-from .webtrader import WebTrader
+from .webtrader import WebTrader, NotLoginError
 
 log = helpers.get_logger(__file__)
 
@@ -67,7 +67,7 @@ class HTTrader(WebTrader):
         super(HTTrader, self).read_config(path)
         self.fund_account = self.__get_user_name()
 
-    def login(self):
+    def login(self, throw=False):
         """实现华泰的自动登录"""
         self.__go_login_page()
 
@@ -75,7 +75,7 @@ class HTTrader(WebTrader):
         if not verify_code:
             return False
 
-        is_login = self.__check_login_status(verify_code)
+        is_login = self.__check_login_status(verify_code, throw)
         if not is_login:
             return False
 
@@ -113,7 +113,7 @@ class HTTrader(WebTrader):
             return False
         return verify_code
 
-    def __check_login_status(self, verify_code):
+    def __check_login_status(self, verify_code, throw=False):
         # 设置登录所需参数
         params = dict(
                 userName=self.account_config['userName'],
@@ -129,9 +129,11 @@ class HTTrader(WebTrader):
         log.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
-        if login_api_response.text.find('欢迎您') == -1:
-            return False
-        return True
+        if login_api_response.text.find('欢迎您') != -1:
+            return True
+        if throw:
+            raise NotLoginError(login_api_response.text)
+        return False
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """
