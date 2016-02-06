@@ -75,8 +75,10 @@ class HTTrader(WebTrader):
         if not verify_code:
             return False
 
-        is_login = self.__check_login_status(verify_code, throw)
+        is_login, result = self.__check_login_status(verify_code)
         if not is_login:
+            if throw:
+                raise NotLoginError(result)
             return False
 
         trade_info = self.__get_trade_info()
@@ -113,7 +115,7 @@ class HTTrader(WebTrader):
             return False
         return verify_code
 
-    def __check_login_status(self, verify_code, throw=False):
+    def __check_login_status(self, verify_code):
         # 设置登录所需参数
         params = dict(
                 userName=self.account_config['userName'],
@@ -130,10 +132,8 @@ class HTTrader(WebTrader):
         login_api_response = self.s.post(self.config['login_api'], params)
 
         if login_api_response.text.find('欢迎您') != -1:
-            return True
-        if throw:
-            raise NotLoginError(login_api_response.text)
-        return False
+            return True, None
+        return False, login_api_response.text
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """

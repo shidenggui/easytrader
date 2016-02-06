@@ -48,7 +48,9 @@ class YHTrader(WebTrader):
         if not verify_code:
             return False
 
-        login_status = self.post_login_data(verify_code, throw)
+        login_status, result = self.post_login_data(verify_code)
+        if login_status == False and throw:
+            raise NotLoginError(result)
         exchangeinfo = list((self.do(dict(self.config['account4stock']))))
         if len(exchangeinfo) >= 2:
             for i in range(2):
@@ -58,7 +60,7 @@ class YHTrader(WebTrader):
                     self.exchange_stock_account['1'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
         return login_status
 
-    def post_login_data(self, verify_code, throw=False):
+    def post_login_data(self, verify_code):
         login_params = dict(
                 self.config['login'],
                 mac=helpers.get_mac(),
@@ -72,10 +74,8 @@ class YHTrader(WebTrader):
         log.debug('login response: %s' % login_response.text)
 
         if login_response.text.find('success') != -1:
-            return True
-        if throw:
-            raise NotLoginError(login_response.text)
-        return False
+            return True, None
+        return False, login_response.text
 
     @property
     def token(self):

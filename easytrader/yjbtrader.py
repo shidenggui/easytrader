@@ -37,7 +37,9 @@ class YJBTrader(WebTrader):
         verify_code = self.handle_recognize_code()
         if not verify_code:
             return False
-        login_status = self.post_login_data(verify_code, throw=True)
+        login_status, result = self.post_login_data(verify_code)
+        if login_status == False and throw:
+            raise NotLoginError(result)
         return login_status
 
     def handle_recognize_code(self):
@@ -59,7 +61,7 @@ class YJBTrader(WebTrader):
             return False
         return verify_code
 
-    def post_login_data(self, verify_code, throw=False):
+    def post_login_data(self, verify_code):
         if six.PY2:
             password = urllib.unquote(self.account_config['password'])
         else:
@@ -75,10 +77,8 @@ class YJBTrader(WebTrader):
         log.debug('login response: %s' % login_response.text)
 
         if login_response.text.find('上次登陆') != -1:
-            return True
-        if throw:
-            raise NotLoginError(login_response.text)
-        return False
+            return True, None
+        return False, login_response.text
 
     @property
     def token(self):
