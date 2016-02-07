@@ -5,9 +5,9 @@ import ssl
 import subprocess
 import sys
 import uuid
-import six
 
 import logbook
+import six
 from logbook import Logger, StreamHandler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager

@@ -11,6 +11,7 @@ from . import helpers
 
 if six.PY2:
     import sys
+
     reload(sys)
     sys.setdefaultencoding('utf8')
 
