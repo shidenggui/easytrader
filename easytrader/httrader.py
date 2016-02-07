@@ -1,5 +1,6 @@
 # coding: utf-8
 from __future__ import division
+
 import base64
 import json
 import os
@@ -30,6 +31,7 @@ def remove_heart_log(*args, **kwargs):
     else:
         if threading.current_thread() == threading.main_thread():
             debug_log(*args, **kwargs)
+
 
 log.debug = remove_heart_log
 
