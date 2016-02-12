@@ -293,3 +293,24 @@ class HTTrader(WebTrader):
     def fix_error_data(self, data):
         last_no_use_info_index = -1
         return data if hasattr(data, 'get') else data[:last_no_use_info_index]
+
+
+    @property
+    def exchangebill(self):
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        params = self.config['exchangebill'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
