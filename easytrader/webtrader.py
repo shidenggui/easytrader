@@ -3,7 +3,6 @@ import json
 import os
 import re
 import time
-import datetime
 from threading import Thread
 
 import six
@@ -132,7 +131,6 @@ class WebTrader(object):
         start_date, end_date = helpers.get_30_date()
         return self.get_exchangebill(start_date, end_date)
 
-
     def get_exchangebill(self, start_date, end_date):
         """
         查询指定日期内的交割单
@@ -142,7 +140,6 @@ class WebTrader(object):
         """
         # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
-
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
