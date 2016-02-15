@@ -6,6 +6,7 @@ import subprocess
 import sys
 import uuid
 import six
+import datetime
 
 import logbook
 from logbook import Logger, StreamHandler
@@ -106,3 +107,15 @@ def get_logger(name):
     logbook.set_datetime_format('local')
     StreamHandler(sys.stdout).push_application()
     return Logger(os.path.basename(name))
+
+
+def get_30_date():
+    """
+    获得用于查询的默认日期, 今天的日期, 以及30天前的日期
+    用于查询的日期格式通常为 20160211
+    :return:
+    """
+    now = datetime.datetime.now()
+    end_date = now.date()
+    start_date = end_date - datetime.timedelta(days=30)
+    return start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
