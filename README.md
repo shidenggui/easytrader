@@ -180,6 +180,7 @@ user.cancel_entrust('委托单号', '股票代码')
 ##### 银河证券
 ```python
 user.cancel_entrust('委托单号', '股票代码')
+```
 
 #### 查询交割单
 
