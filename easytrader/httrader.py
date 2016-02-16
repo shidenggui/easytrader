@@ -184,7 +184,6 @@ class HTTrader(WebTrader):
         :param entrust_no: 委托单号"""
         cancel_params = dict(
                 self.config['cancel_entrust'],
-                password=self.__trdpwd,
                 entrust_no=entrust_no
         )
         return self.do(cancel_params)
