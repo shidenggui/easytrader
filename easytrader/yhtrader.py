@@ -29,9 +29,7 @@ class YHTrader(WebTrader):
         self.cookie = None
         self.account_config = None
         self.s = None
-        self.exchange_stock_account = self.config['account4stock']
-        print(self.exchange_stock_account)
-
+        self.exchange_stock_account = dict()
 
     def login(self):
         headers = {
@@ -136,6 +134,56 @@ class YHTrader(WebTrader):
             qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
+
+    def fundpurchase(self, stock_code, amount=0):
+        """基金申购
+        :param stock_code: 基金代码
+        :param amount: 申购份额
+        """
+        params = dict(
+            self.config['fundpurchase'],
+            price=1, #价格默认为1
+            qty=amount
+        )
+        return self.__tradefund(stock_code, other=params)
+
+    def fundredemption(self, stock_code, amount=0):
+        """基金赎回
+        :param stock_code: 基金代码
+        :param amount: 赎回份额
+        """
+        params = dict(
+            self.config['fundredemption'],
+            price=1, #价格默认为1
+            qty=amount
+        )
+        return self.__tradefund(stock_code, other=params)
+
+    def __tradefund(self, stock_code, other):
+        # 检查是否已经掉线
+        if not self.heart_thread.is_alive():
+            check_data = self.get_balance()
+            if type(check_data) == dict:
+                return check_data
+        need_info = self.__get_trade_need_info(stock_code)
+        print(need_info)
+        trade_params = dict(
+                other,
+                stockCode=stock_code,
+                market=need_info['exchange_type'],
+                secuid=need_info['stock_account']
+        )
+        """
+        s = Session()
+        req = Request('POSt', self.config['trade_api'], data=trade_params)
+        preped = s.prepare_request(req)
+        log.debug(preped.body)
+        log.debug(preped.headers)
+
+        trade_response = self.s.post(self.config['trade_api'], params=trade_params)
+        log.debug('trade response: %s' % trade_response.text)
+        """
+        return True
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线

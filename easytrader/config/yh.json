@@ -38,13 +38,22 @@
   "sell": {
     "ajaxFlag":"wt"
   },
+  
+  "fundpurchase": {
+    "ajaxFlag":"wt",
+    "bsflag":3
+  },
+
+  "fundredemption": {
+    "ajaxFlag":"wt",
+    "bsflag":4
+  },
 
   "cancel_entrust": {
     "ajaxFlag":"stock_cancel"
   },
   
   "account4stock": {
-    "0":"",
-    "1":""
+    "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"
   }
 }
