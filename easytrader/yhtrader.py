@@ -10,7 +10,6 @@ import requests
 
 from . import helpers
 from .webtrader import WebTrader, NotLoginError
-from requests import Request, Session
 
 log = helpers.get_logger(__file__)
 
@@ -51,7 +50,7 @@ class YHTrader(WebTrader):
             return False
 
         login_status, result = self.post_login_data(verify_code)
-        if login_status == False and throw:
+        if login_status is False and throw:
             raise NotLoginError(result)
         exchangeinfo = list((self.do(dict(self.config['account4stock']))))
         if len(exchangeinfo) >= 2:
@@ -139,9 +138,9 @@ class YHTrader(WebTrader):
         :param amount: 申购份额
         """
         params = dict(
-            self.config['fundpurchase'],
-            price=1, #价格默认为1
-            qty=amount
+                self.config['fundpurchase'],
+                price=1,  # 价格默认为1
+                qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -151,9 +150,9 @@ class YHTrader(WebTrader):
         :param amount: 赎回份额
         """
         params = dict(
-            self.config['fundredemption'],
-            price=1, #价格默认为1
-            qty=amount
+                self.config['fundredemption'],
+                price=1,  # 价格默认为1
+                qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -163,31 +162,31 @@ class YHTrader(WebTrader):
         :param amount: 认购份额
         """
         params = dict(
-            self.config['fundsubscribe'],
-            price=1, #价格默认为1
-            qty=amount
+                self.config['fundsubscribe'],
+                price=1,  # 价格默认为1
+                qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
     def fundsplit(self, stock_code, amount=0):
         """基金分拆
         :param stock_code: 母份额基金代码
-        :param amout: 分拆份额
+        :param amount: 分拆份额
         """
         params = dict(
-            self.config['fundsplit'],
-            qty=amount
+                self.config['fundsplit'],
+                qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
     def fundmerge(self, stock_code, amount=0):
         """基金合并
         :param stock_code: 母份额基金代码
-        :param amout: 合并份额
+        :param amount: 合并份额
         """
         params = dict(
-            self.config['fundmerge'],
-            qty=amount
+                self.config['fundmerge'],
+                qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -254,7 +253,7 @@ class YHTrader(WebTrader):
                 return rptext
             else:
                 rbtext = r.text[r.text.find('操作'):]
-                rbtext = rbtext + 'yhposition'
+                rbtext += 'yhposition'
                 return rbtext
         else:
             return r.text
