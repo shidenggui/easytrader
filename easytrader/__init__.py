@@ -1,9 +1,6 @@
 # coding: utf-8
-__author__ = 'shidenggui'
-
-from .webtrader import WebTrader
-from .yjbtrader import YJBTrader
-from .httrader import HTTrader
-from .yhtrader import YHTrader
 from .api import *
-
+from .httrader import HTTrader
+from .webtrader import WebTrader
+from .yhtrader import YHTrader
+from .yjbtrader import YJBTrader

@@ -1,37 +1,34 @@
 # coding: utf-8
-import json
-import random
-import urllib
-import re
-import os
-import sys
-import ssl
-import requests
-import logbook
-from logbook import Logger, StreamHandler
-from . import helpers
-from .webtrader import WebTrader
-from .webtrader import NotLoginError
-from requests import Request, Session
+from __future__ import division
 
-logbook.set_datetime_format('local')
-StreamHandler(sys.stdout).push_application()
-log = Logger(os.path.basename(__file__))
+import json
+import os
+import random
+import re
+
+import requests
+
+from . import helpers
+from .webtrader import WebTrader, NotLoginError
+
+log = helpers.get_logger(__file__)
 
 VERIFY_CODE_POS = 0
-BALANCE_NUM = 7
+TRADE_MARKET = 1
+HOLDER_NAME = 0
+
 
 class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
 
     def __init__(self):
-        super().__init__()
+        super(YHTrader, self).__init__()
         self.cookie = None
         self.account_config = None
         self.s = None
         self.exchange_stock_account = dict()
 
-    def login(self):
+    def login(self, throw=False):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
         }
@@ -41,7 +38,7 @@ class YHTrader(WebTrader):
         self.s.headers.update(headers)
         data = self.s.get(self.config['login_page'])
 
-        #查找验证码
+        # 查找验证码
         search_result = re.search(r'src=\"verifyCodeImage.jsp\?rd=([0-9]{4})\"', data.text)
         if not search_result:
             log.debug("Can not find verify code, stop login")
@@ -52,7 +49,16 @@ class YHTrader(WebTrader):
         if not verify_code:
             return False
 
-        login_status = self.post_login_data(verify_code)
+        login_status, result = self.post_login_data(verify_code)
+        if login_status == False and throw:
+            raise NotLoginError(result)
+        exchangeinfo = list((self.do(dict(self.config['account4stock']))))
+        if len(exchangeinfo) >= 2:
+            for i in range(2):
+                if exchangeinfo[i][TRADE_MARKET]['交易市场'] == '深A':
+                    self.exchange_stock_account['0'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
+                else:
+                    self.exchange_stock_account['1'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
         return login_status
 
     def post_login_data(self, verify_code):
@@ -65,16 +71,12 @@ class YHTrader(WebTrader):
                 checkword=verify_code
         )
         log.debug('login params: %s' % login_params)
-        s = Session()
-        req = Request('POST', self.config['login_api'], data=login_params, headers=self.s.headers)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
+
         if login_response.text.find('success') != -1:
-            return True
-        return False
+            return True, None
+        return False, login_response.text
 
     @property
     def token(self):
@@ -91,15 +93,10 @@ class YHTrader(WebTrader):
         :param stock_code: 股票代码"""
         need_info = self.__get_trade_need_info(stock_code)
         cancel_params = dict(
-            self.config['cancel_entrust'],
-            orderSno=entrust_no,
-            secuid=need_info['stock_account']
+                self.config['cancel_entrust'],
+                orderSno=entrust_no,
+                secuid=need_info['stock_account']
         )
-        s = Session()
-        req = Request('POSt', self.config['trade_api'], data=cancel_params)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
         cancel_response = self.s.post(self.config['trade_api'], params=cancel_params)
         log.debug('cancel trust: %s' % cancel_response.text)
         return True
@@ -114,9 +111,9 @@ class YHTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['buy'],
-            bsflag='0B',  # 买入0B 卖出0S
-            qty=amount if amount else volume // price // 100 * 100
+                self.config['buy'],
+                bsflag='0B',  # 买入0B 卖出0S
+                qty=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -129,9 +126,9 @@ class YHTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['sell'],
-            bsflag='0S',  # 买入0B 卖出0S
-            qty=amount if amount else volume // price
+                self.config['sell'],
+                bsflag='0S',  # 买入0B 卖出0S
+                qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -199,18 +196,9 @@ class YHTrader(WebTrader):
                 market=need_info['exchange_type'],
                 secuid=need_info['stock_account']
         )
-        #调试信息
-        """
-        s = Session()
-        req = Request('POSt', self.config['trade_api'], data=trade_params)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
-        """
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
         log.debug('trade response: %s' % trade_response.text)
-        return True
-                  
+        return trade_response.text
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
@@ -219,14 +207,14 @@ class YHTrader(WebTrader):
         sz_exchange_type = '0'
         exchange_type = sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else sz_exchange_type
         return dict(
-            exchange_type=exchange_type,
-            stock_account=self.exchange_stock_account[exchange_type]
+                exchange_type=exchange_type,
+                stock_account=self.exchange_stock_account[exchange_type]
         )
 
     def create_basic_params(self):
         basic_params = dict(
-            CSRF_Token='undefined',
-            timestamp=random.random(),
+                CSRF_Token='undefined',
+                timestamp=random.random(),
         )
         return basic_params
 
@@ -237,24 +225,25 @@ class YHTrader(WebTrader):
 
     def format_response_data(self, data):
         # 获取原始data的html源码并且解析得到一个可读json格式 
-        search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head\">(.*)</td>', data)
-        search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data) 
+        search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
+        search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
         columnlen = len(search_result_name)
-        if len(search_result_content) % columnlen != 0:
+        if columnlen == 0 or len(search_result_content) % columnlen != 0:
             log.error("Can not fetch balance info")
-            retdata = json.dumps(search_result)
+            retdata = json.dumps(search_result_name)
             retjsonobj = json.loads(retdata)
         else:
             rowlen = len(search_result_content) // columnlen
-
-        retdata = list()
-        for i in range(rowlen):
-            for j in range(columnlen):
-                retdict = dict()
-                retdict[search_result_name[j]] = search_result_content[i * columnlen + j]
-                retdata.append(retdict)
-        retlist = json.dumps(retdata)
-        retjsonobj = json.loads(retlist)
+            retdata = list()
+            for i in range(rowlen):
+                retrowdata = list()
+                for j in range(columnlen):
+                    retdict = dict()
+                    retdict[search_result_name[j]] = search_result_content[i * columnlen + j]
+                    retrowdata.append(retdict)
+                retdata.append(retrowdata)
+            retlist = json.dumps(retdata)
+            retjsonobj = json.loads(retlist)
         return retjsonobj
 
     def fix_error_data(self, data):

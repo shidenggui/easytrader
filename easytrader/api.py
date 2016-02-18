@@ -1,7 +1,7 @@
 # coding=utf-8
-from .yjbtrader import YJBTrader
 from .httrader import HTTrader
 from .yhtrader import YHTrader
+from .yjbtrader import YJBTrader
 
 
 def use(broker):
@@ -13,6 +13,7 @@ def use(broker):
 
         >>> import easytrader
         >>> user = easytrader.use('ht')
+        >>> user.prepare('ht.json')
     """
     if broker.lower() in ['ht', 'HT', '华泰']:
         return HTTrader()
@@ -20,4 +21,3 @@ def use(broker):
         return YJBTrader()
     if broker.lower() in ['yh', 'YH', '银河']:
         return YHTrader()
-
