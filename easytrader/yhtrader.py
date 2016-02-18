@@ -10,6 +10,7 @@ import requests
 
 from . import helpers
 from .webtrader import WebTrader, NotLoginError
+from requests import Request, Session
 
 log = helpers.get_logger(__file__)
 
@@ -170,7 +171,6 @@ class YHTrader(WebTrader):
                 market=need_info['exchange_type'],
                 secuid=need_info['stock_account']
         )
-        """
         s = Session()
         req = Request('POSt', self.config['trade_api'], data=trade_params)
         preped = s.prepare_request(req)
@@ -179,7 +179,6 @@ class YHTrader(WebTrader):
 
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
         log.debug('trade response: %s' % trade_response.text)
-        """
         return True
 
     def __trade(self, stock_code, price, entrust_prop, other):

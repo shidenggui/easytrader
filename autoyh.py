@@ -13,7 +13,7 @@ class AutoTrade(object):
         self.user.prepare('yh.json')
         print(self.user.balance)
         self.user.fundpurchase('161812', 100)
-        #self.user.fundredemption('161812', 1000)
+        self.user.fundredemption('161812', 1000)
 
 def main():
     autotrade = AutoTrade()
