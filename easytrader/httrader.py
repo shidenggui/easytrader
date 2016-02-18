@@ -1,32 +1,37 @@
 # coding: utf-8
+from __future__ import division
+
+import base64
 import json
+import os
 import random
 import re
-import requests
-import os
-import uuid
 import socket
-import base64
-import urllib
-import sys
 import threading
+import urllib
+import uuid
 from collections import OrderedDict
-import logbook
-from logbook import Logger, StreamHandler
-from . import helpers
-from .webtrader import WebTrader
 
-logbook.set_datetime_format('local')
-StreamHandler(sys.stdout).push_application()
-log = Logger(os.path.basename(__file__))
+import requests
+import six
+
+from . import helpers
+from .webtrader import WebTrader, NotLoginError
+
+log = helpers.get_logger(__file__)
 
 # 移除心跳线程产生的日志
 debug_log = log.debug
 
 
 def remove_heart_log(*args, **kwargs):
-    if threading.current_thread() == threading.main_thread():
-        debug_log(*args, **kwargs)
+    if six.PY2:
+        if threading.current_thread().name == 'MainThread':
+            debug_log(*args, **kwargs)
+    else:
+        if threading.current_thread() == threading.main_thread():
+            debug_log(*args, **kwargs)
+
 
 log.debug = remove_heart_log
 
@@ -35,11 +40,12 @@ class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
 
     def __init__(self):
-        super().__init__()
+        super(HTTrader, self).__init__()
         self.account_config = None
         self.s = None
 
         self.__set_ip_and_mac()
+        self.fund_account = None
 
     def __set_ip_and_mac(self):
         """获取本机IP和MAC地址"""
@@ -51,9 +57,19 @@ class HTTrader(WebTrader):
 
         # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
         self.__mac = ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-            uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+                uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
-    def login(self):
+    def __get_user_name(self):
+        # 华泰账户以 08 开头的需移除 fund_account 开头的 0
+        raw_name = self.account_config['userName']
+        use_index_start = 1
+        return raw_name[use_index_start:] if raw_name.startswith('08') else raw_name
+
+    def read_config(self, path):
+        super(HTTrader, self).read_config(path)
+        self.fund_account = self.__get_user_name()
+
+    def login(self, throw=False):
         """实现华泰的自动登录"""
         self.__go_login_page()
 
@@ -61,8 +77,10 @@ class HTTrader(WebTrader):
         if not verify_code:
             return False
 
-        is_login = self.__check_login_status(verify_code)
+        is_login, result = self.__check_login_status(verify_code)
         if not is_login:
+            if throw:
+                raise NotLoginError(result)
             return False
 
         trade_info = self.__get_trade_info()
@@ -102,22 +120,22 @@ class HTTrader(WebTrader):
     def __check_login_status(self, verify_code):
         # 设置登录所需参数
         params = dict(
-            userName=self.account_config['userName'],
-            trdpwd=self.account_config['trdpwd'],
-            trdpwdEns=self.account_config['trdpwd'],
-            servicePwd=self.account_config['servicePwd'],
-            macaddr=self.__mac,
-            lipInfo=self.__ip,
-            vcode=verify_code
+                userName=self.account_config['userName'],
+                trdpwd=self.account_config['trdpwd'],
+                trdpwdEns=self.account_config['trdpwd'],
+                servicePwd=self.account_config['servicePwd'],
+                macaddr=self.__mac,
+                lipInfo=self.__ip,
+                vcode=verify_code
         )
         params.update(self.config['login'])
 
         log.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
-        if login_api_response.text.find('欢迎您') == -1:
-            return False
-        return True
+        if login_api_response.text.find('欢迎您') != -1:
+            return True, None
+        return False, login_api_response.text
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """
@@ -165,9 +183,9 @@ class HTTrader(WebTrader):
         """撤单
         :param entrust_no: 委托单号"""
         cancel_params = dict(
-            self.config['cancel_entrust'],
-            password=self.__trdpwd,
-            entrust_no=entrust_no
+                self.config['cancel_entrust'],
+                password=self.__trdpwd,
+                entrust_no=entrust_no
         )
         return self.do(cancel_params)
 
@@ -181,8 +199,8 @@ class HTTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['buy'],
-            entrust_amount=amount if amount else volume // price // 100 * 100
+                self.config['buy'],
+                entrust_amount=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -195,8 +213,8 @@ class HTTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-            self.config['sell'],
-            entrust_amount=amount if amount else volume // price
+                self.config['sell'],
+                entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -209,7 +227,7 @@ class HTTrader(WebTrader):
                 entrust_prop=entrust_prop,  # 委托方式
                 stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
                 entrust_price=price
-            ))
+        ))
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
@@ -220,26 +238,23 @@ class HTTrader(WebTrader):
         stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type \
             else self.__sz_stock_account
         return dict(
-            exchange_type=exchange_type,
-            stock_account=stock_account
+                exchange_type=exchange_type,
+                stock_account=stock_account
         )
 
     def create_basic_params(self):
-        raw_name = self.account_config['userName']
-        use_index_start = 1
-        user_name = raw_name[use_index_start:] if raw_name.startswith('0') else raw_name
         basic_params = OrderedDict(
-            uid=self.__uid,
-            version=1,
-            custid=self.account_config['userName'],
-            op_branch_no=self.__branch_no,
-            branch_no=self.__branch_no,
-            op_entrust_way=7,
-            op_station=self.__op_station,
-            fund_account=user_name,
-            password=self.__trdpwd,
-            identity_type='',
-            ram=random.random()
+                uid=self.__uid,
+                version=1,
+                custid=self.account_config['userName'],
+                op_branch_no=self.__branch_no,
+                branch_no=self.__branch_no,
+                op_entrust_way=7,
+                op_station=self.__op_station,
+                fund_account=self.fund_account,
+                password=self.__trdpwd,
+                identity_type='',
+                ram=random.random()
         )
         return basic_params
 
@@ -247,9 +262,17 @@ class HTTrader(WebTrader):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
-        params.move_to_end('ram')
-        params_str = urllib.parse.urlencode(params)
-        unquote_str = urllib.parse.unquote(params_str)
+        if six.PY2:
+            item = params.pop('ram')
+            params['ram'] = item
+        else:
+            params.move_to_end('ram')
+        if six.PY2:
+            params_str = urllib.urlencode(params)
+            unquote_str = urllib.unquote(params_str)
+        else:
+            params_str = urllib.parse.urlencode(params)
+            unquote_str = urllib.parse.unquote(params_str)
         log.debug('request params: %s' % unquote_str)
         b64params = base64.b64encode(unquote_str.encode()).decode()
         r = self.s.get('{prefix}/?{b64params}'.format(prefix=self.trade_prefix, b64params=b64params), headers=headers)
@@ -272,3 +295,22 @@ class HTTrader(WebTrader):
     def fix_error_data(self, data):
         last_no_use_info_index = -1
         return data if hasattr(data, 'get') else data[:last_no_use_info_index]
+
+    @property
+    def exchangebill(self):
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        params = self.config['exchangebill'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)

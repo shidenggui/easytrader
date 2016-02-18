@@ -1,29 +1,56 @@
 # coding: utf-8
-import time
+import json
 import os
 import re
+import time
 from threading import Thread
+
+import six
+
 from . import helpers
+
+if six.PY2:
+    import sys
+
+    reload(sys)
+    sys.setdefaultencoding('utf8')
+
+log = helpers.get_logger(__file__)
 
 
 class NotLoginError(Exception):
-    pass
+    def __init__(self, result=None):
+        super(NotLoginError, self).__init__()
+        self.result = result
 
 
-class WebTrader:
+class WebTrader(object):
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
+    config_path = ''
 
     def __init__(self):
         self.__read_config()
         self.trade_prefix = self.config['prefix']
+        self.account_config = ''
         self.heart_active = True
-        self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
+        if six.PY2:
+            self.heart_thread = Thread(target=self.send_heartbeat)
+            self.heart_thread.setDaemon(True)
+        else:
+            self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
 
     def read_config(self, path):
-        self.account_config = helpers.file2dict(path)
+        try:
+            self.account_config = helpers.file2dict(path)
+        except json.JSONDecodeError:
+            log.error('配置文件格式有误，请勿使用记事本编辑，推荐使用 notepad++ 或者 sublime text')
+        for v in self.account_config:
+            if type(v) is int:
+                log.warn('配置文件的值最好使用双引号包裹，使用字符串类型，否则可能导致不可知的问题')
 
     def prepare(self, need_data):
-        """登录的统一接口"""
+        """登录的统一接口
+        :param need_data 登录所需数据"""
         self.read_config(need_data)
         self.autologin()
 
@@ -48,7 +75,10 @@ class WebTrader:
         """每隔10秒查询指定接口保持 token 的有效性"""
         while True:
             if self.heart_active:
-                response = self.get_balance()
+                try:
+                    response = self.balance
+                except:
+                    pass
                 self.check_account_live(response)
                 time.sleep(10)
             else:
@@ -90,6 +120,26 @@ class WebTrader:
     def get_entrust(self):
         """获取当日委托列表"""
         return self.do(self.config['entrust'])
+
+    @property
+    def exchangebill(self):
+        """
+        默认提供最近30天的交割单, 通常只能返回查询日期内最新的 90 天数据。
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果

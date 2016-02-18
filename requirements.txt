@@ -3,5 +3,7 @@ logbook
 anyjson
 dill
 click
+six
+flask
 
 

@@ -3,6 +3,7 @@
 * 进行简单的 web 股票交易
 * 实现自动登录
 * 支持命令行调用，方便其他语言适配
+* 支持 Python3 / Python2
 * 有兴趣的可以加群 `429011814` 一起讨论
 
 **开发环境** : `Ubuntu 15.10` / `Python 3.4`
@@ -12,16 +13,15 @@
 
 [简单的股票量化交易框架 使用 easytrader 和 easyquotation](https://github.com/shidenggui/easyquant)
 
+捐助: [支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png)  [微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png)
 ### 支持券商
 
-* 佣金宝（支持自动登录）
-* 华泰（支持自动登录）
-* 银河（支持自动登录） 
+* 佣金宝
+* 华泰
+* 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
 
 ### requirements
 
-> Python 3.4+
- 
 > pip install -r requirements.txt
 
 > 华泰 / 佣金宝 的自动登录需要安装以下二者之一： 
@@ -59,19 +59,14 @@ user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ##### 自动登录
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json // 或者 yh.json 
+user.prepare('ht.json') // 或者 yjb.json || yh.json 
 ```
 
 **注**: 
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
-* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 另外在`yhtrader.py`同级目录的`config`下面`yh.json`配置自己的沪深帐户号格式如下:
-
-"account4stock": {
-    "0":"深市帐号",
-    "1":"沪市帐号"
-}
+* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 以及登录`POST`请求里面的`hardinfo`字段 
 
 
 [如何获取配置所需信息, 可参考此文章](http://www.jisilu.cn/question/42707)
@@ -131,7 +126,7 @@ user.entrust
   'entrust_bs': '买卖方向',
   'entrust_no': '委托编号',
   'entrust_price': '委托价格',
-  'entrust_status': '委托状态',  # 废单 / 已报
+  'entrust_status': '委托状态',  # 废单 / 已报
   'report_time': '申报时间',
   'stock_code': '证券代码',
   'stock_name': '证券名称'}]
@@ -212,6 +207,21 @@ user.cancel_entrust('委托单号', '股票代码')
 ```
  python cli.py --help
 ```
+
+#### Q&A
+
+##### Question 
+
+编辑完配置文件，运行后出现 `json` 解码报错的信息。类似于下面
+
+```python
+raise JSONDecodeError("Expecting value", s, err.value) from None
+
+JSONDecodeError: Expecting value
+```
+
+##### Answer
+请勿使用 `记事本` 编辑账户的 `json` 配置文件，推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
 
 ### 其他
 [交易接口分析以及其他开源量化相关论坛](http://www.celuetan.com) 
