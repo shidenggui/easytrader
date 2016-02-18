@@ -104,11 +104,11 @@ class YHTrader(WebTrader):
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
-        """买入卖出股票
+        """买入股票
         :param stock_code: 股票代码
-        :param price: 卖出价格
-        :param amount: 卖出股数
-        :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param price: 买入价格
+        :param amount: 买入股数
+        :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
@@ -157,6 +157,40 @@ class YHTrader(WebTrader):
         )
         return self.__tradefund(stock_code, other=params)
 
+    def fundsubscribe(self, stock_code, amount=0):
+        """基金认购
+        :param stock_code: 基金代码
+        :param amount: 认购份额
+        """
+        params = dict(
+            self.config['fundsubscribe'],
+            price=1, #价格默认为1
+            qty=amount
+        )
+        return self.__tradefund(stock_code, other=params)
+
+    def fundsplit(self, stock_code, amount=0):
+        """基金分拆
+        :param stock_code: 母份额基金代码
+        :param amout: 分拆份额
+        """
+        params = dict(
+            self.config['fundsplit'],
+            qty=amount
+        )
+        return self.__tradefund(stock_code, other=params)
+
+    def fundmerge(self, stock_code, amount=0):
+        """基金合并
+        :param stock_code: 母份额基金代码
+        :param amout: 合并份额
+        """
+        params = dict(
+            self.config['fundmerge'],
+            qty=amount
+        )
+        return self.__tradefund(stock_code, other=params)
+
     def __tradefund(self, stock_code, other):
         # 检查是否已经掉线
         if not self.heart_thread.is_alive():
@@ -164,18 +198,12 @@ class YHTrader(WebTrader):
             if type(check_data) == dict:
                 return check_data
         need_info = self.__get_trade_need_info(stock_code)
-        print(need_info)
         trade_params = dict(
                 other,
                 stockCode=stock_code,
                 market=need_info['exchange_type'],
                 secuid=need_info['stock_account']
         )
-        s = Session()
-        req = Request('POSt', self.config['trade_api'], data=trade_params)
-        preped = s.prepare_request(req)
-        log.debug(preped.body)
-        log.debug(preped.headers)
 
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
         log.debug('trade response: %s' % trade_response.text)
@@ -220,12 +248,28 @@ class YHTrader(WebTrader):
     def request(self, params):
         url = self.trade_prefix + params['service_jsp']
         r = self.s.get(url, cookies=self.cookie)
-        return r.text
+        if params['service_jsp'] == '/trade/webtrade/stock/stock_zjgf_query.jsp':
+            if params['service_type'] == 2:
+                rptext = r.text[0:r.text.find('操作')]
+                return rptext
+            else:
+                rbtext = r.text[r.text.find('操作'):]
+                rbtext = rbtext + 'yhposition'
+                return rbtext
+        else:
+            return r.text
 
     def format_response_data(self, data):
-        # 获取原始data的html源码并且解析得到一个可读json格式 
-        search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
-        search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
+        # 需要对于银河持仓情况特殊处理
+        if data.find('yhposition') != -1:
+            search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
+            search_result_content = re.findall(r'<td nowrap=\"nowrap\"  >(.*)</td>', data)
+            search_result_name.remove('参考成本价')
+        else:
+            # 获取原始data的html源码并且解析得到一个可读json格式 
+            search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
+            search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
+
         columnlen = len(search_result_name)
         if columnlen == 0 or len(search_result_content) % columnlen != 0:
             log.error("Can not fetch balance info")

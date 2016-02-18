@@ -12,8 +12,12 @@ class AutoTrade(object):
         self.user = easytrader.use('yh')
         self.user.prepare('yh.json')
         print(self.user.balance)
-        self.user.fundpurchase('161812', 100)
-        self.user.fundredemption('161812', 1000)
+        #self.user.fundpurchase('161812', 100)
+        #self.user.fundredemption('161812', 1000)
+        #self.user.fundmerge('161812', 100)
+        #self.user.fundsubscribe('161812', 100)
+        #print(self.user.entrust)
+        #print(self.user.position)
 
 def main():
     autotrade = AutoTrade()

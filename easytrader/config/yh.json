@@ -18,11 +18,17 @@
     "certdata9322": "",
     "ftype": "bsn"
   },
+
   "position": {
+    "service_jsp": "/trade/webtrade/stock/stock_zjgf_query.jsp",
+    "service_type": 1
   },
+
   "balance": {
-    "service_jsp": "/trade/webtrade/stock/stock_zjgf_query.jsp"
+    "service_jsp": "/trade/webtrade/stock/stock_zjgf_query.jsp",
+    "service_type": 2
   },
+
   "entrust": {
     "service_jsp": "/trade/webtrade/stock/stock_wt_query.jsp"
   },
@@ -42,6 +48,21 @@
   "fundredemption": {
     "ajaxFlag":"wt",
     "bsflag":4
+  },
+
+  "fundsubscribe": {
+    "ajaxFlag":"wt",
+    "bsflag":5
+  },
+
+  "fundsplit": {
+    "ajaxFlag":"wt",
+    "bsflag":85
+  },
+
+  "fundmerge": {
+    "ajaxFlag":"wt",
+    "bsflag":86
   },
 
   "cancel_entrust": {
