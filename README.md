@@ -1,12 +1,12 @@
 # easytrader
 
-* 进行简单的 web 股票交易
+* 进行自动的程序化股票交易
 * 实现自动登录
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3 / Python2
 * 有兴趣的可以加群 `429011814` 一起讨论
 
-**开发环境** : `Ubuntu 15.10` / `Python 3.4`
+**开发环境** : `Ubuntu 15.10` / `Python 3.5`
 
 ### 相关
 [获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
@@ -59,7 +59,7 @@ user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ##### 自动登录
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json || yh.json 
+user.prepare('ht.json') // 或者 yjb.json 或者 yh.json
 ```
 
 **注**: 
@@ -182,28 +182,28 @@ user.cancel_entrust('委托单号', '股票代码')
 ```python
 user.cancel_entrust('委托单号', '股票代码')
 ```
-##### 银河证券场内基金功能
+#### 银河证券场内基金功能
 
-###### 基金认购
+##### 基金认购
 
 ```python
 user.fundsubscribe('基金代码', '基金份额')
 ```
-###### 基金申购
+##### 基金申购
 
 ```python
 user.fundpurchase('基金代码', '基金份额')
 ```
-###### 基金赎回
+##### 基金赎回
 ```python
 user.fundredemption('基金代码', '基金份额')
 ```
-###### 基金合并
+##### 基金合并
 
 ```python
 user.fundmerge('基金代码', '基金份额')
 ```
-###### 基金拆分
+##### 基金拆分
 
 ```python
 user.fundsplit('基金代码', '基金份额')
