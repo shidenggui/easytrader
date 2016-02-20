@@ -182,23 +182,23 @@ user.cancel_entrust('委托单号', '股票代码')
 user.cancel_entrust('委托单号', '股票代码')
 ```
 ##### 银河证券场内基金功能
-### 基金认购
+###### 基金认购
 ```python
 self.user.fundsubscribe('基金代码', '基金份额')
 ```
-### 基金申购
+###### 基金申购
 ```python
 self.user.fundpurchase('基金代码', '基金份额')
 ```
-### 基金赎回
+###### 基金赎回
 ```python
 self.user.fundredemption('基金代码', '基金份额')
 ```
-### 基金合并
+###### 基金合并
 ```python
 self.user.fundmerge('基金代码', '基金份额')
 ```
-### 基金拆分
+###### 基金拆分
 ```python
 self.user.fundsplit('基金代码', '基金份额')
 ```
