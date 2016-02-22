@@ -29,6 +29,11 @@
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 保证在命令行下 `tesseract` 可用
 
+### 安装
+
+```python
+pip install easytrader
+```
 
 ### 用法
 
@@ -59,10 +64,12 @@ user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ##### 自动登录
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json 或者 yh.json
+user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 ```
 
-**注**: 
+**注**:
+
+配置文件格式可以参照 `Github` 目录下对应的 `json` 文件
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
