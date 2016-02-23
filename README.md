@@ -245,7 +245,18 @@ user.fundsplit('基金代码', '基金份额')
 
 #### Q&A
 
-##### Question 
+##### Question
+
+如何关闭 debug 日志的输出
+
+##### Answer
+
+```python
+user = easytrader.use('ht', debug=False)
+
+```
+
+##### Question
 
 编辑完配置文件，运行后出现 `json` 解码报错的信息。类似于下面
 

@@ -1,21 +1,32 @@
 # coding: utf-8
+import datetime
 import json
 import os
 import ssl
 import subprocess
 import sys
 import uuid
-import six
-import datetime
 
 import logbook
-from logbook import Logger, StreamHandler
+import six
+from logbook import Logger, StreamHandler, NullHandler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 
-logbook.set_datetime_format('local')
-StreamHandler(sys.stdout).push_application()
-log = Logger(os.path.basename(__file__))
+
+def get_logger(name, debug=True):
+    logbook.set_datetime_format('local')
+    handler = StreamHandler(sys.stdout) if debug else NullHandler()
+    handler.push_application()
+    return Logger(os.path.basename(name))
+
+
+def disable_log():
+    global log
+    log = get_logger(__file__, debug=False)
+
+
+log = get_logger(__file__)
 
 
 class Ssl3HttpAdapter(HTTPAdapter):
@@ -101,12 +112,6 @@ def grep_comma(num_str):
 def str2num(num_str, convert_type='float'):
     num = float(grep_comma(num_str))
     return num if convert_type == 'float' else int(num)
-
-
-def get_logger(name):
-    logbook.set_datetime_format('local')
-    StreamHandler(sys.stdout).push_application()
-    return Logger(os.path.basename(name))
 
 
 def get_30_date():
