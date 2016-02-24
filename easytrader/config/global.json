@@ -17,7 +17,16 @@
       "market_value",
       "entrust_price",
       "business_amount",
-      "business_price"
+      "business_price",
+      "business_balance",
+      "fare1",
+      "occur_balance",
+      "farex",
+      "fare0",
+      "occur_amount",
+      "post_balance",
+      "fare2",
+      "fare3"
     ]
   }
 }

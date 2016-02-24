@@ -194,6 +194,31 @@ user.exchangebill   # 查询最近30天的交割单
 user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段, 日期格式为 "20160214"
 ```
 
+** return
+```
+{["entrust_bs": "操作", # "1":"买入", "2":"卖出", " ":"其他"
+  "business_balance": "成交金额",
+  "stock_name": "证券名称",
+  "fare1": "印花税",
+  "occur_balance": "发生金额",
+  "stock_account": "股东帐户",
+  "business_name": "摘要", # "证券买入", "证券卖出", "基金拆分", "基金合并", "交收证券冻结", "交收证券冻结取消", "开放基金赎回", "开放基金赎回返款", "基金资金拨入", "基金资金拨出", "交收资金冻结取消", "开放基金申购"
+  "farex": "",
+  "fare0": "手续费",
+  "stock_code": "证券代码",
+  "occur_amount": "成交数量",
+  "date": "成交日期",
+  "post_balance": "本次余额",
+  "fare2": "其他杂费",
+  "fare3": "",
+  "entrust_no": "合同编号",
+  "business_price": "成交均价",
+]}
+
+# 未确认的key有, farex, fare3
+# 未确认的表头有 结算汇率, 备注
+```
+
 ### 命令行模式
 
 #### 登录
