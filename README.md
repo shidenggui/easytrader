@@ -215,6 +215,7 @@ user.fundmerge('基金代码', '基金份额')
 
 ```python
 user.fundsplit('基金代码', '基金份额')
+```
 
 #### 查询交割单
 
@@ -228,8 +229,8 @@ user.exchangebill   # 查询最近30天的交割单
 user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段, 日期格式为 "20160214"
 ```
 
-** return
-```
+**return**
+```python
 {["entrust_bs": "操作", # "1":"买入", "2":"卖出", " ":"其他"
   "business_balance": "成交金额",
   "stock_name": "证券名称",
