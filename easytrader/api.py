@@ -3,6 +3,7 @@ from .helpers import disable_log
 from .httrader import HTTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
+from .xqtrader import XueQiuTrader
 
 
 def use(broker, debug=True):
@@ -24,3 +25,5 @@ def use(broker, debug=True):
         return YJBTrader()
     if broker.lower() in ['yh', 'YH', '银河']:
         return YHTrader()
+    if broker.lower() in ['xq', 'XQ', '雪球']:
+        return XueQiuTrader()
