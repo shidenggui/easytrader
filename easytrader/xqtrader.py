@@ -4,12 +4,15 @@ import os
 import requests
 import json
 import urllib
-import urllib2
 import time
+import six
 
 from . import helpers
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
+
+if six.PY2:
+    import urllib2
 
 log = helpers.get_logger(__file__)
 
@@ -82,8 +85,8 @@ class XueQiuTrader(WebTrader):
         login_response = self.requests.post(self.config['login_api'], cookies=self.cookies, data=login_post_data,
                                             headers=self.headers)
         self.cookies = login_response.cookies
-        login_status = json.loads(login_response.content)
-        if login_status.has_key('error_description'):
+        login_status = json.loads(login_response.text)
+        if 'error_description' in login_status.keys():
             return False, login_status['error_description']
         return True, "SUCCESS"
 
@@ -103,9 +106,14 @@ class XueQiuTrader(WebTrader):
             'Host': 'xueqiu.com',
             'Cookie': r'xxxxxx',
         }
-        req = urllib2.Request(url, headers=send_headers)
-        resp = urllib2.urlopen(req)
-        html = resp.read()
+
+        if six.PY2:
+            req = urllib2.Request(url, headers=send_headers)
+            resp = urllib2.urlopen(req)
+        else:
+            req = urllib.request.Request(url, headers=send_headers)
+            resp = urllib.request.urlopen(req)
+        html = resp.read().decode('UTF-8')
         return html
 
     def __search_stock_info(self, code):
@@ -263,7 +271,10 @@ class XueQiuTrader(WebTrader):
                 if entrust['id'] == entrust_no and status == 'pending':
                     is_have = True
                     bs = 'buy' if entrust['target_weight'] < entrust['weight'] else 'sell'
-                    volume = abs(entrust['target_weight'] - entrust['weight']) * self.multiple / 100
+                    if entrust['target_weight'] == 0 and entrust['weight'] == 0:
+                        raise TraderError(u"移除的股票操作无法撤销,建议重新买入")
+                    balance = self.get_balance()[0]
+                    volume = abs(entrust['target_weight'] - entrust['weight']) * balance['asset_balance'] / 100
                     r = self.__trade(stock_code=entrust['stock_symbol'], volume=volume, entrust_bs=bs)
                     if len(r) > 0 and r[0].has_key('error_info'):
                         raise TraderError(u"撤销失败!%s" % (r[0].has_key('error_info')))
@@ -291,6 +302,8 @@ class XueQiuTrader(WebTrader):
             raise TraderError(u"没有足够的现金进行操作")
         if stock['flag'] != 1:
             raise TraderError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+        if volume==0:
+            raise TraderError(u"操作金额不能为零")
 
         # 计算调仓调仓份额
         weight = volume / balance['asset_balance'] * 100
@@ -344,7 +357,7 @@ class XueQiuTrader(WebTrader):
         else:
             cash = (balance['current_balance'] + volume) / balance['asset_balance'] * 100
         cash = round(cash, 2)
-        # log.debug("weight:%f, cash:%f" % (weight, cash))
+        log.debug("weight:%f, cash:%f" % (weight, cash))
 
         data = {
             "cash": cash,
@@ -353,7 +366,10 @@ class XueQiuTrader(WebTrader):
             'segment': 1,
             'comment': ""
         }
-        data = (urllib.urlencode(data))
+        if six.PY2:
+            data = (urllib.urlencode(data))
+        else:
+            data = (urllib.parse.urlencode(data))
 
         self.headers['Referer'] = self.config['referer'] % self.account_config['portfolio_code']
 
@@ -366,8 +382,8 @@ class XueQiuTrader(WebTrader):
             return
         else:
             log.debug('调仓 %s%s: %d' % (entrust_bs, stock['name'], rebalance_res.status_code))
-            rebalance_status = json.loads(rebalance_res.content)
-            if rebalance_status.has_key('error_description') and rebalance_res.status_code != 200:
+            rebalance_status = json.loads(rebalance_res.text)
+            if 'error_description' in rebalance_status.keys() and rebalance_res.status_code != 200:
                 log.error('调仓错误: %s' % (rebalance_status['error_description']))
                 return [{'error_no': rebalance_status['error_code'],
                          'error_info': rebalance_status['error_description']}]

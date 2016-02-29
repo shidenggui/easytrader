@@ -20,6 +20,10 @@
 * 华泰
 * 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
 
+### 模拟交易
+
+* 雪球组合（[说明](doc/xueqiu.md)）
+
 ### requirements
 
 > pip install -r requirements.txt
