@@ -192,9 +192,10 @@ class XueQiuTrader(WebTrader):
         :return:
         """
         xq_positions = self.__get_position()
+        balance = self.get_balance()[0]
         position_list = []
         for pos in xq_positions:
-            volume = pos['weight'] * self.multiple / 100
+            volume = pos['weight'] * balance['asset_balance'] / 100
             position_list.append({'cost_price': volume / 100,
                                   'current_amount': 100,
                                   'enable_amount': 100,
