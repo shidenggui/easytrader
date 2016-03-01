@@ -73,7 +73,11 @@ user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 
 **注**:
 
-配置文件格式可以参照 `Github` 目录下对应的 `json` 文件
+配置文件需要自己用编辑器编辑生成, 请勿使用记事本, 推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
+
+
+格式可以参照 `Github` 目录下对应的 `json` 文件
+
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
