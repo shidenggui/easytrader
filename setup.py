@@ -6,7 +6,7 @@ long_desc = """
 easytrader
 ===============
 
-* easy to use to trade in China staock
+* easy to use to trade in China Stock
 
 Installation
 --------------

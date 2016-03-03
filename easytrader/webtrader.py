@@ -42,7 +42,7 @@ class WebTrader(object):
     def read_config(self, path):
         try:
             self.account_config = helpers.file2dict(path)
-        except json.JSONDecodeError:
+        except ValueError:
             log.error('配置文件格式有误，请勿使用记事本编辑，推荐使用 notepad++ 或者 sublime text')
         for v in self.account_config:
             if type(v) is int:
