@@ -3,11 +3,13 @@ from .helpers import disable_log
 from .httrader import HTTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
+from .xqtrader import XueQiuTrader
 
 
 def use(broker, debug=True):
     """用于生成特定的券商对象
     :param broker:券商名支持 ['ht', 'HT', '华泰’] ['yjb', 'YJB', ’佣金宝'] ['yh', 'YH', '银河']
+    :param debug: 控制 debug 日志的显示, 默认为 True
     :return the class of trader
 
     Usage::
@@ -24,3 +26,5 @@ def use(broker, debug=True):
         return YJBTrader()
     if broker.lower() in ['yh', 'YH', '银河']:
         return YHTrader()
+    if broker.lower() in ['xq', 'XQ', '雪球']:
+        return XueQiuTrader()
