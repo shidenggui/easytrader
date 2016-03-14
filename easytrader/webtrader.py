@@ -1,5 +1,4 @@
 # coding: utf-8
-import json
 import os
 import re
 import time
@@ -127,7 +126,7 @@ class WebTrader(object):
 
     def get_current_deal(self):
         """获取当日委托列表"""
-        #return self.do(self.config['current_deal'])
+        # return self.do(self.config['current_deal'])
         # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
 

@@ -39,7 +39,7 @@ class YJBTrader(WebTrader):
         if not verify_code:
             return False
         login_status, result = self.post_login_data(verify_code)
-        if login_status == False and throw:
+        if login_status is False and throw:
             raise NotLoginError(result)
         return login_status
 
