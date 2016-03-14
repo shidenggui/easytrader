@@ -97,6 +97,11 @@ class TestEasytrader(unittest.TestCase):
         result = helpers.str2num(test_data, 'float')
         self.assertAlmostEqual(result, normal_data)
 
+    def test_ht_format_exchagnebill_request_data(self):
+        user = easytrader.use('ht')
+        import datetime
+        # print(datetime.datetime.now().strftime("%Y%m%d"))
+        # user.exchangebill
 
 if __name__ == '__main__':
     unittest.main()

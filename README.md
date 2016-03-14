@@ -1,12 +1,12 @@
 # easytrader
 
-* 进行简单的 web 股票交易
+* 进行自动的程序化股票交易
 * 实现自动登录
 * 支持命令行调用，方便其他语言适配
-* 支持 Python3 / Python2
+* 支持 Python3 / Python2, Linux / Win
 * 有兴趣的可以加群 `429011814` 一起讨论
 
-**开发环境** : `Ubuntu 15.10` / `Python 3.4`
+**开发环境** : `Ubuntu 15.10` / `Python 3.5`
 
 ### 相关
 [获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
@@ -20,6 +20,10 @@
 * 华泰
 * 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
 
+### 模拟交易
+
+* 雪球组合（[说明](doc/xueqiu.md)）
+
 ### requirements
 
 > pip install -r requirements.txt
@@ -29,6 +33,11 @@
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 保证在命令行下 `tesseract` 可用
 
+### 安装
+
+```python
+pip install easytrader
+```
 
 ### 用法
 
@@ -59,10 +68,16 @@ user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ##### 自动登录
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json || yh.json 
+user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 ```
 
-**注**: 
+**注**:
+
+配置文件需要自己用编辑器编辑生成, 请勿使用记事本, 推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
+
+
+格式可以参照 `Github` 目录下对应的 `json` 文件
+
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
@@ -178,9 +193,75 @@ user.cancel_entrust('委托单号')
 user.cancel_entrust('委托单号', '股票代码')
 ```
 ##### 银河证券
+
 ```python
 user.cancel_entrust('委托单号', '股票代码')
 ```
+
+#### 银河证券场内基金功能
+
+##### 基金认购
+
+```python
+user.fundsubscribe('基金代码', '基金份额')
+```
+##### 基金申购
+
+```python
+user.fundpurchase('基金代码', '基金份额')
+```
+##### 基金赎回
+```python
+user.fundredemption('基金代码', '基金份额')
+```
+##### 基金合并
+
+```python
+user.fundmerge('基金代码', '基金份额')
+```
+##### 基金拆分
+
+```python
+user.fundsplit('基金代码', '基金份额')
+```
+
+#### 查询交割单
+
+##### 华泰
+
+需要注意通常券商只会返回有限天数最新的交割单，如查询2015年整年数据, 华泰只会返回年末的90天的交割单
+
+```python
+user.exchangebill   # 查询最近30天的交割单
+
+user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段, 日期格式为 "20160214"
+```
+
+**return**
+```python
+{["entrust_bs": "操作", # "1":"买入", "2":"卖出", " ":"其他"
+  "business_balance": "成交金额",
+  "stock_name": "证券名称",
+  "fare1": "印花税",
+  "occur_balance": "发生金额",
+  "stock_account": "股东帐户",
+  "business_name": "摘要", # "证券买入", "证券卖出", "基金拆分", "基金合并", "交收证券冻结", "交收证券冻结取消", "开放基金赎回", "开放基金赎回返款", "基金资金拨入", "基金资金拨出", "交收资金冻结取消", "开放基金申购"
+  "farex": "",
+  "fare0": "手续费",
+  "stock_code": "证券代码",
+  "occur_amount": "成交数量",
+  "date": "成交日期",
+  "post_balance": "本次余额",
+  "fare2": "其他杂费",
+  "fare3": "",
+  "entrust_no": "合同编号",
+  "business_price": "成交均价",
+]}
+
+# 未确认的key有, farex, fare3
+# 未确认的表头有 结算汇率, 备注
+```
+
 ### 命令行模式
 
 #### 登录
@@ -210,7 +291,18 @@ user.cancel_entrust('委托单号', '股票代码')
 
 #### Q&A
 
-##### Question 
+##### Question
+
+如何关闭 debug 日志的输出
+
+##### Answer
+
+```python
+user = easytrader.use('ht', debug=False)
+
+```
+
+##### Question
 
 编辑完配置文件，运行后出现 `json` 解码报错的信息。类似于下面
 

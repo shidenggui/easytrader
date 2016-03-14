@@ -3,6 +3,7 @@ import click
 import dill
 
 import easytrader
+from easytrader.helpers import disable_log
 
 ACCOUNT_OBJECT_FILE = 'account.session'
 
@@ -12,12 +13,13 @@ ACCOUNT_OBJECT_FILE = 'account.session'
 @click.option('--prepare', type=click.Path(exists=True), help='指定登录账户文件路径')
 @click.option('--get', help='调用 easytrader 中对应的变量')
 @click.option('--do', help='调用 easytrader 中对应的函数名')
+@click.option('--debug', default=False, help='是否输出 easytrader 的 debug 日志')
 @click.argument('params', nargs=-1)
-def main(prepare, use, do, get, params):
+def main(prepare, use, do, get, params, debug):
     if get is not None:
         do = get
     if prepare is not None and use in ['ht', 'yjb', 'yh']:
-        user = easytrader.use(use)
+        user = easytrader.use(use, debug)
         user.prepare(prepare)
         with open(ACCOUNT_OBJECT_FILE, 'wb') as f:
             dill.dump(user, f)
@@ -25,6 +27,8 @@ def main(prepare, use, do, get, params):
         with open(ACCOUNT_OBJECT_FILE, 'rb') as f:
             user = dill.load(f)
 
+        if not debug:
+            disable_log()
         if len(params) > 0:
             result = getattr(user, do)(*params)
         else:

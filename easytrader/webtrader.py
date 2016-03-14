@@ -42,7 +42,7 @@ class WebTrader(object):
     def read_config(self, path):
         try:
             self.account_config = helpers.file2dict(path)
-        except json.JSONDecodeError:
+        except ValueError:
             log.error('配置文件格式有误，请勿使用记事本编辑，推荐使用 notepad++ 或者 sublime text')
         for v in self.account_config:
             if type(v) is int:
@@ -120,6 +120,26 @@ class WebTrader(object):
     def get_entrust(self):
         """获取当日委托列表"""
         return self.do(self.config['entrust'])
+
+    @property
+    def exchangebill(self):
+        """
+        默认提供最近30天的交割单, 通常只能返回查询日期内最新的 90 天数据。
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
