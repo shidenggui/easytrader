@@ -101,6 +101,29 @@ class YJBTrader(WebTrader):
         )
         return self.do(cancel_params)
 
+    @property
+    def current_deal(self):
+        return self.get_current_deal()
+
+    def get_current_deal(self):
+        """获取当日成交列表"""
+        '''
+        [{'business_amount': '成交数量',
+        'business_price': '成交价格',
+        'entrust_amount': '委托数量',
+        'entrust_bs': '买卖方向',
+        'stock_account': '证券帐号',
+        'fund_account': '资金帐号',
+        'position_str': '定位串',
+        'business_status': '成交状态',
+        'date': '发生日期',
+        'business_type': '成交类别',
+        'business_time': '成交时间',
+        'stock_code': '证券代码',
+        'stock_name': '证券名称'}]
+        '''
+        return self.do(self.config['current_deal'])
+
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
