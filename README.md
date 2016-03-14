@@ -262,6 +262,32 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
 # 未确认的表头有 结算汇率, 备注
 ```
 
+#### 查询当日成交
+
+##### 佣金宝
+
+```python
+user.current_deal
+```
+
+**return**
+
+```python
+[{'business_amount': '成交数量',
+'business_price': '成交价格',
+'entrust_amount': '委托数量',
+'entrust_bs': '买卖方向',
+'stock_account': '证券帐号',
+'fund_account': '资金帐号',
+'position_str': '定位串',
+'business_status': '成交状态',
+'date': '发生日期',
+'business_type': '成交类别',
+'business_time': '成交时间',
+'stock_code': '证券代码',
+'stock_name': '证券名称'}]
+```
+
 ### 命令行模式
 
 #### 登录

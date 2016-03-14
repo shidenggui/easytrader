@@ -107,7 +107,7 @@ class YJBTrader(WebTrader):
 
     def get_current_deal(self):
         """获取当日成交列表"""
-        '''
+        """
         [{'business_amount': '成交数量',
         'business_price': '成交价格',
         'entrust_amount': '委托数量',
@@ -121,7 +121,7 @@ class YJBTrader(WebTrader):
         'business_time': '成交时间',
         'stock_code': '证券代码',
         'stock_name': '证券名称'}]
-        '''
+        """
         return self.do(self.config['current_deal'])
 
     # TODO: 实现买入卖出的各种委托类型
