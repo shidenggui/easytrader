@@ -122,6 +122,16 @@ class WebTrader(object):
         return self.do(self.config['entrust'])
 
     @property
+    def current_deal(self):
+        return self.get_current_deal()
+
+    def get_current_deal(self):
+        """获取当日委托列表"""
+        #return self.do(self.config['current_deal'])
+        # TODO 目前仅在 华泰子类 中实现
+        log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
+
+    @property
     def exchangebill(self):
         """
         默认提供最近30天的交割单, 通常只能返回查询日期内最新的 90 天数据。
