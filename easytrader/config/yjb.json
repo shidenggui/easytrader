@@ -40,6 +40,11 @@
   "cancel_entrust": {
     "request_id": "chedan_304"
   },
+  "current_deal": {
+    "request_id": "bargain_402",
+    "sort_direction": 1,
+    "service_type": "stock"
+  },
   "exchangetype4stock": {
     "service_type": "stock",
     "function_id": "105"
