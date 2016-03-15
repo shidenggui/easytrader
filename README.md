@@ -39,6 +39,9 @@
 pip install easytrader
 ```
 
+注： `Window` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`
+
+
 ### 用法
 
 #### 引入:

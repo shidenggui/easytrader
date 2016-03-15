@@ -86,7 +86,12 @@ setup(
         license='BSD',
         url='https://github.com/shidenggui/easytrader',
         keywords='China stock trade',
-        install_requires=['requests', 'logbook', 'anyjson', 'six'],
+        install_requires=[
+            'requests',
+            'logbook',
+            'anyjson',
+            'six'
+        ],
         classifiers=['Development Status :: 4 - Beta',
                      'Programming Language :: Python :: 2.6',
                      'Programming Language :: Python :: 2.7',
