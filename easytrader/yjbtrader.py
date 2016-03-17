@@ -209,6 +209,21 @@ class YJBTrader(WebTrader):
         # 获取 returnJSON
         return_json = json.loads(data)['returnJson']
         add_key_quote = re.sub('\w+:', lambda x: '"%s":' % x.group().rstrip(':'), return_json)
+        ix = add_key_quote.rfind("business_time")
+        if ix > -1:
+            add_key_quote = add_key_quote.replace("'\"", "'")
+            add_key_quote = add_key_quote.replace('":"', ':')
+            ix = add_key_quote.rfind("business_time") - 1
+            eix = int(ix) + 29
+            strbefore = add_key_quote[0 :ix]
+            strafter = add_key_quote[eix :]
+            strbustime = add_key_quote[ix :eix]
+
+            strbustime = strbustime.replace('"', '')
+            strbustime = strbustime.replace('business_time', '"business_time"')
+            
+            add_key_quote = strbefore + strbustime + strafter
+
         # 替换所有单引号到双引号
         change_single_double_quote = add_key_quote.replace("'", '"')
         raw_json_data = json.loads(change_single_double_quote)
