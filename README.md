@@ -68,7 +68,7 @@ user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
 user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ```
 
-##### 自动登录
+#### 自动登录
 
 ```python
 user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
