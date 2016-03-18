@@ -4,12 +4,11 @@ from __future__ import division
 import json
 import os
 import random
-import re
 import urllib
 
+import demjson
 import requests
 import six
-import demjson
 
 from . import helpers
 from .webtrader import NotLoginError
@@ -140,7 +139,6 @@ class YJBTrader(WebTrader):
                 entrust_amount=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
-
 
     def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """卖出股票
