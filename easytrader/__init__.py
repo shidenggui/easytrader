@@ -5,5 +5,5 @@ from .webtrader import WebTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
 
-__version__ = '0.4.1'
+__version__ = '0.4.2'
 __author__ = 'shidenggui'
