@@ -1,4 +1,5 @@
 requests
+demjson
 logbook
 anyjson
 dill
