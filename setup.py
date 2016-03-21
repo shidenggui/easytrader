@@ -87,7 +87,7 @@ setup(
         url='https://github.com/shidenggui/easytrader',
         keywords='China stock trade',
         install_requires=[
-            'demjson'
+            'demjson',
             'requests',
             'logbook',
             'anyjson',
