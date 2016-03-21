@@ -67,6 +67,11 @@ user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 ```python
 user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
 ```
+
+
+注: 如果你的华泰账户是以 `08` 开头，而且可以正常登录，但是其他操作返回 `账户记录表不存在` 等错误时，请尝试 `user = easytrader.use('ht', remove_zero=False)`
+
+
 ##### 银河 
 
 ```python

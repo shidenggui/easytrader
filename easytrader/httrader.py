@@ -39,10 +39,11 @@ log.debug = remove_heart_log
 class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
 
-    def __init__(self):
+    def __init__(self, remove_zero=True):
         super(HTTrader, self).__init__()
         self.account_config = None
         self.s = None
+        self.remove_zero = remove_zero
 
         self.__set_ip_and_mac()
         self.fund_account = None
@@ -60,10 +61,10 @@ class HTTrader(WebTrader):
                 uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
     def __get_user_name(self):
-        # 华泰账户以 08 开头的需移除 fund_account 开头的 0
+        # 华泰账户以 08 开头的有些需移除 fund_account 开头的 0
         raw_name = self.account_config['userName']
         use_index_start = 1
-        return raw_name[use_index_start:] if raw_name.startswith('08') else raw_name
+        return raw_name[use_index_start:] if raw_name.startswith('08') and self.remove_zero is True else raw_name
 
     def read_config(self, path):
         super(HTTrader, self).read_config(path)

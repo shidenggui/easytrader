@@ -6,7 +6,7 @@ from .yjbtrader import YJBTrader
 from .xqtrader import XueQiuTrader
 
 
-def use(broker, debug=True):
+def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
     :param broker:券商名支持 ['ht', 'HT', '华泰’] ['yjb', 'YJB', ’佣金宝'] ['yh', 'YH', '银河']
     :param debug: 控制 debug 日志的显示, 默认为 True
@@ -21,7 +21,7 @@ def use(broker, debug=True):
     if not debug:
         disable_log()
     if broker.lower() in ['ht', 'HT', '华泰']:
-        return HTTrader()
+        return HTTrader(**kwargs)
     if broker.lower() in ['yjb', 'YJB', '佣金宝']:
         return YJBTrader()
     if broker.lower() in ['yh', 'YH', '银河']:
