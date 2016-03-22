@@ -167,11 +167,11 @@ class HTTrader(WebTrader):
             if account_info['stock_account'].startswith('A'):
                 self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']
-                log.debug('sh stock account %s' % self.__sh_stock_account)
-            elif account_info['stock_account'].isdigit():
+                log.debug('sh_A stock account %s' % self.__sh_stock_account)
+            elif account_info['stock_account'].startswith('0'):
                 self.__sz_exchange_type = account_info['exchange_type']
                 self.__sz_stock_account = account_info['stock_account']
-                log.debug('sz stock account %s' % self.__sz_stock_account)
+                log.debug('sz_A stock account %s' % self.__sz_stock_account)
 
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
