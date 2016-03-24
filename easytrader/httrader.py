@@ -165,10 +165,12 @@ class HTTrader(WebTrader):
         """
         for account_info in json_data['item']:
             if account_info['stock_account'].startswith('A'):
+                # 沪 A  股东代码以 A 开头，同时需要是数字，沪 B 帐号以 C 开头
                 if account_info['exchange_type'].isdigit():
                     self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']
                 log.debug('sh_A stock account %s' % self.__sh_stock_account)
+            # 深 A 股东代码以 0 开头，深 B 股东代码以 2 开头
             elif account_info['stock_account'].startswith('0'):
                 self.__sz_exchange_type = account_info['exchange_type']
                 self.__sz_stock_account = account_info['stock_account']
