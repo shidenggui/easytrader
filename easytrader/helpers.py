@@ -46,7 +46,7 @@ def get_stock_type(stock_code):
     """判断股票ID对应的证券市场
     :param stock_code:股票ID
     :return 'sh' or 'sz'"""
-    if str(stock_code).startswith(('5', '6', '9')):
+    if str(stock_code).startswith(('5', '6', '9','11','13')):
         return 'sh'
     return 'sz'
 

@@ -165,7 +165,8 @@ class HTTrader(WebTrader):
         """
         for account_info in json_data['item']:
             if account_info['stock_account'].startswith('A'):
-                self.__sh_exchange_type = account_info['exchange_type']
+                if account_info['exchange_type'].isdigit():
+                    self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']
                 log.debug('sh_A stock account %s' % self.__sh_stock_account)
             elif account_info['stock_account'].startswith('0'):
