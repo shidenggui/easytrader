@@ -75,13 +75,16 @@ class WebTrader(object):
         while True:
             if self.heart_active:
                 try:
-                    response = self.balance
+                    response = self.heartbeat()
                 except:
                     pass
                 self.check_account_live(response)
                 time.sleep(10)
             else:
                 time.sleep(1)
+
+    def heartbeat(self):
+        return self.balance
 
     def check_account_live(self, response):
         pass
