@@ -297,3 +297,23 @@ class YHTrader(WebTrader):
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
             self.heart_active = False
+
+    def heartbeat(self):
+        heartbeat_params = dict(
+            ftype='bsn'
+        )
+        log.debug('heartbeat params: %s' % heartbeat_params)
+        heartbeat_resp = self.s.post(self.config['heart_beat'], params=heartbeat_params)
+        log.debug('heartbeat resp: %s' % heartbeat_resp.text)
+
+    def unlockscreen(self):
+        unlock_params = dict(
+            password=self.account_config['trdpwd'],
+            mainAccount=self.account_config['inputaccount'],
+            ftype='bsn'
+        )
+        log.debug('unlock params: %s' % unlock_params)
+        unlock_resp = self.s.post(self.config['unlock'], params=unlock_params)
+        log.debug('unlock resp: %s' % unlock_resp.text)
+        
+    
