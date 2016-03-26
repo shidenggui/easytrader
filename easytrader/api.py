@@ -10,6 +10,7 @@ def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
     :param broker:券商名支持 ['ht', 'HT', '华泰’] ['yjb', 'YJB', ’佣金宝'] ['yh', 'YH', '银河']
     :param debug: 控制 debug 日志的显示, 默认为 True
+    :param remove_zero: ht 可用参数，是否移除 08 账户开头的 0, 默认 True
     :return the class of trader
 
     Usage::
