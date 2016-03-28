@@ -57,7 +57,12 @@ def recognize_verify_code(image_path, broker='ht'):
     :param broker: 券商 ['ht', 'yjb', 'gf']
     :return recognized: verify code string"""
     if broker in ['ht', 'yjb']:
-        verify_code_tool = 'getcode_jdk1.5.jar' if broker == 'ht' else 'yjb_verify_code.jar guojin'
+        if broker == 'ht':
+            verify_code_tool = 'getcode_jdk1.5.jar'
+            param = ''
+        else:
+            verify_code_tool = 'yjb_verify_code.jar'
+            param = 'guojin'
         # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
         if six.PY2:
             import commands
@@ -67,9 +72,8 @@ def recognize_verify_code(image_path, broker='ht'):
         out_put = getcmdout_func.getoutput('java -version')
         log.debug('java detect result: %s' % out_put)
         if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
-            out_put = getcmdout_func.getoutput(
-                    'java -jar "%s" "%s"' % (
-                        os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
+            tool_path = os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool)
+            out_put = getcmdout_func.getoutput('java -jar "{}" {} {}'.format(tool_path , param, image_path))
             log.debug('recognize output: %s' % out_put)
             verify_code_start = -4
             return out_put[verify_code_start:]
