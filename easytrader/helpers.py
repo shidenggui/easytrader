@@ -68,7 +68,7 @@ def recognize_verify_code(image_path, broker='ht'):
         log.debug('java detect result: %s' % out_put)
         if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
             out_put = getcmdout_func.getoutput(
-                    'java -jar %s %s' % (
+                    'java -jar "%s" "%s"' % (
                         os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool), image_path))
             log.debug('recognize output: %s' % out_put)
             verify_code_start = -4
@@ -77,11 +77,11 @@ def recognize_verify_code(image_path, broker='ht'):
         return detect_gf_result(image_path)
     # 调用 tesseract 识别
     # ubuntu 15.10 无法识别的手动 export TESSDATA_PREFIX
-    system_result = os.system('tesseract {} result -psm 7'.format(image_path))
+    system_result = os.system('tesseract "{}" result -psm 7'.format(image_path))
     system_success = 0
     if system_result != system_success:
         os.system(
-                'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract {} result -psm 7'.format(
+                'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract "{}" result -psm 7'.format(
                         image_path))
 
     # 获取识别的验证码
