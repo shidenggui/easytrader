@@ -51,11 +51,11 @@ class WebTrader(object):
         """登录的统一接口
         :param need_data 登录所需数据"""
         self.read_config(need_data)
-        self.autologin()
+        self.autologin(throw=True)
 
-    def autologin(self):
+    def autologin(self, throw=False):
         """实现自动登录"""
-        is_login_ok = self.login()
+        is_login_ok = self.login(throw)
         if not is_login_ok:
             self.autologin()
         self.keepalive()
