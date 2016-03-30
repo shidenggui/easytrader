@@ -76,7 +76,7 @@ class XueQiuTrader(WebTrader):
 
     def post_login_data(self):
         login_post_data = {
-            'username': '',
+            'username': self.account_config.get('username', ''),
             'areacode': '86',
             'telephone': self.account_config['account'],
             'remember_me': '0',
@@ -298,7 +298,7 @@ class XueQiuTrader(WebTrader):
         if stock == None:
             raise TraderError(u"没有查询要操作的股票信息")
         if not volume:
-            volume = price * amount  # 可能要取整数
+            volume = int(price * amount)  # 可能要取整数
         if balance['current_balance'] < volume and entrust_bs == 'buy':
             raise TraderError(u"没有足够的现金进行操作")
         if stock['flag'] != 1:
