@@ -76,9 +76,9 @@ class WebTrader(object):
             if self.heart_active:
                 try:
                     response = self.heartbeat()
+                    self.check_account_live(response)
                 except:
                     pass
-                self.check_account_live(response)
                 time.sleep(10)
             else:
                 time.sleep(1)
@@ -184,7 +184,7 @@ class WebTrader(object):
     def fix_error_data(self, data):
         """若是返回错误移除外层的列表
         :param data: 需要判断是否包含错误信息的数据"""
-        pass
+        return data
 
     def format_response_data_type(self, response_data):
         """格式化返回的值为正确的类型

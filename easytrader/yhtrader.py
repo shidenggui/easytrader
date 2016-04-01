@@ -1,7 +1,6 @@
 # coding: utf-8
 from __future__ import division
 
-import json
 import os
 import random
 import re
@@ -52,13 +51,15 @@ class YHTrader(WebTrader):
         login_status, result = self.post_login_data(verify_code)
         if login_status is False and throw:
             raise NotLoginError(result)
-        exchangeinfo = list((self.do(dict(self.config['account4stock']))))
-        if len(exchangeinfo) >= 2:
-            for i in range(2):
-                if exchangeinfo[i][TRADE_MARKET]['交易市场'] == '深A':
-                    self.exchange_stock_account['0'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
-                else:
-                    self.exchange_stock_account['1'] = exchangeinfo[i][HOLDER_NAME]['股东代码'][0:10]
+
+        accounts = self.do(self.config['account4stock'])
+        if len(accounts) < 2:
+            raise Exception('无法获取沪深 A 股账户: %s' % accounts)
+        for account in accounts:
+            if account['交易市场'] == '深A':
+                self.exchange_stock_account['0'] = account['股东代码'][0:10]
+            else:
+                self.exchange_stock_account['1'] = account['股东代码'][0:10]
         return login_status
 
     def post_login_data(self, verify_code):
@@ -269,30 +270,22 @@ class YHTrader(WebTrader):
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
             search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
 
-        columnlen = len(search_result_name)
-        if columnlen == 0 or len(search_result_content) % columnlen != 0:
-            log.error("Can not fetch balance info")
-            retdata = json.dumps(search_result_name)
-            retjsonobj = json.loads(retdata)
+        col_len = len(search_result_name)
+        if col_len == 0 or len(search_result_content) % col_len != 0:
+            if len(search_result_content) == 0:
+                return list()
+            raise Exception("Get Data Error: col_num: {}, Data: {}".format(col_len, search_result_content))
         else:
-            rowlen = len(search_result_content) // columnlen
-            retdata = list()
-            for i in range(rowlen):
-                retrowdata = list()
-                for j in range(columnlen):
-                    retdict = dict()
-                    retdict[search_result_name[j]] = search_result_content[i * columnlen + j]
-                    retrowdata.append(retdict)
-                retdata.append(retrowdata)
-            retlist = json.dumps(retdata)
-            retjsonobj = json.loads(retlist)
-        return retjsonobj
+            row_len = len(search_result_content) // col_len
+            res = list()
+            for row in range(row_len):
+                item = dict()
+                for col in range(col_len):
+                    col_name = search_result_name[col]
+                    item[col_name] = search_result_content[row * col_len + col]
+                res.append(item)
 
-    def fix_error_data(self, data):
-        return data
-
-    def check_login_status(self, return_data):
-        pass
+        return self.format_response_data_type(res)
 
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
@@ -300,20 +293,16 @@ class YHTrader(WebTrader):
 
     def heartbeat(self):
         heartbeat_params = dict(
-            ftype='bsn'
+                ftype='bsn'
         )
-        log.debug('heartbeat params: %s' % heartbeat_params)
-        heartbeat_resp = self.s.post(self.config['heart_beat'], params=heartbeat_params)
-        log.debug('heartbeat resp: %s' % heartbeat_resp.text)
+        self.s.post(self.config['heart_beat'], params=heartbeat_params)
 
     def unlockscreen(self):
         unlock_params = dict(
-            password=self.account_config['trdpwd'],
-            mainAccount=self.account_config['inputaccount'],
-            ftype='bsn'
+                password=self.account_config['trdpwd'],
+                mainAccount=self.account_config['inputaccount'],
+                ftype='bsn'
         )
         log.debug('unlock params: %s' % unlock_params)
         unlock_resp = self.s.post(self.config['unlock'], params=unlock_params)
         log.debug('unlock resp: %s' % unlock_resp.text)
-        
-    
