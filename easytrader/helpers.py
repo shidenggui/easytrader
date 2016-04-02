@@ -65,8 +65,17 @@ def recognize_verify_code(image_path, broker='ht'):
             param = 'guojin'
         # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
         if six.PY2:
-            import commands
-            getcmdout_func = commands
+            if sys.platform == 'win32':
+                from subprocess import PIPE, Popen, STDOUT
+                def get_status_output(cmd, input=None, cwd=None, env=None):
+                    pipe = Popen(cmd, shell=True, cwd=cwd, env=env, stdout=PIPE, stderr=STDOUT)
+                    (output, errout) = pipe.communicate(input=input)
+                    return output.decode().rstrip('\n')
+                getcmdout_func = lambda:_
+                getcmdout_func.getoutput = get_status_output
+            else:
+                import commands
+                getcmdout_func = commands
         else:
             getcmdout_func = subprocess
         out_put = getcmdout_func.getoutput('java -version')
