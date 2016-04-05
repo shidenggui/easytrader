@@ -1,8 +1,12 @@
+import os
+
 from setuptools import setup
 
 import easytrader
 
-with open('README.md', encoding='utf-8') as f:
+readme_path = os.path.join(os.path.dirname(__file__), 'README.md')
+
+with open(readme_path, encoding='utf-8') as f:
     long_desc = f.read()
 
 setup(
