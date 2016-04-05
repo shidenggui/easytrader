@@ -229,7 +229,6 @@ class YHTrader(WebTrader):
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
-        # 获取股票对应的证券市场
         sh_exchange_type = '1'
         sz_exchange_type = '0'
         exchange_type = sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else sz_exchange_type
@@ -264,7 +263,8 @@ class YHTrader(WebTrader):
         if data.find('yhposition') != -1:
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
             search_result_content = re.findall(r'<td nowrap=\"nowrap\"  >(.*)</td>', data)
-            search_result_name.remove('参考成本价')
+            if '参考成本价' in search_result_content:
+                search_result_name.remove('参考成本价')
         else:
             # 获取原始data的html源码并且解析得到一个可读json格式 
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
