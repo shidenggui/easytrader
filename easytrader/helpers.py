@@ -29,6 +29,11 @@ def disable_log():
 log = get_logger(__file__)
 
 
+class EntrustProp(object):
+    Limit = 'limit'
+    Market = 'market'
+
+
 class Ssl3HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
         self.poolmanager = PoolManager(num_pools=connections,
@@ -53,7 +58,7 @@ def get_stock_type(stock_code):
     assert type(stock_code) is str, 'stock code need str type'
     if stock_code.startswith(('sh', 'sz')):
         return stock_code[:2]
-    if stock_code.startswith(('50', '51', '60', '90', '110','113','132','204')):
+    if stock_code.startswith(('50', '51', '60', '90', '110', '113', '132', '204')):
         return 'sh'
     if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30', '39', '115', '1318')):
         return 'sz'

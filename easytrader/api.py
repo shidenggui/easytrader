@@ -31,6 +31,3 @@ def use(broker, debug=True, **kwargs):
         return XueQiuTrader()
 
 
-class entrust_prop_type(object):
-    limit_price = 0
-    market_price = 1

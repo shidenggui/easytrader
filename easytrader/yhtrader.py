@@ -9,7 +9,7 @@ import requests
 
 from . import helpers
 from .webtrader import WebTrader, NotLoginError
-from .api import entrust_prop_type
+from .helpers import EntrustProp
 
 log = helpers.get_logger(__file__)
 
@@ -111,7 +111,7 @@ class YHTrader(WebTrader):
         """获取当日成交列表."""
         return self.do(self.config['current_deal'])
 
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=entrust_prop_type.limit_price):
+    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
         """买入股票
         :param stock_code: 股票代码
         :param price: 买入价格
@@ -119,10 +119,17 @@ class YHTrader(WebTrader):
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop: 委托类型
         """
-        is_sse = helpers.get_stock_type(stock_code) == 'sh'
+        market_type = helpers.get_stock_type(stock_code)
+        if entrust_prop == EntrustProp.Limit:
+            bsflag = '0B'
+        elif market_type == 'sh':
+            bsflag = '0q'
+        elif market_type == 'sz':
+            bsflag = '0a'
+
         params = dict(
                 self.config['buy'],
-                bsflag='0B' if entrust_prop == entrust_prop_type.limit_price else ('0q' if is_sse else '0a'),
+                bsflag=bsflag,
                 qty=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
@@ -135,10 +142,17 @@ class YHTrader(WebTrader):
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 amount 则此参数无效
         :param entrust_prop: 委托类型
         """
-        is_sse = helpers.get_stock_type(stock_code) == 'sh'
+        market_type = helpers.get_stock_type(stock_code)
+        if entrust_prop == EntrustProp.Limit:
+            bsflag = '0S'
+        elif market_type == 'sh':
+            bsflag = '0r'
+        elif market_type == 'sz':
+            bsflag = '0f'
+
         params = dict(
                 self.config['sell'],
-                bsflag='0S' if entrust_prop == entrust_prop_type.limit_price else ('0r' if is_sse else '0f'),
+                bsflag=bsflag,
                 qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
