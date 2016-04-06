@@ -143,7 +143,7 @@ def detect_gf_result(image_path):
     med_res = min_res.filter(ImageFilter.MedianFilter)
     for _ in range(2):
         med_res = med_res.filter(ImageFilter.MedianFilter)
-    res = pytesseract.image_to_string(med_res, config='-psm 6')
+    res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
 
 
