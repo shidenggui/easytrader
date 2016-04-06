@@ -108,7 +108,7 @@ class YHTrader(WebTrader):
         return self.get_current_deal()
 
     def get_current_deal(self):
-        """获取当日成交列表"""
+        """获取当日成交列表."""
         return self.do(self.config['current_deal'])
 
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=entrust_prop_type.limit_price):
