@@ -61,6 +61,9 @@
   "cancel_entrust": {
     "ajaxFlag": "stock_cancel"
   },
+  "current_deal": {
+    "service_jsp": "/trade/webtrade/stock/stock_cj_query.jsp"
+  },
   "account4stock": {
     "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"
   }

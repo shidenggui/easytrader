@@ -29,3 +29,8 @@ def use(broker, debug=True, **kwargs):
         return YHTrader()
     if broker.lower() in ['xq', 'XQ', '雪球']:
         return XueQiuTrader()
+
+
+class entrust_prop_type(object):
+    limit_price = 0
+    market_price = 1

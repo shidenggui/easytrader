@@ -9,6 +9,7 @@ import requests
 
 from . import helpers
 from .webtrader import WebTrader, NotLoginError
+from .api import entrust_prop_type
 
 log = helpers.get_logger(__file__)
 
@@ -102,18 +103,26 @@ class YHTrader(WebTrader):
         log.debug('cancel trust: %s' % cancel_response.text)
         return True
 
-    # TODO: 实现买入卖出的各种委托类型
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
+    @property
+    def current_deal(self):
+        return self.get_current_deal()
+
+    def get_current_deal(self):
+        """获取当日成交列表"""
+        return self.do(self.config['current_deal'])
+
+    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=entrust_prop_type.limit_price):
         """买入股票
         :param stock_code: 股票代码
         :param price: 买入价格
         :param amount: 买入股数
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
-        :param entrust_prop: 委托类型，暂未实现，默认为限价委托
+        :param entrust_prop: 委托类型
         """
+        is_sse = helpers.get_stock_type(stock_code) == 'sh'
         params = dict(
                 self.config['buy'],
-                bsflag='0B',  # 买入0B 卖出0S
+                bsflag='0B' if entrust_prop == entrust_prop_type.limit_price else ('0q' if is_sse else '0a'),
                 qty=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
@@ -124,11 +133,12 @@ class YHTrader(WebTrader):
         :param price: 卖出价格
         :param amount: 卖出股数
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 amount 则此参数无效
-        :param entrust_prop: 委托类型，暂未实现，默认为限价委托
+        :param entrust_prop: 委托类型
         """
+        is_sse = helpers.get_stock_type(stock_code) == 'sh'
         params = dict(
                 self.config['sell'],
-                bsflag='0S',  # 买入0B 卖出0S
+                bsflag='0S' if entrust_prop == entrust_prop_type.limit_price else ('0r' if is_sse else '0f'),
                 qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
