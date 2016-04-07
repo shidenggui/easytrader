@@ -4,6 +4,7 @@ from .httrader import HTTrader
 from .webtrader import WebTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
+from .gftrader import GFTrader
 
 __version__ = '0.5.10'
 __author__ = 'shidenggui'
