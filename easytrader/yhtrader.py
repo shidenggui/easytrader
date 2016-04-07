@@ -286,9 +286,14 @@ class YHTrader(WebTrader):
         # 需要对于银河持仓情况特殊处理
         if data.find('yhposition') != -1:
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
-            search_result_content = re.findall(r'<td nowrap=\"nowrap\"  >(.*)</td>', data)
-            if '参考成本价' in search_result_content:
-                search_result_name.remove('参考成本价')
+            search_result_content = []
+            search_result_content_tmp = re.findall(r'<td nowrap=\"nowrap\" ( |style.*)>(.*)</td>', data)
+            for item in search_result_content_tmp:
+                s = item[-1] if type(item) is not str else item
+                k = re.findall(">(.*)<", s)
+                if len(k) > 0:
+                    s = k[-1]
+                search_result_content.append(s)
         else:
             # 获取原始data的html源码并且解析得到一个可读json格式 
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
