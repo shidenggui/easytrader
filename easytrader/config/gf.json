@@ -1,0 +1,78 @@
+{
+  "login_api": "https://trade.gf.com.cn/login",
+  "login_page": "https://trade.gf.com.cn/",
+  "verify_code_api": "https://trade.gf.com.cn/yzm.jpgx",
+  "prefix": "https://trade.gf.com.cn/entry",
+  "logout_api": "https://trade.gf.com.cn/entry",
+  "login": {
+    "authtype": 2,
+    "disknum": "1SVEYNFA915146",
+    "loginType": 2,
+    "origin": "web"
+  },
+  "balance":{
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryAssert"
+  },
+  "position":{
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryCC",
+    "request_num": 500,
+    "start": 0,
+    "limit": 10
+  },
+  "entrust":{
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryDRWT",
+    "action_in": 1,
+    "request_num": 100,
+    "query_direction": 0,
+    "start": 0,
+    "limit": 10
+  },
+  "cancel_entrust": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "cancel",
+    "exchange_type": 1,
+    "batch_flag": 0
+  },
+  "accountinfo": {
+    "classname": "com.gf.etrade.control.FrameWorkControl",
+    "method": "getMainJS"
+  },
+  "buy": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "entrust",
+    "entrust_bs": 1
+  },
+  "sell": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "entrust",
+    "entrust_bs": 2
+  },
+  "fundsubscribe": {
+    "classname": "com.gf.etrade.control.SHLOFFundControl",
+    "method": "assetSecuprtTrade",
+    "entrust_bs": 1
+  },
+  "fundpurchase": {
+    "classname": "com.gf.etrade.control.SHLOFFundControl",
+    "method": "assetSecuprtTrade",
+    "entrust_bs": 1
+  },
+  "fundredemption": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "doDZJYEntrust",
+    "entrust_bs": 2
+  },
+  "fundmerge": {
+    "classname": "com.gf.etrade.control.SHLOFFundControl",
+    "method": "assetSecuprtTrade",
+    "entrust_bs": ""
+  },
+  "fundsplit": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "doDZJYEntrust",
+    "entrust_bs": ""
+  }
+}

@@ -19,6 +19,7 @@
 * 佣金宝
 * 华泰
 * 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
+* 广发
 
 ### 模拟交易
 
@@ -76,6 +77,12 @@ user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
 
 ```python
 user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
+```
+
+##### 广发
+
+```python
+user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
 ```
 
 #### 登录帐号
