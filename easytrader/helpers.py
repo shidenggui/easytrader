@@ -13,6 +13,9 @@ from logbook import Logger, StreamHandler, NullHandler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 
+if six.PY2:
+    from io import open
+
 
 def get_logger(name, debug=True):
     logbook.set_datetime_format('local')
@@ -89,7 +92,7 @@ def recognize_verify_code(image_path, broker='ht'):
                 def get_status_output(cmd, input=None, cwd=None, env=None):
                     pipe = Popen(cmd, shell=True, cwd=cwd, env=env, stdout=PIPE, stderr=STDOUT)
                     (output, errout) = pipe.communicate(input=input)
-                    return output.decode().rstrip('\n')
+                    return output.decode().rstrip('\r\n')
 
                 getcmdout_func = lambda: _
                 getcmdout_func.getoutput = get_status_output
