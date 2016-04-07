@@ -1,10 +1,10 @@
 # coding=utf-8
+from .gftrader import GFTrader
 from .helpers import disable_log
 from .httrader import HTTrader
+from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
-from .xqtrader import XueQiuTrader
-from .gftrader import GFTrader
 
 
 def use(broker, debug=True, **kwargs):
