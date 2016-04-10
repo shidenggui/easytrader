@@ -7,6 +7,7 @@ import re
 import urllib
 
 import requests
+import six
 
 from . import helpers
 from .webtrader import WebTrader
@@ -97,14 +98,21 @@ class GFTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        params_str = urllib.parse.urlencode(params)
-        unquote_str = urllib.parse.unquote(params_str)
+        if six.PY2:
+            params_str = urllib.urlencode(params)
+            unquote_str = urllib.unquote(params_str)
+        else:
+            params_str = urllib.parse.urlencode(params)
+            unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
         r = self.s.post(url)
         return r.content
 
     def format_response_data(self, data):
-        return_data = json.loads(str(data, 'utf-8'))
+        if six.PY2:
+            return_data = json.loads(data.encode('utf-8'))
+        else:
+            return_data = json.loads(str(data, 'utf-8'))
         return return_data
 
     def check_account_live(self, response):
@@ -117,8 +125,12 @@ class GFTrader(WebTrader):
         account_params = dict(
                 self.config['accountinfo']
         )
-        params_str = urllib.parse.urlencode(account_params)
-        unquote_str = urllib.parse.unquote(params_str)
+        if six.PY2:
+            params_str = urllib.urlencode(account_params)
+            unquote_str = urllib.unquote(params_str)
+        else:
+            params_str = urllib.parse.urlencode(account_params)
+            unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
         log.debug('get account info: %s' % unquote_str)
         r = self.s.get(url)
