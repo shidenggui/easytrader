@@ -246,7 +246,7 @@ class XueQiuTrader(WebTrader):
                 entrust_list.append({
                     'entrust_no': entrust['id'],
                     'entrust_bs': u"买入" if entrust['target_weight'] > entrust['weight'] else u"卖出",
-                    'report_time': self.__time_strftime(entrust['updated_at']),
+                    'report_time': self.__time_strftime(entrust['updated_at'] / 1000),
                     'entrust_status': status,
                     'stock_code': entrust['stock_symbol'],
                     'stock_name': entrust['stock_name'],
