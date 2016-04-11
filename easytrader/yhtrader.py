@@ -287,7 +287,7 @@ class YHTrader(WebTrader):
         if data.find('yhposition') != -1:
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
             search_result_content = re.findall(r'<td nowrap=\"nowrap\"  >(.*)</td>', data)
-            if '参考成本价' in search_result_content:
+            if '参考成本价' in search_result_name:
                 search_result_name.remove('参考成本价')
         else:
             # 获取原始data的html源码并且解析得到一个可读json格式 
