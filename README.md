@@ -82,7 +82,7 @@ user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ##### 广发
 
 ```python
-user = easytrader.use('gf') # 银河支持 ['gf', 'GF', '广发']
+user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
 ```
 
 #### 登录帐号

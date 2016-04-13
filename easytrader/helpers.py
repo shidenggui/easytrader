@@ -13,6 +13,9 @@ from logbook import Logger, StreamHandler, NullHandler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 
+if six.PY2:
+    from io import open
+
 
 def get_logger(name, debug=True):
     logbook.set_datetime_format('local')
@@ -89,7 +92,7 @@ def recognize_verify_code(image_path, broker='ht'):
                 def get_status_output(cmd, input=None, cwd=None, env=None):
                     pipe = Popen(cmd, shell=True, cwd=cwd, env=env, stdout=PIPE, stderr=STDOUT)
                     (output, errout) = pipe.communicate(input=input)
-                    return output.decode().rstrip('\n')
+                    return output.decode().rstrip('\r\n')
 
                 getcmdout_func = lambda: _
                 getcmdout_func.getoutput = get_status_output
@@ -138,8 +141,12 @@ def detect_gf_result(image_path):
     from PIL import ImageFilter, Image
     import pytesseract
     img = Image.open(image_path)
-    for x in range(img.width):
-        for y in range(img.height):
+    if hasattr(img, "width"):
+        width, height = img.width, img.height
+    else:
+        width, height = img.size
+    for x in range(width):
+        for y in range(height):
             if img.getpixel((x, y)) < (100, 100, 100):
                 img.putpixel((x, y), (256, 256, 256))
     gray = img.convert('L')
