@@ -1,5 +1,5 @@
 {
-  "login_api": "http://xueqiu.com/user/login",
+  "login_api": "https://xueqiu.com/user/login",
   "prefix": "http://xueqiu.com/user/login",
   "portfolio_url": "http://xueqiu.com/p/",
   "search_stock_url": "http://xueqiu.com/stock/p/search.json",
