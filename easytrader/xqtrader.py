@@ -183,9 +183,11 @@ class XueQiuTrader(WebTrader):
         return stocks
 
     def __time_strftime(self, time_stamp):
-        ltime = time.localtime(time_stamp)
-        return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
-
+        try:
+            ltime = time.localtime(time_stamp/1000)
+            return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
+        except :
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     def get_position(self):
         """
         获取持仓
