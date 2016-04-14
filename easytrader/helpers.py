@@ -141,8 +141,12 @@ def detect_gf_result(image_path):
     from PIL import ImageFilter, Image
     import pytesseract
     img = Image.open(image_path)
-    for x in range(img.width):
-        for y in range(img.height):
+    if hasattr(img, "width"):
+        width, height = img.width, img.height
+    else:
+        width, height = img.size
+    for x in range(width):
+        for y in range(height):
             if img.getpixel((x, y)) < (100, 100, 100):
                 img.putpixel((x, y), (256, 256, 256))
     gray = img.convert('L')
