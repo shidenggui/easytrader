@@ -225,7 +225,7 @@ class XueQiuTrader(WebTrader):
         r = json.loads(r.text)
         return r['list']
 
-    def entrust(self):
+    def get_entrust(self):
         """
         获取委托单(目前返回5次调仓的结果)
         操作数量都按1手模拟换算的
