@@ -27,11 +27,13 @@ class WebTrader(object):
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
     config_path = ''
 
-    def __init__(self):
+    def __init__(self,setting_max_number_to_Login=20):
         self.__read_config()
         self.trade_prefix = self.config['prefix']
         self.account_config = ''
         self.heart_active = True
+        self.setting_max_number_to_Login=setting_max_number_to_Login
+        self.max_number_to_Login=setting_max_number_to_Login
         if six.PY2:
             self.heart_thread = Thread(target=self.send_heartbeat)
             self.heart_thread.setDaemon(True)
@@ -55,9 +57,15 @@ class WebTrader(object):
 
     def autologin(self):
         """实现自动登录"""
-        is_login_ok = self.login()
-        if not is_login_ok:
-            self.autologin()
+        is_login_ok=False
+        while(not is_login_ok):
+            self.max_number_to_Login-=1
+            if self.max_number_to_Login==0:
+                log.error('%s\n'%('登录失败！远端服务器可能正在维护。'))
+                raise Exception('%s\n'%('登录失败！远端服务器可能正在维护。'))
+            is_login_ok=self.login()
+            
+        self.max_number_to_Login=self.setting_max_number_to_Login
         self.keepalive()
 
     def login(self):
