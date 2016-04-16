@@ -227,7 +227,7 @@ class XueQiuTrader(WebTrader):
         r = json.loads(r.text)
         return r['list']
 
-    def entrust(self):
+    def get_entrust(self):
         """
         获取委托单(目前返回5次调仓的结果)
         操作数量都按1手模拟换算的
@@ -248,7 +248,7 @@ class XueQiuTrader(WebTrader):
                 entrust_list.append({
                     'entrust_no': entrust['id'],
                     'entrust_bs': u"买入" if entrust['target_weight'] > entrust['weight'] else u"卖出",
-                    'report_time': self.__time_strftime(entrust['updated_at']),
+                    'report_time': self.__time_strftime(entrust['updated_at'] / 1000),
                     'entrust_status': status,
                     'stock_code': entrust['stock_symbol'],
                     'stock_name': entrust['stock_name'],
