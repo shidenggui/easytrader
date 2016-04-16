@@ -6,5 +6,5 @@ from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
 from .gftrader import GFTrader
 
-__version__ = '0.6.0'
+__version__ = '0.6.3'
 __author__ = 'shidenggui'
