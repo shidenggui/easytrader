@@ -5,10 +5,12 @@ import json
 import os
 import random
 import urllib
+import tempfile
 
 import demjson
 import requests
 import six
+
 
 from . import helpers
 from .webtrader import NotLoginError
@@ -49,7 +51,7 @@ class YJBTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
