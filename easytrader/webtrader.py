@@ -158,6 +158,15 @@ class WebTrader(object):
         # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
+    def ipo_enable_amount(self, stock_code):
+        """
+        获取新股可申购额度
+        :param stock_code: 股票 ID
+        :return:
+        """
+        # TODO 目前仅在 佣金宝 中实现
+        log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
+
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
         :param params: 交易所需的动态参数"""

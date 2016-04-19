@@ -4,13 +4,12 @@ from __future__ import division
 import json
 import os
 import random
-import urllib
 import tempfile
+import urllib
 
 import demjson
 import requests
 import six
-
 
 from . import helpers
 from .webtrader import NotLoginError
@@ -125,6 +124,13 @@ class YJBTrader(WebTrader):
         'stock_name': '证券名称'}]
         """
         return self.do(self.config['current_deal'])
+
+    def ipo_enable_amount(self, stock_code):
+        params = dict(
+                self.config['ipo_enable_amount'],
+                stock_code=stock_code
+        )
+        return self.do(params)
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):

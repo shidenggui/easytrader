@@ -309,6 +309,12 @@ user.current_deal
 'stock_name': '证券名称'}]
 ```
 
+#### 查看新股可申购额度(目前仅佣金宝可用)
+
+```python
+user.ipo_enable_amount('股票代码')
+```
+
 ### 命令行模式
 
 #### 登录
