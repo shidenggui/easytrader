@@ -18,12 +18,12 @@
 
 * 佣金宝
 * 华泰
-* 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
-* 广发
+* 银河 by @[ruyiqf](https://github.com/ruyiqf)
+* 广发 by @[ruyiqf](https://github.com/ruyiqf)
 
 ### 模拟交易
 
-* 雪球组合（[说明](doc/xueqiu.md)）
+* 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](doc/xueqiu.md)）
 
 ### requirements
 
