@@ -4,12 +4,11 @@ from __future__ import division
 import json
 import os
 import re
-import urllib
 import tempfile
+import urllib
 
 import requests
 import six
-
 
 from . import helpers
 from .webtrader import WebTrader
@@ -22,6 +21,7 @@ SESSIONIDPOS = 32
 HOLDER_POS = 11
 SH = 0
 SZ = 1
+
 
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
@@ -123,7 +123,7 @@ class GFTrader(WebTrader):
         """设置交易所需的一些基本参数
         """
         account_params = dict(
-            self.config['accountinfo']
+                self.config['accountinfo']
         )
         if six.PY2:
             params_str = urllib.urlencode(account_params)

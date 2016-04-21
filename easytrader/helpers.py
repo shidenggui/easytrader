@@ -160,17 +160,19 @@ def detect_gf_result(image_path):
     res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
 
+
 def detect_yh_result(image_path):
-    from PIL import ImageFilter, Image
+    from PIL import Image
     import pytesseract
     img = Image.open(image_path)
     for x in range(img.width):
         for y in range(img.height):
-            (r,g,b) = img.getpixel((x,y))
+            (r, g, b) = img.getpixel((x, y))
             if r > 100 and g > 100 and b > 100:
-                img.putpixel((x,y), (256,256,256))
+                img.putpixel((x, y), (256, 256, 256))
     res = pytesseract.image_to_string(img)
     return res
+
 
 def get_mac():
     # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
