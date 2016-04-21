@@ -6,7 +6,6 @@ from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
 
-
 def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
     :param broker:券商名支持 ['ht', 'HT', '华泰’] ['yjb', 'YJB', ’佣金宝'] ['yh', 'YH', '银河'] ['gf', 'GF', '广发']

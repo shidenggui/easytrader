@@ -23,7 +23,6 @@ HOLDER_POS = 11
 SH = 0
 SZ = 1
 
-
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
 
@@ -65,7 +64,6 @@ class GFTrader(WebTrader):
     def login(self, throw=False):
         """实现广发证券的自动登录"""
         self.__go_login_page()
-
         verify_code = self.__handle_recognize_code()
 
         if not verify_code:
@@ -125,7 +123,7 @@ class GFTrader(WebTrader):
         """设置交易所需的一些基本参数
         """
         account_params = dict(
-                self.config['accountinfo']
+            self.config['accountinfo']
         )
         if six.PY2:
             params_str = urllib.urlencode(account_params)
