@@ -52,10 +52,10 @@ class YHTrader(WebTrader):
         if len(accounts) < 2:
             raise Exception('无法获取沪深 A 股账户: %s' % accounts)
         for account in accounts:
-            if account['交易市场'] == '深A':
-                self.exchange_stock_account['0'] = account['股东代码'][0:10]
+            if account[u'交易市场'] == '深A':
+                self.exchange_stock_account['0'] = account[u'股东代码'][0:10]
             else:
-                self.exchange_stock_account['1'] = account['股东代码'][0:10]
+                self.exchange_stock_account['1'] = account[u'股东代码'][0:10]
         return login_status
 
     def handle_recognize_code(self):
@@ -147,7 +147,7 @@ class YHTrader(WebTrader):
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
+    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
