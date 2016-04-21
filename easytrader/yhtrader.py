@@ -39,12 +39,7 @@ class YHTrader(WebTrader):
         data = self.s.get(self.config['login_page'])
 
         # 查找验证码
-        search_result = re.search(r'src=\"verifyCodeImage.jsp\?rd=([0-9]{4})\"', data.text)
-        if not search_result:
-            log.debug("Can not find verify code, stop login")
-            return False
-
-        verify_code = search_result.groups()[VERIFY_CODE_POS]
+        verify_code = self.handle_recognize_code()
 
         if not verify_code:
             return False
@@ -62,6 +57,25 @@ class YHTrader(WebTrader):
             else:
                 self.exchange_stock_account['1'] = account['股东代码'][0:10]
         return login_status
+
+    def handle_recognize_code(self):
+        """获取并识别返回的验证码
+        :return:失败返回 False 成功返回 验证码"""
+        # 获取验证码
+        verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
+        # 保存验证码
+        image_path = os.path.join(os.getcwd(), 'vcode')
+        with open(image_path, 'wb') as f:
+            f.write(verify_code_response.content)
+
+        verify_code = helpers.recognize_verify_code(image_path, 'yh')
+        log.debug('verify code detect result: %s' % verify_code)
+        #os.remove(image_path)
+
+        ht_verify_code_length = 4
+        if len(verify_code) != ht_verify_code_length:
+            return False
+        return verify_code
 
     def post_login_data(self, verify_code):
         login_params = dict(
@@ -286,9 +300,14 @@ class YHTrader(WebTrader):
         # 需要对于银河持仓情况特殊处理
         if data.find('yhposition') != -1:
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
-            search_result_content = re.findall(r'<td nowrap=\"nowrap\"  >(.*)</td>', data)
-            if '参考成本价' in search_result_content:
-                search_result_name.remove('参考成本价')
+            search_result_content = []
+            search_result_content_tmp = re.findall(r'<td nowrap=\"nowrap\" ( |style.*)>(.*)</td>', data)
+            for item in search_result_content_tmp:
+                s = item[-1] if type(item) is not str else item
+                k = re.findall(">(.*)<", s)
+                if len(k) > 0:
+                    s = k[-1]
+                search_result_content.append(s)
         else:
             # 获取原始data的html源码并且解析得到一个可读json格式 
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)

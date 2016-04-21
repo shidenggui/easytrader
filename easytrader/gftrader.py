@@ -3,16 +3,14 @@ from __future__ import division
 
 import json
 import os
-import random
 import re
-import demjson
-
-import requests
 import urllib
 
+import requests
+import six
+
 from . import helpers
-from .webtrader import WebTrader, NotLoginError
-from requests import Request, Session
+from .webtrader import WebTrader
 
 log = helpers.get_logger(__file__)
 
@@ -64,7 +62,6 @@ class GFTrader(WebTrader):
     def login(self, throw=False):
         """实现广发证券的自动登录"""
         self.__go_login_page()
-        
         verify_code = self.__handle_recognize_code()
 
         if not verify_code:
@@ -72,7 +69,7 @@ class GFTrader(WebTrader):
 
         login_status, result = self.post_login_data(verify_code)
         if login_status is False:
-            return False 
+            return False
         return True
 
     def post_login_data(self, verify_code):
@@ -94,19 +91,26 @@ class GFTrader(WebTrader):
 
     def create_basic_params(self):
         basic_params = dict(
-            dse_sessionId = self.sessionid
+                dse_sessionId=self.sessionid
         )
         return basic_params
 
     def request(self, params):
-        params_str = urllib.parse.urlencode(params)
-        unquote_str = urllib.parse.unquote(params_str)
-        url = self.trade_prefix + '?' + unquote_str 
+        if six.PY2:
+            params_str = urllib.urlencode(params)
+            unquote_str = urllib.unquote(params_str)
+        else:
+            params_str = urllib.parse.urlencode(params)
+            unquote_str = urllib.parse.unquote(params_str)
+        url = self.trade_prefix + '?' + unquote_str
         r = self.s.post(url)
         return r.content
 
     def format_response_data(self, data):
-        return_data = json.loads(str(data, 'utf-8'))
+        if six.PY2:
+            return_data = json.loads(data.encode('utf-8'))
+        else:
+            return_data = json.loads(str(data, 'utf-8'))
         return return_data
 
     def check_account_live(self, response):
@@ -118,19 +122,23 @@ class GFTrader(WebTrader):
         """
         account_params = dict(
             self.config['accountinfo']
-        ) 
-        params_str = urllib.parse.urlencode(account_params)
-        unquote_str = urllib.parse.unquote(params_str)
+        )
+        if six.PY2:
+            params_str = urllib.urlencode(account_params)
+            unquote_str = urllib.unquote(params_str)
+        else:
+            params_str = urllib.parse.urlencode(account_params)
+            unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
         log.debug('get account info: %s' % unquote_str)
         r = self.s.get(url)
         jslist = r.text.split(';')
         jsholder = jslist[HOLDER_POS]
-        jsholder = re.findall(r'\[(.*)\]',jsholder)
+        jsholder = re.findall(r'\[(.*)\]', jsholder)
         jsholder = jsholder[0].split('},{')
         self.holdername.append(json.loads(jsholder[0] + '}'))
         self.holdername.append(json.loads('{' + jsholder[1]))
-        
+
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
         # 获取股票对应的证券市场
@@ -143,7 +151,7 @@ class GFTrader(WebTrader):
                 exchange_type=exchange_type,
                 stock_account=stock_account
         )
-       
+
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入
         :param stock_code: 股票代码
@@ -174,17 +182,17 @@ class GFTrader(WebTrader):
         )
         return self.__trade(stock_code, price, other=params)
 
-    def fund_subscribe(self, stock_code, price=0, entrust_prop='LFS'):      
+    def fund_subscribe(self, stock_code, price=0, entrust_prop='LFS'):
         """基金认购
         :param stock_code: 基金代码
         :param price: 认购金额
         """
         params = dict(
-               self.config['fundsubscribe'],
-               entrust_amount=1,
-               entrust_prop=entrust_prop
+                self.config['fundsubscribe'],
+                entrust_amount=1,
+                entrust_prop=entrust_prop
         )
-        return self.__trade(stock_code, price, other=params) 
+        return self.__trade(stock_code, price, other=params)
 
     def fund_purchase(self, stock_code, price=0, entrust_prop='LFC'):
         """基金申购
@@ -192,11 +200,11 @@ class GFTrader(WebTrader):
         :param amount: 申购金额
         """
         params = dict(
-               self.config['fundpurchase'],
-               entrust_amount=1,
-               entrust_prop=entrust_prop
+                self.config['fundpurchase'],
+                entrust_amount=1,
+                entrust_prop=entrust_prop
         )
-        return self.__trade(stock_code, price, other=params) 
+        return self.__trade(stock_code, price, other=params)
 
     def fund_redemption(self, stock_code, amount=0, entrust_prop='LFR'):
         """基金赎回
@@ -250,8 +258,8 @@ class GFTrader(WebTrader):
         """撤单
         :param entrust_no: 委单号"""
         cancel_params = dict(
-            self.config['cancel_entrust'],
-            entrust_no=entrust_no,
-            dse_sessionId = self.sessionid
+                self.config['cancel_entrust'],
+                entrust_no=entrust_no,
+                dse_sessionId=self.sessionid
         )
         return self.do(cancel_params)
