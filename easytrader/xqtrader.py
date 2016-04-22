@@ -183,9 +183,11 @@ class XueQiuTrader(WebTrader):
         return stocks
 
     def __time_strftime(self, time_stamp):
-        ltime = time.localtime(time_stamp)
-        return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
-
+        try:
+            ltime = time.localtime(time_stamp/1000)
+            return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
+        except :
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     def get_position(self):
         """
         获取持仓
@@ -225,7 +227,7 @@ class XueQiuTrader(WebTrader):
         r = json.loads(r.text)
         return r['list']
 
-    def entrust(self):
+    def get_entrust(self):
         """
         获取委托单(目前返回5次调仓的结果)
         操作数量都按1手模拟换算的

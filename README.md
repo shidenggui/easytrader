@@ -18,12 +18,12 @@
 
 * 佣金宝
 * 华泰
-* 银河 (感谢 [ruyiqf](https://github.com/ruyiqf) 的贡献)
-* 广发
+* 银河 by @[ruyiqf](https://github.com/ruyiqf)
+* 广发 by @[ruyiqf](https://github.com/ruyiqf)
 
 ### 模拟交易
 
-* 雪球组合（[说明](doc/xueqiu.md)）
+* 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](doc/xueqiu.md)）
 
 ### requirements
 
@@ -307,6 +307,12 @@ user.current_deal
 'business_time': '成交时间',
 'stock_code': '证券代码',
 'stock_name': '证券名称'}]
+```
+
+#### 查看新股可申购额度(目前仅佣金宝可用)
+
+```python
+user.ipo_enable_amount('股票代码')
 ```
 
 ### 命令行模式

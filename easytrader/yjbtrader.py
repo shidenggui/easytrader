@@ -4,6 +4,7 @@ from __future__ import division
 import json
 import os
 import random
+import tempfile
 import urllib
 
 import demjson
@@ -49,7 +50,7 @@ class YJBTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
@@ -123,6 +124,13 @@ class YJBTrader(WebTrader):
         'stock_name': '证券名称'}]
         """
         return self.do(self.config['current_deal'])
+
+    def ipo_enable_amount(self, stock_code):
+        params = dict(
+                self.config['ipo_enable_amount'],
+                stock_code=stock_code
+        )
+        return self.do(params)
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):

@@ -49,15 +49,20 @@ class WebTrader(object):
 
     def prepare(self, need_data):
         """登录的统一接口
-        :param need_data 登录所需数据"""
+        :param need_data 登录所需数据
+        """
         self.read_config(need_data)
         self.autologin()
 
-    def autologin(self):
-        """实现自动登录"""
-        is_login_ok = self.login()
-        if not is_login_ok:
-            self.autologin()
+    def autologin(self, limit=10):
+        """实现自动登录
+        :param limit: 登录次数限制
+        """
+        for _ in range(limit):
+            if self.login():
+                break
+        else:
+            raise NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
         self.keepalive()
 
     def login(self):
@@ -152,6 +157,15 @@ class WebTrader(object):
         """
         # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
+
+    def ipo_enable_amount(self, stock_code):
+        """
+        获取新股可申购额度
+        :param stock_code: 股票 ID
+        :return:
+        """
+        # TODO 目前仅在 佣金宝 中实现
+        log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果

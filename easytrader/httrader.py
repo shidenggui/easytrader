@@ -11,6 +11,7 @@ import threading
 import urllib
 import uuid
 from collections import OrderedDict
+import tempfile
 
 import requests
 import six
@@ -105,7 +106,7 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 

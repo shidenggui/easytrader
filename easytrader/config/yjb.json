@@ -45,6 +45,9 @@
     "sort_direction": 1,
     "service_type": "stock"
   },
+  "ipo_enable_amount": {
+    "request_id": "buystock_301"
+  },
   "exchangetype4stock": {
     "service_type": "stock",
     "function_id": "105"

@@ -8,8 +8,8 @@ import re
 import requests
 
 from . import helpers
-from .webtrader import WebTrader, NotLoginError
 from .helpers import EntrustProp
+from .webtrader import WebTrader, NotLoginError
 
 log = helpers.get_logger(__file__)
 
@@ -70,7 +70,6 @@ class YHTrader(WebTrader):
 
         verify_code = helpers.recognize_verify_code(image_path, 'yh')
         log.debug('verify code detect result: %s' % verify_code)
-        #os.remove(image_path)
 
         ht_verify_code_length = 4
         if len(verify_code) != ht_verify_code_length:
