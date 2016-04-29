@@ -1,3 +1,4 @@
+# coding: utf-8
 import anyjson as json
 import click
 import dill
