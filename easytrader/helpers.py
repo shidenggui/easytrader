@@ -164,12 +164,23 @@ def detect_gf_result(image_path):
 def detect_yh_result(image_path):
     from PIL import Image
     import pytesseract
+    import numpy
+
     img = Image.open(image_path)
+
+    brightness = list()
     for x in range(img.width):
         for y in range(img.height):
             (r, g, b) = img.getpixel((x, y))
-            if r > 100 and g > 100 and b > 100:
+            brightness.append( r+g+b )
+    avgBrightness = int( numpy.mean(brightness) )
+
+    for x in range(img.width):
+        for y in range(img.height):
+            (r, g, b) = img.getpixel((x, y))
+            if  ( (r+g+b)>avgBrightness/1.5 ) or (y<3) or (y>17) or (x<5) or ( x>(img.width-5) ):
                 img.putpixel((x, y), (256, 256, 256))
+    
     res = pytesseract.image_to_string(img)
     return res
 
