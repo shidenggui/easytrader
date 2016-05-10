@@ -29,7 +29,7 @@
 
 > pip install -r requirements.txt
 
-> 华泰 / 佣金宝 的自动登录需要安装以下二者之一： 
+> 华泰 / 佣金宝 的自动登录需要安装以下二者之一， 银河的自动登录需要安装下列的 tesseract： 
 
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 保证在命令行下 `tesseract` 可用
@@ -105,7 +105,7 @@ user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 
 
-[如何获取配置所需信息, 可参考此文章](http://www.jisilu.cn/question/42707)
+[如何获取配置所需信息, 可参考此文章](http://www.celuetan.com/topic/5731e9ee705ee8f61eb681fd)
 
 ### 交易相关
 以下用法以佣金宝为例，华泰类似
