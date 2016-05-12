@@ -6,20 +6,28 @@
 * 支持 Python3 / Python2, Linux / Win
 * 有兴趣的可以加群 `429011814` 一起讨论
 
-**开发环境** : `Ubuntu 15.10` / `Python 3.5`
+**开发环境** : `Ubuntu 16.04` / `Python 3.5`
 
 ### 相关
+
+[量化交流论坛](http://www.celuetan.com) 
+
 [获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
 
 [简单的股票量化交易框架 使用 easytrader 和 easyquotation](https://github.com/shidenggui/easyquant)
 
 捐助: [支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png)  [微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png)
+
 ### 支持券商
 
 * 佣金宝
 * 华泰
 * 银河 by @[ruyiqf](https://github.com/ruyiqf)
 * 广发 by @[ruyiqf](https://github.com/ruyiqf)
+
+## 前言
+
+使用类库前请阅读 [上交所与深交所程序化交易管理细则](http://www.celuetan.com/topic/5731acb2705ee8f61eb681f8)
 
 ### 模拟交易
 
@@ -369,7 +377,6 @@ JSONDecodeError: Expecting value
 请勿使用 `记事本` 编辑账户的 `json` 配置文件，推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
 
 ### 其他
-[交易接口分析以及其他开源量化相关论坛](http://www.celuetan.com) 
 
 [软件实现原理](http://www.jisilu.cn/question/42707)
 
