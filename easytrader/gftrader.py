@@ -137,9 +137,9 @@ class GFTrader(WebTrader):
         jslist = r.text.split(';')
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)
-        jsholder = jsholder[0].split('},{')
-        self.holdername.append(json.loads(jsholder[0] + '}'))
-        self.holdername.append(json.loads('{' + jsholder[1]))
+        jsholder = eval(jsholder[0])
+        self.holdername.append(jsholder[1])
+        self.holdername.append(jsholder[2])
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
