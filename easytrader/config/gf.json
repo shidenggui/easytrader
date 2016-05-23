@@ -74,5 +74,33 @@
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "doDZJYEntrust",
     "entrust_bs": ""
+  },
+  "nxbQueryPrice": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryPrice",
+  },
+  "nxbentrust": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbentrust"
+  },
+  "nxbQueryDeliver": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryDeliver"
+  },
+  "nxbQueryHisDeliver": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryHisDeliver"
+  },
+  "nxbQueryEntrust": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryEntrust"
+  },
+  "queryOfStkCodes": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "queryOfStkCodes"
+  },
+  "queryNXBOfStock": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "queryNXBOfStock"
   }
 }

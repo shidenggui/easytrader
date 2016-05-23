@@ -244,6 +244,107 @@ class GFTrader(WebTrader):
         )
         return self.__trade(stock_code, 1, other=params)
 
+    def nxbQueryPrice(self, fund_code):
+        """牛熊宝查询
+        """
+        params = dict(
+                self.config['nxbQueryPrice'],
+                fund_code=fund_code
+        )
+        return self.do(params)
+
+    def nxbentrust(self, fund_code, amount, price, bs, auto_deal="true"):
+        """牛熊宝单项申报
+        :param fund_code: 转换代码
+        :param amount: 转入数量
+        :param price: 转换比例
+        :param bs: 转换方向，1为母转子，2为子转母
+        """
+        # TODO: What's bs and auto_deal
+        params = dict(
+                self.config['nxbentrust'],
+                fund_code=fund_code,
+                entrust_amount=amount,
+                entrust_price=price,
+                entrust_bs=bs,
+                auto_deal=auto_deal
+        )
+        return self.do(params)
+
+    def nxbQueryEntrust(self, start_date="0", end_date="0", query_type="1"):
+        """当日委托
+        :param start_date: 开始日期20160515,0为当天
+        :param end_date: 结束日期20160522,0为当天
+        :param query_type: 委托查询类型,0为历史查询，1为当日查询
+        """
+        params = dict(
+                self.config['nxbQueryEntrust']
+                query_type=query_type,
+                prodta_no="98",
+                entrust_no="0",
+                fund_code="",
+                start_date=start_date,
+                end_date=end_date,
+                position_str="0",
+                limit="10",
+                start="0"
+        )
+        if query_type == "1":
+            params['query_mode'] = "1"
+        return self.do(params)
+
+    def nxbQueryDeliverOfToday(self):
+        """当日转换
+        """
+        params = dict(
+                self.config['nxbQueryDeliver']
+                query_type="2",
+                prodta_no="98",
+                fund_code="",
+                position_str="0",
+                limit="10",
+                start="0"
+        )
+        return self.do(params)
+
+    def nxbQueryHisDeliver(self, start_date, end_date):
+        """历史转换
+        """
+        params = dict(
+                self.config['nxbQueryHisDeliver']
+                query_type="2",
+                prodta_no="98",
+                fund_code="",
+                position_str="0",
+                limit="50",
+                start="0",
+                start_date=start_date,
+                end_date=end_date
+        )
+        return self.do(params)
+
+    def queryOfStkCodes(self):
+        """牛熊宝代码查询？
+        """
+        params = dict(
+                self.config['queryOfStkCodes'],
+                prodta_no="98",
+                business_type="2"
+        )
+        return self.do(params)
+
+    def queryNXBOfStock(self):
+        """牛熊宝持仓查询
+        """
+        params = dict(
+                self.config['queryNXBOfStock'],
+                fund_company="98",
+                query_mode="0",
+                start="0",
+                limit="10"
+        )
+        return self.do(params)
+
     def __trade(self, stock_code, price, other):
         need_info = self.__get_trade_need_info(stock_code)
         trade_param = dict(
