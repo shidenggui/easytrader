@@ -256,11 +256,11 @@ class GFTrader(WebTrader):
     def nxbentrust(self, fund_code, amount, price, bs, auto_deal="true"):
         """牛熊宝单项申报
         :param fund_code: 转换代码
-        :param amount: 转入数量
-        :param price: 转换比例
+        :param amount: 转入数量, like n*1000, min 1000
+        :param price: 转换比例 like 0.8
         :param bs: 转换方向，1为母转子，2为子转母
         """
-        # TODO: What's bs and auto_deal
+        # TODO: What's auto_deal
         params = dict(
                 self.config['nxbentrust'],
                 fund_code=fund_code,
@@ -270,6 +270,17 @@ class GFTrader(WebTrader):
                 auto_deal=auto_deal
         )
         return self.do(params)
+
+    def nxbentrustcancel(self, entrust_no):
+        """牛熊宝撤单,撤单后再次调用nxbQueryEntrust确认撤单成功
+        param: entrust_no: 单号，通过调用nxbQueryEntrust查询
+        """
+        params = dict(
+                self.config['nxbentrustcancel'],
+                entrust_no=entrust_no
+        )
+        return self.do(params)
+
 
     def nxbQueryEntrust(self, start_date="0", end_date="0", query_type="1"):
         """当日委托

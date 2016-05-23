@@ -102,5 +102,9 @@
   "queryNXBOfStock": {
     "classname": "com.gf.etrade.control.NXBUF2Control",
     "method": "queryNXBOfStock"
+  },
+  "nxbentrustcancel": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbentrustcancel"
   }
 }
