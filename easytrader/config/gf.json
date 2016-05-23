@@ -77,7 +77,7 @@
   },
   "nxbQueryPrice": {
     "classname": "com.gf.etrade.control.NXBUF2Control",
-    "method": "nxbQueryPrice",
+    "method": "nxbQueryPrice"
   },
   "nxbentrust": {
     "classname": "com.gf.etrade.control.NXBUF2Control",

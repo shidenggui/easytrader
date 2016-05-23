@@ -278,7 +278,7 @@ class GFTrader(WebTrader):
         :param query_type: 委托查询类型,0为历史查询，1为当日查询
         """
         params = dict(
-                self.config['nxbQueryEntrust']
+                self.config['nxbQueryEntrust'],
                 query_type=query_type,
                 prodta_no="98",
                 entrust_no="0",
@@ -297,7 +297,7 @@ class GFTrader(WebTrader):
         """当日转换
         """
         params = dict(
-                self.config['nxbQueryDeliver']
+                self.config['nxbQueryDeliver'],
                 query_type="2",
                 prodta_no="98",
                 fund_code="",
@@ -311,7 +311,7 @@ class GFTrader(WebTrader):
         """历史转换
         """
         params = dict(
-                self.config['nxbQueryHisDeliver']
+                self.config['nxbQueryHisDeliver'],
                 query_type="2",
                 prodta_no="98",
                 fund_code="",
