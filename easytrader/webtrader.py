@@ -83,7 +83,7 @@ class WebTrader(object):
                     response = self.heartbeat()
                     self.check_account_live(response)
                 except:
-                    pass
+                    self.autologin()
                 time.sleep(10)
             else:
                 time.sleep(1)
@@ -173,7 +173,12 @@ class WebTrader(object):
         request_params = self.create_basic_params()
         request_params.update(params)
         response_data = self.request(request_params)
-        format_json_data = self.format_response_data(response_data)
+        try:
+            format_json_data = self.format_response_data(response_data)
+        except:
+            self.autologin()
+            response_data = self.request(request_params)
+            format_json_data = self.format_response_data(response_data)
         return_data = self.fix_error_data(format_json_data)
         try:
             self.check_login_status(return_data)
