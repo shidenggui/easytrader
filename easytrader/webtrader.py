@@ -3,6 +3,7 @@ import os
 import re
 import time
 from threading import Thread
+from logbook import Logger, FileHandler
 
 import six
 
@@ -14,8 +15,11 @@ if six.PY2:
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-log = helpers.get_logger(__file__)
-
+log = Logger(__file__)
+log_file = ".".join(__file__.split(os.sep)[-1].split(".")[:-1])
+log_file = os.getcwd() + os.sep + log_file + ".log"
+file_handler = FileHandler(log_file, level="DEBUG")
+log.handlers.append(file_handler)
 
 class NotLoginError(Exception):
     def __init__(self, result=None):
