@@ -6,20 +6,28 @@
 * 支持 Python3 / Python2, Linux / Win
 * 有兴趣的可以加群 `429011814` 一起讨论
 
-**开发环境** : `Ubuntu 15.10` / `Python 3.5`
+**开发环境** : `Ubuntu 16.04` / `Python 3.5`
 
 ### 相关
+
+[量化交流论坛](http://www.celuetan.com) 
+
 [获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
 
 [简单的股票量化交易框架 使用 easytrader 和 easyquotation](https://github.com/shidenggui/easyquant)
 
 捐助: [支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png)  [微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png)
+
 ### 支持券商
 
 * 佣金宝
 * 华泰
 * 银河 by @[ruyiqf](https://github.com/ruyiqf)
 * 广发 by @[ruyiqf](https://github.com/ruyiqf)
+
+## 前言
+
+使用类库前请阅读 [上交所与深交所程序化交易管理细则](http://www.celuetan.com/topic/5731acb2705ee8f61eb681f8)
 
 ### 模拟交易
 
@@ -29,7 +37,7 @@
 
 > pip install -r requirements.txt
 
-> 华泰 / 佣金宝 的自动登录需要安装以下二者之一： 
+> 华泰 / 佣金宝 的自动登录需要安装以下二者之一， 银河的自动登录需要安装下列的 tesseract： 
 
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 保证在命令行下 `tesseract` 可用
@@ -102,10 +110,10 @@ user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
 * 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 以及登录`POST`请求里面的`hardinfo`字段 
-* 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改 `""`
+* 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 
 
-[如何获取配置所需信息, 可参考此文章](http://www.jisilu.cn/question/42707)
+[如何获取配置所需信息, 可参考此文章](http://www.celuetan.com/topic/5731e9ee705ee8f61eb681fd)
 
 ### 交易相关
 以下用法以佣金宝为例，华泰类似
@@ -369,7 +377,6 @@ JSONDecodeError: Expecting value
 请勿使用 `记事本` 编辑账户的 `json` 配置文件，推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
 
 ### 其他
-[交易接口分析以及其他开源量化相关论坛](http://www.celuetan.com) 
 
 [软件实现原理](http://www.jisilu.cn/question/42707)
 
