@@ -180,9 +180,8 @@ class WebTrader(object):
         try:
             format_json_data = self.format_response_data(response_data)
         except:
-            self.autologin()
-            response_data = self.request(request_params)
-            format_json_data = self.format_response_data(response_data)
+            # Caused by server force logged out
+            return None
         return_data = self.fix_error_data(format_json_data)
         try:
             self.check_login_status(return_data)
