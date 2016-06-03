@@ -116,5 +116,14 @@
   "nxbentrustcancel": {
     "classname": "com.gf.etrade.control.NXBUF2Control",
     "method": "nxbentrustcancel"
+  },
+  "exchangebill": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryDeliver",
+    "request_num": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1
   }
 }
