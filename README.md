@@ -25,9 +25,6 @@
 * 银河 by @[ruyiqf](https://github.com/ruyiqf)
 * 广发 by @[ruyiqf](https://github.com/ruyiqf)
 
-## 前言
-
-使用类库前请阅读 [上交所与深交所程序化交易管理细则](http://www.celuetan.com/topic/5731acb2705ee8f61eb681f8)
 
 ### 模拟交易
 
@@ -48,7 +45,8 @@
 pip install easytrader
 ```
 
-注： `Window` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`
+注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`
+注： Windows 用户可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
 
 ### 升级
 
