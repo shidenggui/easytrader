@@ -45,8 +45,7 @@
 pip install easytrader
 ```
 
-注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`
-注： Windows 用户可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
+注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader, 可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
 
 ### 升级
 
