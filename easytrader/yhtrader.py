@@ -147,7 +147,7 @@ class YHTrader(WebTrader):
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
+    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
