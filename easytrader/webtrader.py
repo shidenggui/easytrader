@@ -65,8 +65,8 @@ class WebTrader(object):
         for _ in range(limit):
             if self.login():
                 break
-        else:
-            raise NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
+            else:
+                raise NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
         self.keepalive()
 
     def login(self):
