@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import anyjson as json
 import click
 import dill
@@ -18,7 +20,7 @@ ACCOUNT_OBJECT_FILE = 'account.session'
 def main(prepare, use, do, get, params, debug):
     if get is not None:
         do = get
-    if prepare is not None and use in ['ht', 'yjb', 'yh']:
+    if prepare is not None and use in ['ht', 'yjb', 'yh', 'gf', 'xq']:
         user = easytrader.use(use, debug)
         user.prepare(prepare)
         with open(ACCOUNT_OBJECT_FILE, 'wb') as f:

@@ -3,6 +3,7 @@ import os
 import re
 import time
 from threading import Thread
+from logbook import Logger, FileHandler
 
 import six
 
@@ -14,8 +15,11 @@ if six.PY2:
     reload(sys)
     sys.setdefaultencoding('utf8')
 
-log = helpers.get_logger(__file__)
-
+log = Logger(__file__)
+log_file = ".".join(__file__.split(os.sep)[-1].split(".")[:-1])
+log_file = os.getcwd() + os.sep + log_file + ".log"
+file_handler = FileHandler(log_file, level="DEBUG")
+log.handlers.append(file_handler)
 
 class NotLoginError(Exception):
     def __init__(self, result=None):
@@ -83,7 +87,7 @@ class WebTrader(object):
                     response = self.heartbeat()
                     self.check_account_live(response)
                 except:
-                    pass
+                    self.autologin()
                 time.sleep(10)
             else:
                 time.sleep(1)
@@ -173,7 +177,11 @@ class WebTrader(object):
         request_params = self.create_basic_params()
         request_params.update(params)
         response_data = self.request(request_params)
-        format_json_data = self.format_response_data(response_data)
+        try:
+            format_json_data = self.format_response_data(response_data)
+        except:
+            # Caused by server force logged out
+            return None
         return_data = self.fix_error_data(format_json_data)
         try:
             self.check_login_status(return_data)
