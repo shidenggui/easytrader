@@ -6,7 +6,6 @@ import random
 import re
 
 import requests
-import pandas
 
 from . import helpers
 from .helpers import EntrustProp
@@ -112,7 +111,7 @@ class YHTrader(WebTrader):
         self.cookie = dict(JSESSIONID=token)
         self.keepalive()
 
-    def check_available_cancels(self, parsed = True, df = False):
+    def check_available_cancels(self, parsed = True):
         """
         @Contact: Emptyset <21324784@qq.com>
         检查撤单列表
@@ -145,9 +144,6 @@ class YHTrader(WebTrader):
                 ,   "account":      item[11]
                 }
                 result.append(item_dict)
-            if df == True:
-                cancel_df = pandas.DataFrame.from_records( result )
-                return cancel_df
         return result
 
     def cancel_entrust(self, entrust_no, stock_code):
