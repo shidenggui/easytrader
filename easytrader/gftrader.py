@@ -138,6 +138,11 @@ class GFTrader(WebTrader):
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)
         jsholder = eval(jsholder[0])
+
+        if len(jsholder) < 3:
+            self.holdername.append(jsholder[0])
+            self.holdername.append(jsholder[1])
+            return
         self.holdername.append(jsholder[1])
         self.holdername.append(jsholder[2])
 
