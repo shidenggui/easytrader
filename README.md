@@ -25,9 +25,6 @@
 * 银河 by @[ruyiqf](https://github.com/ruyiqf)
 * 广发 by @[ruyiqf](https://github.com/ruyiqf)
 
-## 前言
-
-使用类库前请阅读 [上交所与深交所程序化交易管理细则](http://www.celuetan.com/topic/5731acb2705ee8f61eb681f8)
 
 ### 模拟交易
 
@@ -48,7 +45,7 @@
 pip install easytrader
 ```
 
-注： `Window` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`
+注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader, 可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
 
 ### 升级
 
@@ -256,7 +253,7 @@ user.fundsplit('基金代码', '基金份额')
 
 #### 查询交割单
 
-##### 华泰
+##### 华泰/广发
 
 需要注意通常券商只会返回有限天数最新的交割单，如查询2015年整年数据, 华泰只会返回年末的90天的交割单
 
@@ -322,6 +319,65 @@ user.current_deal
 ```python
 user.ipo_enable_amount('股票代码')
 ```
+
+
+#### 场内基金赎回(广发)
+
+```
+user.cnjj_redemption('股票代码', '赎回份额')
+```
+
+#### 场内基金申购(广发)
+
+```
+user.cnjj_apply('股票代码', '赎回份额')
+```
+
+### 广发牛熊宝
+
+
+#### 牛熊宝查询
+
+```
+user.nxbQueryPrice('基金代码')
+```
+
+#### 牛熊宝单项申报
+
+```
+user.nxbentrust('基金代码', '转入数量', '转换比例', '转换方向')
+```
+
+#### 单日委托
+
+```
+user.nxbQueryEntrust('开始日期,ex:20160515', '结束日期', '查询类型[0:历史， 1:单日]')
+```
+
+#### 单日转换
+
+```
+user.nxbQueryDeliverOfToday()
+```
+
+#### 历史转换
+
+```
+user.nxbQueryHisDeliver()
+```
+
+#### 牛熊宝代码查询
+
+```
+user.queryOfStkCode()
+```
+
+#### 牛熊宝持仓查询
+
+```
+user.queryNXBOfStock()
+```
+
 
 ### 命令行模式
 

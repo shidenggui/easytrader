@@ -40,7 +40,7 @@ class GFTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
+        image_path = tempfile.mktemp()
         with open(image_path, 'wb') as f:
             f.write(bytes(verify_code_response.content))
 
@@ -137,6 +137,11 @@ class GFTrader(WebTrader):
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)
         jsholder = eval(jsholder[0])
+
+        if len(jsholder) < 3:
+            self.holdername.append(jsholder[0])
+            self.holdername.append(jsholder[1])
+            return
         self.holdername.append(jsholder[1])
         self.holdername.append(jsholder[2])
 
@@ -182,6 +187,28 @@ class GFTrader(WebTrader):
                 entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, price, other=params)
+
+    def cnjj_apply(self, stock_code, amount):
+        """场内基金申购
+        :param stock_code: 基金代码
+        :param amount: 申购金额
+        """
+        params = dict(
+                self.config['cnjj_apply'],
+                entrust_amount=amount
+        )
+        return self.__trade(stock_code, 0, other=params)
+
+    def cnjj_redemption(self, stock_code, amount=0):
+        """场内基金赎回
+        :param stock_code: 基金代码
+        :param amount: 赎回份额
+        """
+        params = dict(
+                self.config['cnjj_redeem'],
+                entrust_amount=amount
+        )
+        return self.__trade(stock_code, 1, other=params)
 
     def fund_subscribe(self, stock_code, price=0, entrust_prop='LFS'):
         """基金认购
@@ -243,6 +270,118 @@ class GFTrader(WebTrader):
         )
         return self.__trade(stock_code, 1, other=params)
 
+    def nxbQueryPrice(self, fund_code):
+        """牛熊宝查询
+        """
+        params = dict(
+                self.config['nxbQueryPrice'],
+                fund_code=fund_code
+        )
+        return self.do(params)
+
+    def nxbentrust(self, fund_code, amount, price, bs, auto_deal="true"):
+        """牛熊宝单项申报
+        :param fund_code: 转换代码
+        :param amount: 转入数量, like n*1000, min 1000
+        :param price: 转换比例 like 0.8
+        :param bs: 转换方向，1为母转子，2为子转母
+        """
+        # TODO: What's auto_deal
+        params = dict(
+                self.config['nxbentrust'],
+                fund_code=fund_code,
+                entrust_amount=amount,
+                entrust_price=price,
+                entrust_bs=bs,
+                auto_deal=auto_deal
+        )
+        return self.do(params)
+
+    def nxbentrustcancel(self, entrust_no):
+        """牛熊宝撤单,撤单后再次调用nxbQueryEntrust确认撤单成功
+        param: entrust_no: 单号，通过调用nxbQueryEntrust查询
+        """
+        params = dict(
+                self.config['nxbentrustcancel'],
+                entrust_no=entrust_no
+        )
+        return self.do(params)
+
+
+    def nxbQueryEntrust(self, start_date="0", end_date="0", query_type="1"):
+        """当日委托
+        :param start_date: 开始日期20160515,0为当天
+        :param end_date: 结束日期20160522,0为当天
+        :param query_type: 委托查询类型,0为历史查询，1为当日查询
+        """
+        params = dict(
+                self.config['nxbQueryEntrust'],
+                query_type=query_type,
+                prodta_no="98",
+                entrust_no="0",
+                fund_code="",
+                start_date=start_date,
+                end_date=end_date,
+                position_str="0",
+                limit="10",
+                start="0"
+        )
+        if query_type == "1":
+            params['query_mode'] = "1"
+        return self.do(params)
+
+    def nxbQueryDeliverOfToday(self):
+        """当日转换
+        """
+        params = dict(
+                self.config['nxbQueryDeliver'],
+                query_type="2",
+                prodta_no="98",
+                fund_code="",
+                position_str="0",
+                limit="10",
+                start="0"
+        )
+        return self.do(params)
+
+    def nxbQueryHisDeliver(self, start_date, end_date):
+        """历史转换
+        """
+        params = dict(
+                self.config['nxbQueryHisDeliver'],
+                query_type="2",
+                prodta_no="98",
+                fund_code="",
+                position_str="0",
+                limit="50",
+                start="0",
+                start_date=start_date,
+                end_date=end_date
+        )
+        return self.do(params)
+
+    def queryOfStkCodes(self):
+        """牛熊宝代码查询？
+        """
+        params = dict(
+                self.config['queryOfStkCodes'],
+                prodta_no="98",
+                business_type="2"
+        )
+        return self.do(params)
+
+    def queryNXBOfStock(self):
+        """牛熊宝持仓查询
+        """
+        params = dict(
+                self.config['queryNXBOfStock'],
+                fund_company="98",
+                query_mode="0",
+                start="0",
+                limit="10"
+        )
+        return self.do(params)
+
     def __trade(self, stock_code, price, other):
         need_info = self.__get_trade_need_info(stock_code)
         trade_param = dict(
@@ -264,3 +403,22 @@ class GFTrader(WebTrader):
                 dse_sessionId=self.sessionid
         )
         return self.do(cancel_params)
+        
+    @property
+    def exchangebill(self):
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        params = self.config['exchangebill'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
