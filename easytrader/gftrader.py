@@ -409,6 +409,21 @@ class GFTrader(WebTrader):
         start_date, end_date = helpers.get_30_date()
         return self.get_exchangebill(start_date, end_date)
 
+    def getStockQuotation(self, stockcode):
+        exchange_info = self.__get_trade_need_info(stockcode)
+        params = dict(
+                self.config['queryStockInfo'],
+                exchange_type = 2,
+                stock_code = stockcode
+        )
+        request_params = self.create_basic_params()
+        request_params.update(params)
+        response_data = self.request(request_params)
+        response_data = str(response_data)
+        response_data = response_data[response_data.find('hq')+3:response_data.find('hqtype')-1]
+        response_data = response_data.replace('\\x', '\\u00')
+        return json.loads(response_data)
+
     def get_exchangebill(self, start_date, end_date):
         """
         查询指定日期内的交割单
