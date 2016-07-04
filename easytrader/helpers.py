@@ -160,6 +160,17 @@ def detect_gf_result(image_path):
     res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
 
+def detect_yh_result(image_path):
+    from PIL import ImageFilter, Image
+    import pytesseract
+    img = Image.open(image_path)
+    for x in range(img.width):
+        for y in range(img.height):
+            (r,g,b) = img.getpixel((x,y))
+            if r > 100 and g > 100 and b > 100:
+                img.putpixel((x,y), (256,256,256))
+    res = pytesseract.image_to_string(img)
+    return res
 
 def detect_yh_result(image_path):
     from PIL import Image

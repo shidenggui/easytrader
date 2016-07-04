@@ -22,7 +22,6 @@ HOLDER_POS = 11
 SH = 0
 SZ = 1
 
-
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
 
@@ -123,7 +122,7 @@ class GFTrader(WebTrader):
         """设置交易所需的一些基本参数
         """
         account_params = dict(
-                self.config['accountinfo']
+            self.config['accountinfo']
         )
         if six.PY2:
             params_str = urllib.urlencode(account_params)
@@ -409,6 +408,21 @@ class GFTrader(WebTrader):
     def exchangebill(self):
         start_date, end_date = helpers.get_30_date()
         return self.get_exchangebill(start_date, end_date)
+
+    def getStockQuotation(self, stockcode):
+        exchange_info = self.__get_trade_need_info(stockcode)
+        params = dict(
+                self.config['queryStockInfo'],
+                exchange_type = exchange_info['exchange_type'],
+                stock_code = stockcode
+        )
+        request_params = self.create_basic_params()
+        request_params.update(params)
+        response_data = self.request(request_params)
+        response_data = str(response_data)
+        response_data = response_data[response_data.find('hq')+3:response_data.find('hqtype')-1]
+        response_data = response_data.replace('\\x', '\\u00')
+        return json.loads(response_data)
 
     def get_exchangebill(self, start_date, end_date):
         """
