@@ -413,7 +413,7 @@ class GFTrader(WebTrader):
         exchange_info = self.__get_trade_need_info(stockcode)
         params = dict(
                 self.config['queryStockInfo'],
-                exchange_type = 2,
+                exchange_type = exchange_info['exchange_type'],
                 stock_code = stockcode
         )
         request_params = self.create_basic_params()
