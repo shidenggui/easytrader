@@ -17,6 +17,15 @@ VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
 HOLDER_NAME = 0
 
+# 用于将一个list按一定步长切片，返回这个list切分后的list
+def slice_list(step = None, num = None, data_list=None):
+    if not ( (step is None) & (num is None) ):
+        if num is not None:
+            step = math.ceil(len(data_list)/num)
+        return [data_list[ i : i + step] for i in range(0, len(data_list), step)]
+    else:
+        print("step和num不能同时为空")
+        return False
 
 class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
@@ -102,6 +111,41 @@ class YHTrader(WebTrader):
         self.cookie = dict(JSESSIONID=token)
         self.keepalive()
 
+    def check_available_cancels(self, parsed = True):
+        """
+        @Contact: Emptyset <21324784@qq.com>
+        检查撤单列表
+        """
+        try:
+            response = self.s.get( "https://www.chinastock.com.cn/trade/webtrade/stock/StockEntrustCancel.jsp", cookies=self.cookie )
+            html = response.text.replace("\t","").replace("\n","").replace("\r","")
+            pattern = r'<tr\s(?:[a-zA-Z0-9\:\=\'\"\(\)\s]*)>(.+)</tr></TBODY>'
+            result1 = re.findall(pattern, html)[0]
+            pattern = r'<td\s(?:[a-zA-Z0-9=_\"\:]*)>([\S]+)</td>'
+            parsed_data = re.findall(pattern, result1)
+            cancel_list = slice_list(step = 12, data_list = parsed_data)
+        except Exception as e:
+            return []
+        if parsed == True:
+            result = list()
+            for item in cancel_list:
+                item_dict = {
+                    "time"  :   item[0]
+                ,   "code"  :   item[1]
+                ,   "name"  :   item[2]
+                ,   "status":   item[3]
+                ,   "iotype":   item[4]
+                ,   "price" :   float(item[5])
+                ,   "volume":   int(item[6])
+                ,   "entrust_num": item[7]
+                ,   "trans_vol": int(item[8])
+                ,   "canceled_vol": int(item[9])
+                ,   "investor_code": item[10]
+                ,   "account":      item[11]
+                }
+                result.append(item_dict)
+        return result
+
     def cancel_entrust(self, entrust_no, stock_code):
         """撤单
         :param entrust_no: 委托单号
@@ -114,14 +158,46 @@ class YHTrader(WebTrader):
         )
         cancel_response = self.s.post(self.config['trade_api'], params=cancel_params)
         log.debug('cancel trust: %s' % cancel_response.text)
-        return True
+        return cancel_response.json()
+
+    def cancel_entrusts(self, entrust_no):
+        """
+        @Contact: Emptyset <21324784@qq.com>
+        批量撤单
+        @param
+            entrust_no: string类型
+                        委托单号，用逗号隔开
+                        e.g:"8000,8001,8002"
+        """
+        list_entrust_no = entrust_no.split(",")
+        if list_entrust_no[-1] is "":
+            num = len(list_entrust_no) - 1
+        else:
+            num = len(list_entrust_no)
+        cancel_data = {
+            "ajaxFlag":"stock_batch_cancel"
+        ,   "num":num
+        ,   "orderSno": entrust_no
+        }
+        while True:
+            try:
+                cancel_response = self.s.post(
+                    "https://www.chinastock.com.cn/trade/AjaxServlet"
+                ,   data = cancel_data
+                )
+                break
+            except Exception as e:
+                log.debug( '{}'.format(e) )
+        return cancel_response.json()
 
     @property
     def current_deal(self):
         return self.get_current_deal()
 
     def get_current_deal(self):
-        """获取当日成交列表."""
+        """
+        获取当日成交列表.
+        """
         return self.do(self.config['current_deal'])
 
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
@@ -261,6 +337,8 @@ class YHTrader(WebTrader):
                 secuid=need_info['stock_account']
         )
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
+        log.debug( "{}".format( self.config['trade_api'] ) )
+        log.debug( "{}".format( trade_params ) )
         log.debug('trade response: %s' % trade_response.text)
         return trade_response.json()
 
@@ -285,6 +363,8 @@ class YHTrader(WebTrader):
         url = self.trade_prefix + params['service_jsp']
         r = self.s.get(url, cookies=self.cookie)
         if params['service_jsp'] == '/trade/webtrade/stock/stock_zjgf_query.jsp':
+            if r.text.find('系统超时请重新登录') != -1:
+                return False
             if params['service_type'] == 2:
                 rptext = r.text[0:r.text.find('操作')]
                 return rptext
@@ -296,6 +376,8 @@ class YHTrader(WebTrader):
             return r.text
 
     def format_response_data(self, data):
+        if data == False:
+            return False
         # 需要对于银河持仓情况特殊处理
         if data.find('yhposition') != -1:
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
@@ -308,7 +390,7 @@ class YHTrader(WebTrader):
                     s = k[-1]
                 search_result_content.append(s)
         else:
-            # 获取原始data的html源码并且解析得到一个可读json格式 
+            # 获取原始data的html源码并且解析得到一个可读json格式
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
             search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
 
@@ -337,7 +419,8 @@ class YHTrader(WebTrader):
         heartbeat_params = dict(
                 ftype='bsn'
         )
-        self.s.post(self.config['heart_beat'], params=heartbeat_params)
+        res = self.s.post(self.config['heart_beat'], params=heartbeat_params)
+        # log.debug( "Heart Beat Response: {}".format(res.text) )
 
     def unlockscreen(self):
         unlock_params = dict(

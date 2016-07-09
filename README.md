@@ -4,7 +4,7 @@
 * 实现自动登录
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3 / Python2, Linux / Win
-* 有兴趣的可以加群 `429011814` 一起讨论
+* 有兴趣的可以加群 `549879767` 、`429011814`(已满) 一起讨论
 
 **开发环境** : `Ubuntu 16.04` / `Python 3.5`
 
@@ -45,7 +45,7 @@
 pip install easytrader
 ```
 
-注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader, 可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
+注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`, 可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
 
 ### 升级
 

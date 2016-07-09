@@ -61,7 +61,7 @@ def get_stock_type(stock_code):
     assert type(stock_code) is str, 'stock code need str type'
     if stock_code.startswith(('sh', 'sz')):
         return stock_code[:2]
-    if stock_code.startswith(('50', '51', '60', '90', '110', '113', '132', '204')):
+    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204')):
         return 'sh'
     if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30', '39', '115', '1318')):
         return 'sz'
@@ -160,6 +160,17 @@ def detect_gf_result(image_path):
     res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
 
+def detect_yh_result(image_path):
+    from PIL import ImageFilter, Image
+    import pytesseract
+    img = Image.open(image_path)
+    for x in range(img.width):
+        for y in range(img.height):
+            (r,g,b) = img.getpixel((x,y))
+            if r > 100 and g > 100 and b > 100:
+                img.putpixel((x,y), (256,256,256))
+    res = pytesseract.image_to_string(img)
+    return res
 
 def detect_yh_result(image_path):
     from PIL import Image
