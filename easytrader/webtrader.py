@@ -11,8 +11,9 @@ from . import helpers
 
 if six.PY2:
     import sys
-
+    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr #获取标准输入、标准输出和标准错误输出
     reload(sys)
+    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde #保持标准输入、标准输出和标准错误输出
     sys.setdefaultencoding('utf8')
 
 log = Logger(__file__)
