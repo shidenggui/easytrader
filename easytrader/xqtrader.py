@@ -10,11 +10,10 @@ import six
 from . import helpers
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
+from .log import log
 
 if six.PY2:
     import urllib2
-
-log = helpers.get_logger(__file__)
 
 
 class TraderError(Exception):

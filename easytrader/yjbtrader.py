@@ -14,8 +14,7 @@ import six
 from . import helpers
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-
-log = helpers.get_logger(__file__)
+from .log import log
 
 
 class YJBTrader(WebTrader):
