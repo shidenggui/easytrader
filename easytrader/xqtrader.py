@@ -129,7 +129,7 @@ class XueQiuTrader(WebTrader):
             'code': str(code),
             'size': '300',
             'key': '47bce5c74f',
-            'market': 'cn',
+            'market': self.account_config['portfolio_market'],
         }
         r = self.requests.get(self.config['search_stock_url'], headers=self.headers, cookies=self.cookies, params=data)
         stocks = json.loads(r.text)
@@ -299,7 +299,7 @@ class XueQiuTrader(WebTrader):
         if stock == None:
             raise TraderError(u"没有查询要操作的股票信息")
         if not volume:
-            volume = int(price * amount)  # 可能要取整数
+            volume = int(float(price) * float(amount))  # 可能要取整数
         if balance['current_balance'] < volume and entrust_bs == 'buy':
             raise TraderError(u"没有足够的现金进行操作")
         if stock['flag'] != 1:
