@@ -1,6 +1,5 @@
 requests
 demjson
-logbook
 anyjson
 dill
 click

@@ -12,8 +12,8 @@ import six
 
 from . import helpers
 from .webtrader import WebTrader
+from .log import log
 
-log = helpers.get_logger(__file__)
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
@@ -82,7 +82,7 @@ class GFTrader(WebTrader):
                 tmp_yzm=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
-        log.debug(login_response.text)
+        log.info('login response: {}'.format(login_response.text))
         if login_response.json()['success'] == True:
             v = login_response.headers
             self.sessionid = v['Set-Cookie'][-SESSIONIDPOS:]
@@ -105,6 +105,7 @@ class GFTrader(WebTrader):
             unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
         r = self.s.post(url)
+        log.debug('raw response: {}'.format(r.text))
         return r.content
 
     def format_response_data(self, data):
@@ -131,8 +132,8 @@ class GFTrader(WebTrader):
             params_str = urllib.parse.urlencode(account_params)
             unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
-        log.debug('get account info: %s' % unquote_str)
         r = self.s.get(url)
+        log.debug('get account info: {}'.format(r.text))
         jslist = r.text.split(';')
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)

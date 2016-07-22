@@ -8,18 +8,14 @@ from logbook import Logger, FileHandler
 import six
 
 from . import helpers
+from .log import log
 
 if six.PY2:
     import sys
-
+    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr #获取标准输入、标准输出和标准错误输出
     reload(sys)
+    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde #保持标准输入、标准输出和标准错误输出
     sys.setdefaultencoding('utf8')
-
-log = Logger(__file__)
-log_file = ".".join(__file__.split(os.sep)[-1].split(".")[:-1])
-log_file = os.getcwd() + os.sep + log_file + ".log"
-file_handler = FileHandler(log_file, level="DEBUG")
-log.handlers.append(file_handler)
 
 class NotLoginError(Exception):
     def __init__(self, result=None):

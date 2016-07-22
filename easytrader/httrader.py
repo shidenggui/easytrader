@@ -18,23 +18,7 @@ import six
 
 from . import helpers
 from .webtrader import WebTrader, NotLoginError
-
-log = helpers.get_logger(__file__)
-
-# 移除心跳线程产生的日志
-debug_log = log.debug
-
-
-def remove_heart_log(*args, **kwargs):
-    if six.PY2:
-        if threading.current_thread().name == 'MainThread':
-            debug_log(*args, **kwargs)
-    else:
-        if threading.current_thread() == threading.main_thread():
-            debug_log(*args, **kwargs)
-
-
-log.debug = remove_heart_log
+from .log import log
 
 
 class HTTrader(WebTrader):

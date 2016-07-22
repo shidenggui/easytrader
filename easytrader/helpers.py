@@ -9,27 +9,12 @@ import uuid
 
 import logbook
 import six
-from logbook import Logger, StreamHandler, NullHandler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
+from .log import log
 
 if six.PY2:
     from io import open
-
-
-def get_logger(name, debug=True):
-    logbook.set_datetime_format('local')
-    handler = StreamHandler(sys.stdout) if debug else NullHandler()
-    handler.push_application()
-    return Logger(os.path.basename(name))
-
-
-def disable_log():
-    global log
-    log = get_logger(__file__, debug=False)
-
-
-log = get_logger(__file__)
 
 
 class EntrustProp(object):
@@ -65,9 +50,6 @@ def get_stock_type(stock_code):
         return 'sh'
     if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30', '39', '115', '1318')):
         return 'sz'
-    log.warn(
-            'cant auto decide {code} stock type, use default simple rule, please manually use sz{code}/sh{code}'.format(
-                    code=stock_code))
     if stock_code.startswith(('5', '6', '9')):
         return 'sh'
     return 'sz'
