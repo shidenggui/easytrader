@@ -22,7 +22,6 @@ class YJBTrader(WebTrader):
 
     def __init__(self):
         super(YJBTrader, self).__init__()
-        self.cookie = None
         self.account_config = None
         self.s = requests.session()
         self.s.mount('https://', helpers.Ssl3HttpAdapter())
@@ -80,15 +79,6 @@ class YJBTrader(WebTrader):
         if login_response.text.find('上次登陆') != -1:
             return True, None
         return False, login_response.text
-
-    @property
-    def token(self):
-        return self.cookie['JSESSIONID']
-
-    @token.setter
-    def token(self, token):
-        self.cookie = dict(JSESSIONID=token)
-        self.keepalive()
 
     def cancel_entrust(self, entrust_no, stock_code):
         """撤单
@@ -209,7 +199,7 @@ class YJBTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        r = self.s.get(self.trade_prefix, params=params, cookies=self.cookie)
+        r = self.s.get(self.trade_prefix, params=params)
         return r.text
 
     def format_response_data(self, data):
