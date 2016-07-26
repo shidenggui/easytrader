@@ -10,8 +10,8 @@ import requests
 from . import helpers
 from .helpers import EntrustProp
 from .webtrader import WebTrader, NotLoginError
+from .log import log
 
-log = helpers.get_logger(__file__)
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
