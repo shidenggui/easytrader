@@ -156,7 +156,7 @@ class YJBTrader(WebTrader):
         """
         查询新股新股申购额度申购上限
         :param stock_code: 申购代码!!!
-        :return: high_amount(最高申购股数) enable_amount(申购额度)
+        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
         """
         if not self.heart_thread.is_alive():
             check_data = self.get_balance()
@@ -177,7 +177,7 @@ class YJBTrader(WebTrader):
         if 'error_no' in data.keys() and data['error_no'] != "0":
             log.debug('查询错误: %s' % (data['error_info']))
             return None
-        return dict(high_amount=data['high_amount'], enable_amount=data['enable_amount'])
+        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'], last_price=float(data['last_price']))
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
