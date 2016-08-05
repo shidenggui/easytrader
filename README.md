@@ -378,6 +378,21 @@ user.queryOfStkCode()
 user.queryNXBOfStock()
 ```
 
+#### 查询新股申购额度申购上限
+
+##### 佣金宝
+
+```python
+user.get_stock_limit('申购代码')
+```
+
+**return**
+
+```python
+{'high_amount': '最高申购股数',
+'enable_amount': '申购额度',
+'last_price': '发行价',}
+```
 
 ### 命令行模式
 

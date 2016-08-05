@@ -154,7 +154,7 @@ class YJBTrader(WebTrader):
 
     def get_stock_limit(self, stock_code):
         """
-        查询新股新股申购额度申购上限
+        查询新股申购额度申购上限
         :param stock_code: 申购代码!!!
         :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
         """
