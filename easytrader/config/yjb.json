@@ -56,5 +56,6 @@
     "service_type": "stock",
     "function_id": "407",
     "window_id": "StockMarketTrade"
-  }
+  },
+  "buystock": "buystock_300"
 }
