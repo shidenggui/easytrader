@@ -114,13 +114,6 @@ class YJBTrader(WebTrader):
         """
         return self.do(self.config['current_deal'])
 
-    def ipo_enable_amount(self, stock_code):
-        params = dict(
-                self.config['ipo_enable_amount'],
-                stock_code=stock_code
-        )
-        return self.do(params)
-
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
@@ -151,6 +144,33 @@ class YJBTrader(WebTrader):
                 entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
+
+    def get_ipo_limit(self, stock_code):
+        """
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码!!!
+        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
+        """
+        if not self.heart_thread.is_alive():
+            check_data = self.get_balance()
+            if type(check_data) == dict:
+                return check_data
+        need_info = self.__get_trade_need_info(stock_code)
+        params = dict(
+                CSRF_Token='undefined',
+                timestamp=random.random(),
+                request_id=self.config['buystock'],
+                stock_account=need_info['stock_account'],  # '沪深帐号'
+                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+                entrust_prop=0,
+                stock_code=stock_code
+        )
+        return_json = self.format_response_data(self.request(params))
+        data = self.fix_error_data(return_json)
+        if 'error_no' in data.keys() and data['error_no'] != "0":
+            log.debug('查询错误: %s' % (data['error_info']))
+            return None
+        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'], last_price=float(data['last_price']))
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
