@@ -46,7 +46,7 @@
     "service_type": "stock"
   },
   "ipo_enable_amount": {
-    "request_id": "buystock_301"
+    "request_id": "buystock_300"
   },
   "exchangetype4stock": {
     "service_type": "stock",
@@ -56,6 +56,5 @@
     "service_type": "stock",
     "function_id": "407",
     "window_id": "StockMarketTrade"
-  },
-  "buystock": "buystock_300"
+  }
 }
