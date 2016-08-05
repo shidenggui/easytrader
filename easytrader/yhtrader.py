@@ -58,6 +58,8 @@ class YHTrader(WebTrader):
             raise NotLoginError(result)
 
         accounts = self.do(self.config['account4stock'])
+        if accounts is False:
+            return False
         if len(accounts) < 2:
             raise Exception('无法获取沪深 A 股账户: %s' % accounts)
         for account in accounts:
