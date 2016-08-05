@@ -314,12 +314,6 @@ user.current_deal
 'stock_name': '证券名称'}]
 ```
 
-#### 查看新股可申购额度(目前仅佣金宝可用)
-
-```python
-user.ipo_enable_amount('股票代码')
-```
-
 
 #### 场内基金赎回(广发)
 
@@ -383,7 +377,7 @@ user.queryNXBOfStock()
 ##### 佣金宝
 
 ```python
-user.get_stock_limit('申购代码')
+user.get_ipo_limit('申购代码')
 ```
 
 **return**

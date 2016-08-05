@@ -114,13 +114,6 @@ class YJBTrader(WebTrader):
         """
         return self.do(self.config['current_deal'])
 
-    def ipo_enable_amount(self, stock_code):
-        params = dict(
-                self.config['ipo_enable_amount'],
-                stock_code=stock_code
-        )
-        return self.do(params)
-
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
@@ -152,7 +145,7 @@ class YJBTrader(WebTrader):
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-    def get_stock_limit(self, stock_code):
+    def get_ipo_limit(self, stock_code):
         """
         查询新股申购额度申购上限
         :param stock_code: 申购代码!!!
