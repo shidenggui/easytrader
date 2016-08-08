@@ -46,7 +46,7 @@ def get_stock_type(stock_code):
     assert type(stock_code) is str, 'stock code need str type'
     if stock_code.startswith(('sh', 'sz')):
         return stock_code[:2]
-    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204')):
+    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204', '78')):
         return 'sh'
     if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30', '39', '115', '1318')):
         return 'sz'
@@ -106,7 +106,7 @@ def recognize_verify_code(image_path, broker='ht'):
                         image_path))
 
     # 获取识别的验证码
-    verify_code_result = 'result.txt'
+    verify_code_result = 'result_%d.txt'%os.getpid()
     try:
         with open(verify_code_result) as f:
             recognized_code = f.readline()

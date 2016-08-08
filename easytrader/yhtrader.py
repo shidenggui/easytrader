@@ -58,6 +58,8 @@ class YHTrader(WebTrader):
             raise NotLoginError(result)
 
         accounts = self.do(self.config['account4stock'])
+        if accounts is False:
+            return False
         if len(accounts) < 2:
             raise Exception('无法获取沪深 A 股账户: %s' % accounts)
         for account in accounts:
@@ -118,31 +120,54 @@ class YHTrader(WebTrader):
         """
         try:
             response = self.s.get( "https://www.chinastock.com.cn/trade/webtrade/stock/StockEntrustCancel.jsp", cookies=self.cookie )
+            if response.status_code != 200:
+                return False
             html = response.text.replace("\t","").replace("\n","").replace("\r","")
+            if html.find("请重新登录") != -1:
+                return False
             pattern = r'<tr\s(?:[a-zA-Z0-9\:\=\'\"\(\)\s]*)>(.+)</tr></TBODY>'
             result1 = re.findall(pattern, html)[0]
             pattern = r'<td\s(?:[a-zA-Z0-9=_\"\:]*)>([\S]+)</td>'
             parsed_data = re.findall(pattern, result1)
             cancel_list = slice_list(step = 12, data_list = parsed_data)
+            # print(cancel_list)
         except Exception as e:
             return []
         if parsed == True:
             result = list()
             for item in cancel_list:
-                item_dict = {
-                    "time"  :   item[0]
-                ,   "code"  :   item[1]
-                ,   "name"  :   item[2]
-                ,   "status":   item[3]
-                ,   "iotype":   item[4]
-                ,   "price" :   float(item[5])
-                ,   "volume":   int(item[6])
-                ,   "entrust_num": item[7]
-                ,   "trans_vol": int(item[8])
-                ,   "canceled_vol": int(item[9])
-                ,   "investor_code": item[10]
-                ,   "account":      item[11]
-                }
+                if len(item) == 12:
+                    item_dict = {
+                        "time"  :   item[0]
+                    ,   "code"  :   item[1]
+                    ,   "name"  :   item[2]
+                    ,   "status":   item[3]
+                    ,   "iotype":   item[4]
+                    ,   "price" :   float(item[5])
+                    ,   "volume":   int(item[6])
+                    ,   "entrust_num": item[7]
+                    ,   "trans_vol": int(item[8])
+                    ,   "canceled_vol": int(item[9])
+                    ,   "investor_code": item[10]
+                    ,   "account":      item[11]
+                    }
+                elif len(item) == 11:
+                    item_dict = {
+                        "time"  :   item[0]
+                    ,   "code"  :   item[1]
+                    ,   "name"  :   item[2]
+                    ,   "status":   item[3]
+                    ,   "iotype":   ""
+                    ,   "price" :   float(item[4])
+                    ,   "volume":   int(item[5])
+                    ,   "entrust_num": item[6]
+                    ,   "trans_vol": int(item[7])
+                    ,   "canceled_vol": int(item[8])
+                    ,   "investor_code": item[9]
+                    ,   "account":      item[10]
+                    }
+                else:
+                    continue
                 result.append(item_dict)
         return result
 
@@ -168,37 +193,84 @@ class YHTrader(WebTrader):
             entrust_no: string类型
                         委托单号，用逗号隔开
                         e.g:"8000,8001,8002"
+        @return
+            返回格式是list，比如一个22个单子的批量撤单
+            e.g.:
+            [{"success":15, "failed":0},{"success":7, "failed":0}]
         """
+        import time
         list_entrust_no = entrust_no.split(",")
-        if list_entrust_no[-1] is "":
-            num = len(list_entrust_no) - 1
-        else:
-            num = len(list_entrust_no)
-        cancel_data = {
-            "ajaxFlag":"stock_batch_cancel"
-        ,   "num":num
-        ,   "orderSno": entrust_no
-        }
-        while True:
-            try:
-                cancel_response = self.s.post(
-                    "https://www.chinastock.com.cn/trade/AjaxServlet"
-                ,   data = cancel_data
-                )
-                break
-            except Exception as e:
-                log.debug( '{}'.format(e) )
-        return cancel_response.json()
+        # 一次批量撤单不能超过15个
+        list_entrust_no = slice_list( step = 15, data_list = list_entrust_no )
+        result = list()
+        for item in list_entrust_no:
+            if item[-1] == "":
+                num = len( item ) - 1
+            else:
+                num = len( item )
+            cancel_data = {
+                "ajaxFlag":"stock_batch_cancel"
+            ,   "num": num
+            ,   "orderSno": ",".join(item)
+            }
+            while True:
+                try:
+                    cancel_response = self.s.post(
+                        "https://www.chinastock.com.cn/trade/AjaxServlet"
+                    ,   data = cancel_data
+                    ,   timeout = 1
+                    )
+                    if cancel_response.status_code == 200:
+                        cancel_response_json = cancel_response.json()
+                        # 如果出现“系统超时请重新登录”之类的错误信息，直接返回False
+                        if "result_type" in cancel_response_json and "result_type" == 'error':
+                            return False
+                        result.append( cancel_response_json )
+                        break
+                    else:
+                        log.debug( '{}'.format( cancel_response ) )
+                except Exception as e:
+                    log.debug( '{}'.format(e) )
+            time.sleep(0.2)
+        return result
 
     @property
     def current_deal(self):
         return self.get_current_deal()
 
-    def get_current_deal(self):
+    def get_current_deal(self, date = None):
         """
         获取当日成交列表.
         """
         return self.do(self.config['current_deal'])
+
+    def get_deal(self, date = None):
+        """
+        @Contact: Emptyset <21324784@qq.com>
+        获取历史日成交列表
+            e.g.: get_deal( "2016-07-14" )
+            如果不传递日期则取的是当天成交列表
+            返回值格式与get_current_deal相同
+            遇到提示“系统超时请重新登录”或者https返回状态码非200或者其他异常情况会返回False
+        """
+        if date is None:
+            data = {}
+        else:
+            data = {
+                "sdate" : date,
+                "edate" : date
+            }
+        try:
+            response = self.s.post( "https://www.chinastock.com.cn/trade/webtrade/stock/stock_cj_query.jsp", data = data, cookies=self.cookie )
+            if response.status_code != 200:
+                return False
+            if response.text.find("重新登录") != -1:
+                return False
+            res = self.format_response_data( response.text )
+            return res
+        except Exception as e:
+            log.warning("撤单出错".format(e) )
+            return False
 
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
         """买入股票
@@ -362,9 +434,11 @@ class YHTrader(WebTrader):
     def request(self, params):
         url = self.trade_prefix + params['service_jsp']
         r = self.s.get(url, cookies=self.cookie)
+        if r.status_code != 200:
+            return False
+        if r.text.find('系统超时请重新登录') != -1:
+            return False
         if params['service_jsp'] == '/trade/webtrade/stock/stock_zjgf_query.jsp':
-            if r.text.find('系统超时请重新登录') != -1:
-                return False
             if params['service_type'] == 2:
                 rptext = r.text[0:r.text.find('操作')]
                 return rptext

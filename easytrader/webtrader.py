@@ -161,10 +161,10 @@ class WebTrader(object):
         # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
-    def ipo_enable_amount(self, stock_code):
+    def get_ipo_limit(self, stock_code):
         """
-        获取新股可申购额度
-        :param stock_code: 股票 ID
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码 ID
         :return:
         """
         # TODO 目前仅在 佣金宝 中实现
