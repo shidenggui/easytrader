@@ -90,7 +90,7 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d'%os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
