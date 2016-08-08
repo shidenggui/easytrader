@@ -90,7 +90,8 @@ def recognize_verify_code(image_path, broker='ht'):
             out_put = getcmdout_func.getoutput('java -jar "{}" {} {}'.format(tool_path, param, image_path))
             log.debug('recognize output: %s' % out_put)
             verify_code_start = -4
-            return out_put[verify_code_start:]
+            if len(out_put) <10:
+                return out_put[verify_code_start:]
     elif broker == 'gf':
         return detect_gf_result(image_path)
     elif broker == 'yh':
