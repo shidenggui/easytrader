@@ -105,7 +105,7 @@ def recognize_verify_code(image_path, broker='ht'):
                         image_path))
 
     # 获取识别的验证码
-    verify_code_result = 'result.txt'
+    verify_code_result = 'result_%d.txt'%os.getpid()
     try:
         with open(verify_code_result) as f:
             recognized_code = f.readline()
