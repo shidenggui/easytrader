@@ -9,27 +9,12 @@ import uuid
 
 import logbook
 import six
-from logbook import Logger, StreamHandler, NullHandler
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
+from .log import log
 
 if six.PY2:
     from io import open
-
-
-def get_logger(name, debug=True):
-    logbook.set_datetime_format('local')
-    handler = StreamHandler(sys.stdout) if debug else NullHandler()
-    handler.push_application()
-    return Logger(os.path.basename(name))
-
-
-def disable_log():
-    global log
-    log = get_logger(__file__, debug=False)
-
-
-log = get_logger(__file__)
 
 
 class EntrustProp(object):
@@ -61,13 +46,10 @@ def get_stock_type(stock_code):
     assert type(stock_code) is str, 'stock code need str type'
     if stock_code.startswith(('sh', 'sz')):
         return stock_code[:2]
-    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204')):
+    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204', '78')):
         return 'sh'
     if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30', '39', '115', '1318')):
         return 'sz'
-    log.warn(
-            'cant auto decide {code} stock type, use default simple rule, please manually use sz{code}/sh{code}'.format(
-                    code=stock_code))
     if stock_code.startswith(('5', '6', '9')):
         return 'sh'
     return 'sz'
@@ -123,7 +105,7 @@ def recognize_verify_code(image_path, broker='ht'):
                         image_path))
 
     # 获取识别的验证码
-    verify_code_result = 'result.txt'
+    verify_code_result = 'result_%d.txt'%os.getpid()
     try:
         with open(verify_code_result) as f:
             recognized_code = f.readline()
@@ -160,6 +142,17 @@ def detect_gf_result(image_path):
     res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
 
+def detect_yh_result(image_path):
+    from PIL import ImageFilter, Image
+    import pytesseract
+    img = Image.open(image_path)
+    for x in range(img.width):
+        for y in range(img.height):
+            (r,g,b) = img.getpixel((x,y))
+            if r > 100 and g > 100 and b > 100:
+                img.putpixel((x,y), (256,256,256))
+    res = pytesseract.image_to_string(img)
+    return res
 
 def detect_yh_result(image_path):
     from PIL import Image

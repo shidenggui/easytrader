@@ -18,23 +18,7 @@ import six
 
 from . import helpers
 from .webtrader import WebTrader, NotLoginError
-
-log = helpers.get_logger(__file__)
-
-# 移除心跳线程产生的日志
-debug_log = log.debug
-
-
-def remove_heart_log(*args, **kwargs):
-    if six.PY2:
-        if threading.current_thread().name == 'MainThread':
-            debug_log(*args, **kwargs)
-    else:
-        if threading.current_thread() == threading.main_thread():
-            debug_log(*args, **kwargs)
-
-
-log.debug = remove_heart_log
+from .log import log
 
 
 class HTTrader(WebTrader):
@@ -106,7 +90,7 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d'%os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
@@ -165,8 +149,8 @@ class HTTrader(WebTrader):
         :param json_data:登录成功返回的json数据
         """
         for account_info in json_data['item']:
-            if account_info['stock_account'].startswith('A'):
-                # 沪 A  股东代码以 A 开头，同时需要是数字，沪 B 帐号以 C 开头
+            if account_info['stock_account'].startswith('A') or account_info['stock_account'].startswith('B'):
+                # 沪 A  股东代码以 A 开头，同时需要是数字，沪 B 帐号以 C 开头，机构账户以B开头
                 if account_info['exchange_type'].isdigit():
                     self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']

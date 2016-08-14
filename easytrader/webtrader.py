@@ -8,18 +8,14 @@ from logbook import Logger, FileHandler
 import six
 
 from . import helpers
+from .log import log
 
 if six.PY2:
     import sys
-
+    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr #获取标准输入、标准输出和标准错误输出
     reload(sys)
+    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde #保持标准输入、标准输出和标准错误输出
     sys.setdefaultencoding('utf8')
-
-log = Logger(__file__)
-log_file = ".".join(__file__.split(os.sep)[-1].split(".")[:-1])
-log_file = os.getcwd() + os.sep + log_file + ".log"
-file_handler = FileHandler(log_file, level="DEBUG")
-log.handlers.append(file_handler)
 
 class NotLoginError(Exception):
     def __init__(self, result=None):
@@ -162,10 +158,10 @@ class WebTrader(object):
         # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
-    def ipo_enable_amount(self, stock_code):
+    def get_ipo_limit(self, stock_code):
         """
-        获取新股可申购额度
-        :param stock_code: 股票 ID
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码 ID
         :return:
         """
         # TODO 目前仅在 佣金宝 中实现

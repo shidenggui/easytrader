@@ -12,8 +12,8 @@ import six
 
 from . import helpers
 from .webtrader import WebTrader
+from .log import log
 
-log = helpers.get_logger(__file__)
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
@@ -21,7 +21,6 @@ SESSIONIDPOS = 32
 HOLDER_POS = 11
 SH = 0
 SZ = 1
-
 
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
@@ -83,7 +82,7 @@ class GFTrader(WebTrader):
                 tmp_yzm=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
-        log.debug(login_response.text)
+        log.info('login response: {}'.format(login_response.text))
         if login_response.json()['success'] == True:
             v = login_response.headers
             self.sessionid = v['Set-Cookie'][-SESSIONIDPOS:]
@@ -106,6 +105,7 @@ class GFTrader(WebTrader):
             unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
         r = self.s.post(url)
+        log.debug('raw response: {}'.format(r.text))
         return r.content
 
     def format_response_data(self, data):
@@ -123,7 +123,7 @@ class GFTrader(WebTrader):
         """设置交易所需的一些基本参数
         """
         account_params = dict(
-                self.config['accountinfo']
+            self.config['accountinfo']
         )
         if six.PY2:
             params_str = urllib.urlencode(account_params)
@@ -132,8 +132,8 @@ class GFTrader(WebTrader):
             params_str = urllib.parse.urlencode(account_params)
             unquote_str = urllib.parse.unquote(params_str)
         url = self.trade_prefix + '?' + unquote_str
-        log.debug('get account info: %s' % unquote_str)
         r = self.s.get(url)
+        log.debug('get account info: {}'.format(r.text))
         jslist = r.text.split(';')
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)
@@ -409,6 +409,21 @@ class GFTrader(WebTrader):
     def exchangebill(self):
         start_date, end_date = helpers.get_30_date()
         return self.get_exchangebill(start_date, end_date)
+
+    def getStockQuotation(self, stockcode):
+        exchange_info = self.__get_trade_need_info(stockcode)
+        params = dict(
+                self.config['queryStockInfo'],
+                exchange_type = exchange_info['exchange_type'],
+                stock_code = stockcode
+        )
+        request_params = self.create_basic_params()
+        request_params.update(params)
+        response_data = self.request(request_params)
+        response_data = str(response_data)
+        response_data = response_data[response_data.find('hq')+3:response_data.find('hqtype')-1]
+        response_data = response_data.replace('\\x', '\\u00')
+        return json.loads(response_data)
 
     def get_exchangebill(self, start_date, end_date):
         """

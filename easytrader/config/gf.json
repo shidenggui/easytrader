@@ -125,5 +125,9 @@
     "start_date": "",
     "end_date": "",
     "deliver_type": 1
+  },
+  "queryStockInfo": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "getStockHQ"
   }
 }

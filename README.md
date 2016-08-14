@@ -4,7 +4,7 @@
 * 实现自动登录
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3 / Python2, Linux / Win
-* 有兴趣的可以加群 `429011814` 一起讨论
+* 有兴趣的可以加群 `549879767` 、`429011814`(已满) 一起讨论
 
 **开发环境** : `Ubuntu 16.04` / `Python 3.5`
 
@@ -45,7 +45,7 @@
 pip install easytrader
 ```
 
-注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader, 可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
+注： `Windows` 用户 `pip` 安装时会提示 `No module named xxx`, 请使用 `pip install xxx` 安装对应缺失的 `module`, 然后再重新 `pip install easytrader`, 可以参考此文档 [INSTALL4Windows.md](INSTALL4Windows.md)
 
 ### 升级
 
@@ -106,7 +106,7 @@ user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
-* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定, 以及登录`POST`请求里面的`hardinfo`字段 
+* 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 
 
@@ -314,12 +314,6 @@ user.current_deal
 'stock_name': '证券名称'}]
 ```
 
-#### 查看新股可申购额度(目前仅佣金宝可用)
-
-```python
-user.ipo_enable_amount('股票代码')
-```
-
 
 #### 场内基金赎回(广发)
 
@@ -378,6 +372,21 @@ user.queryOfStkCode()
 user.queryNXBOfStock()
 ```
 
+#### 查询新股申购额度申购上限
+
+##### 佣金宝
+
+```python
+user.get_ipo_limit('申购代码')
+```
+
+**return**
+
+```python
+{'high_amount': '最高申购股数',
+'enable_amount': '申购额度',
+'last_price': '发行价',}
+```
 
 ### 命令行模式
 

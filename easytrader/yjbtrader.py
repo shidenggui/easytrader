@@ -14,8 +14,7 @@ import six
 from . import helpers
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-
-log = helpers.get_logger(__file__)
+from .log import log
 
 
 class YJBTrader(WebTrader):
@@ -23,7 +22,6 @@ class YJBTrader(WebTrader):
 
     def __init__(self):
         super(YJBTrader, self).__init__()
-        self.cookie = None
         self.account_config = None
         self.s = requests.session()
         self.s.mount('https://', helpers.Ssl3HttpAdapter())
@@ -82,15 +80,6 @@ class YJBTrader(WebTrader):
             return True, None
         return False, login_response.text
 
-    @property
-    def token(self):
-        return self.cookie['JSESSIONID']
-
-    @token.setter
-    def token(self, token):
-        self.cookie = dict(JSESSIONID=token)
-        self.keepalive()
-
     def cancel_entrust(self, entrust_no, stock_code):
         """撤单
         :param entrust_no: 委托单号
@@ -125,13 +114,6 @@ class YJBTrader(WebTrader):
         """
         return self.do(self.config['current_deal'])
 
-    def ipo_enable_amount(self, stock_code):
-        params = dict(
-                self.config['ipo_enable_amount'],
-                stock_code=stock_code
-        )
-        return self.do(params)
-
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
@@ -162,6 +144,28 @@ class YJBTrader(WebTrader):
                 entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
+
+    def get_ipo_limit(self, stock_code):
+        """
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码!!!
+        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
+        """
+        need_info = self.__get_trade_need_info(stock_code)
+        params = dict(
+                self.config['ipo_enable_amount'],
+                CSRF_Token='undefined',
+                timestamp=random.random(),
+                stock_account=need_info['stock_account'],  # '沪深帐号'
+                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+                entrust_prop=0,
+                stock_code=stock_code
+        )
+        data = self.do(params)
+        if 'error_no' in data.keys() and data['error_no'] != "0":
+            log.debug('查询错误: %s' % (data['error_info']))
+            return None
+        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'], last_price=float(data['last_price']))
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
@@ -210,7 +214,7 @@ class YJBTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        r = self.s.get(self.trade_prefix, params=params, cookies=self.cookie)
+        r = self.s.get(self.trade_prefix, params=params)
         return r.text
 
     def format_response_data(self, data):

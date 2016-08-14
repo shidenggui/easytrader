@@ -1,11 +1,12 @@
 # coding=utf-8
+import logging
+
 from .gftrader import GFTrader
-from .helpers import disable_log
 from .httrader import HTTrader
 from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
-
+from .log import log
 
 def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
@@ -21,7 +22,7 @@ def use(broker, debug=True, **kwargs):
         >>> user.prepare('ht.json')
     """
     if not debug:
-        disable_log()
+        log.handlers = [logging.NullHandler()]
     if broker.lower() in ['ht', 'HT', '华泰']:
         return HTTrader(**kwargs)
     if broker.lower() in ['yjb', 'YJB', '佣金宝']:
