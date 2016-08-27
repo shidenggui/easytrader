@@ -10,11 +10,10 @@ import six
 from . import helpers
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
+from .log import log
 
 if six.PY2:
     import urllib2
-
-log = helpers.get_logger(__file__)
 
 
 class TraderError(Exception):
@@ -59,7 +58,6 @@ class XueQiuTrader(WebTrader):
             'X-Requested-With': 'XMLHttpRequest',
             'Accept-Language': 'zh-CN,zh;q=0.8'
         }
-        # self.__pre_fetch()
         login_status, result = self.post_login_data()
         if login_status == False and throw:
             raise NotLoginError(result)
@@ -76,7 +74,7 @@ class XueQiuTrader(WebTrader):
 
     def post_login_data(self):
         login_post_data = {
-            'username': '',
+            'username': self.account_config.get('username', ''),
             'areacode': '86',
             'telephone': self.account_config['account'],
             'remember_me': '0',
@@ -100,11 +98,11 @@ class XueQiuTrader(WebTrader):
 
     def __get_html(self, url):
         send_headers = {
-            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.81 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Connection': 'keep-alive',
             'Host': 'xueqiu.com',
-            'Cookie': r'xxxxxx',
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:43.0) Gecko/20100101 Firefox/43.0',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+            'Connection': 'keep-alive'
         }
 
         if six.PY2:
@@ -130,7 +128,7 @@ class XueQiuTrader(WebTrader):
             'code': str(code),
             'size': '300',
             'key': '47bce5c74f',
-            'market': 'cn',
+            'market': self.account_config['portfolio_market'],
         }
         r = self.requests.get(self.config['search_stock_url'], headers=self.headers, cookies=self.cookies, params=data)
         stocks = json.loads(r.text)
@@ -158,7 +156,7 @@ class XueQiuTrader(WebTrader):
         获取账户资金状况
         :return:
         """
-        portfolio_code = self.account_config['portfolio_code']  # 组合代码
+        portfolio_code = self.account_config.get('portfolio_code', 'ch')  # 组合代码
         portfolio_info = self.__get_portfolio_info(portfolio_code)  # 组合信息
         asset_balance = self.__virtual_to_balance(float(portfolio_info['net_value']))  # 总资产
         position = portfolio_info['view_rebalancing']  # 仓位结构
@@ -183,9 +181,11 @@ class XueQiuTrader(WebTrader):
         return stocks
 
     def __time_strftime(self, time_stamp):
-        ltime = time.localtime(time_stamp)
-        return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
-
+        try:
+            ltime = time.localtime(time_stamp/1000)
+            return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
+        except :
+            return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     def get_position(self):
         """
         获取持仓
@@ -225,7 +225,7 @@ class XueQiuTrader(WebTrader):
         r = json.loads(r.text)
         return r['list']
 
-    def entrust(self):
+    def get_entrust(self):
         """
         获取委托单(目前返回5次调仓的结果)
         操作数量都按1手模拟换算的
@@ -298,7 +298,7 @@ class XueQiuTrader(WebTrader):
         if stock == None:
             raise TraderError(u"没有查询要操作的股票信息")
         if not volume:
-            volume = price * amount  # 可能要取整数
+            volume = int(float(price) * amount)  # 可能要取整数
         if balance['current_balance'] < volume and entrust_bs == 'buy':
             raise TraderError(u"没有足够的现金进行操作")
         if stock['flag'] != 1:

@@ -1,6 +1,8 @@
 {
   "login_page": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
   "login_api": "https://www.chinastock.com.cn/trade/LoginServlet?ajaxFlag=mainlogin",
+  "heart_beat": "https://www.chinastock.com.cn/trade/AjaxServlet?ajaxFlag=heartbeat",
+  "unlock": "https://www.chinastock.com.cn/trade/AjaxServlet?ajaxFlag=unlockscreen",
   "trade_api": "https://www.chinastock.com.cn/trade/AjaxServlet",
   "trade_info_page": "https://www.chinastock.com.cn/trade/webtrade/tradeindex.jsp",
   "verify_code_api": "https://www.chinastock.com.cn/trade/webtrade/verifyCodeImage.jsp",
@@ -58,6 +60,9 @@
   },
   "cancel_entrust": {
     "ajaxFlag": "stock_cancel"
+  },
+  "current_deal": {
+    "service_jsp": "/trade/webtrade/stock/stock_cj_query.jsp"
   },
   "account4stock": {
     "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"

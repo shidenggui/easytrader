@@ -12,7 +12,7 @@ class TestEasytrader(unittest.TestCase):
         result = helpers.get_stock_type('691777')
         self.assertEqual(result, 'sh')
 
-        result = helpers.get_stock_type(162411)
+        result = helpers.get_stock_type('sz162411')
         self.assertEqual(result, 'sz')
 
     def test_format_response_data_type(self):
