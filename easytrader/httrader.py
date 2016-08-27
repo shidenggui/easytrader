@@ -1,4 +1,6 @@
 # coding: utf-8
+from __future__ import division
+
 import base64
 import json
 import os
@@ -9,37 +11,24 @@ import threading
 import urllib
 import uuid
 from collections import OrderedDict
+import tempfile
 
 import requests
 import six
 
 from . import helpers
-from .webtrader import WebTrader
-
-log = helpers.get_logger(__file__)
-
-# 移除心跳线程产生的日志
-debug_log = log.debug
-
-
-def remove_heart_log(*args, **kwargs):
-    if six.PY2:
-        if threading.current_thread().name == 'MainThread':
-            debug_log(*args, **kwargs)
-    else:
-        if threading.current_thread() == threading.main_thread():
-            debug_log(*args, **kwargs)
-
-log.debug = remove_heart_log
+from .webtrader import WebTrader, NotLoginError
+from .log import log
 
 
 class HTTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/ht.json'
 
-    def __init__(self):
+    def __init__(self, remove_zero=True):
         super(HTTrader, self).__init__()
         self.account_config = None
         self.s = None
+        self.remove_zero = remove_zero
 
         self.__set_ip_and_mac()
         self.fund_account = None
@@ -57,16 +46,16 @@ class HTTrader(WebTrader):
                 uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
     def __get_user_name(self):
-        # 华泰账户以 08 开头的需移除 fund_account 开头的 0
+        # 华泰账户以 08 开头的有些需移除 fund_account 开头的 0
         raw_name = self.account_config['userName']
         use_index_start = 1
-        return raw_name[use_index_start:] if raw_name.startswith('08') else raw_name
+        return raw_name[use_index_start:] if raw_name.startswith('08') and self.remove_zero is True else raw_name
 
     def read_config(self, path):
         super(HTTrader, self).read_config(path)
         self.fund_account = self.__get_user_name()
 
-    def login(self):
+    def login(self, throw=False):
         """实现华泰的自动登录"""
         self.__go_login_page()
 
@@ -74,8 +63,10 @@ class HTTrader(WebTrader):
         if not verify_code:
             return False
 
-        is_login = self.__check_login_status(verify_code)
+        is_login, result = self.__check_login_status(verify_code)
         if not is_login:
+            if throw:
+                raise NotLoginError(result)
             return False
 
         trade_info = self.__get_trade_info()
@@ -99,7 +90,7 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d'%os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
@@ -128,9 +119,9 @@ class HTTrader(WebTrader):
         log.debug('login params: %s' % params)
         login_api_response = self.s.post(self.config['login_api'], params)
 
-        if login_api_response.text.find('欢迎您') == -1:
-            return False
-        return True
+        if login_api_response.text.find('欢迎您') != -1:
+            return True, None
+        return False, login_api_response.text
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """
@@ -158,14 +149,17 @@ class HTTrader(WebTrader):
         :param json_data:登录成功返回的json数据
         """
         for account_info in json_data['item']:
-            if account_info['stock_account'].startswith('A'):
-                self.__sh_exchange_type = account_info['exchange_type']
+            if account_info['stock_account'].startswith('A') or account_info['stock_account'].startswith('B'):
+                # 沪 A  股东代码以 A 开头，同时需要是数字，沪 B 帐号以 C 开头，机构账户以B开头
+                if account_info['exchange_type'].isdigit():
+                    self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']
-                log.debug('sh stock account %s' % self.__sh_stock_account)
-            elif account_info['stock_account'].isdigit():
+                log.debug('sh_A stock account %s' % self.__sh_stock_account)
+            # 深 A 股东代码以 0 开头，深 B 股东代码以 2 开头
+            elif account_info['stock_account'].startswith('0'):
                 self.__sz_exchange_type = account_info['exchange_type']
                 self.__sz_stock_account = account_info['stock_account']
-                log.debug('sz stock account %s' % self.__sz_stock_account)
+                log.debug('sz_A stock account %s' % self.__sz_stock_account)
 
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
@@ -179,7 +173,6 @@ class HTTrader(WebTrader):
         :param entrust_no: 委托单号"""
         cancel_params = dict(
                 self.config['cancel_entrust'],
-                password=self.__trdpwd,
                 entrust_no=entrust_no
         )
         return self.do(cancel_params)
@@ -290,3 +283,22 @@ class HTTrader(WebTrader):
     def fix_error_data(self, data):
         last_no_use_info_index = -1
         return data if hasattr(data, 'get') else data[:last_no_use_info_index]
+
+    @property
+    def exchangebill(self):
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        params = self.config['exchangebill'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)

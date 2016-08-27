@@ -1,24 +1,26 @@
 # coding: utf-8
-import json
 import os
 import re
 import time
 from threading import Thread
+from logbook import Logger, FileHandler
 
 import six
 
 from . import helpers
+from .log import log
 
 if six.PY2:
     import sys
+    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr #获取标准输入、标准输出和标准错误输出
     reload(sys)
+    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde #保持标准输入、标准输出和标准错误输出
     sys.setdefaultencoding('utf8')
 
-log = helpers.get_logger(__file__)
-
-
 class NotLoginError(Exception):
-    pass
+    def __init__(self, result=None):
+        super(NotLoginError, self).__init__()
+        self.result = result
 
 
 class WebTrader(object):
@@ -39,7 +41,7 @@ class WebTrader(object):
     def read_config(self, path):
         try:
             self.account_config = helpers.file2dict(path)
-        except json.JSONDecodeError:
+        except ValueError:
             log.error('配置文件格式有误，请勿使用记事本编辑，推荐使用 notepad++ 或者 sublime text')
         for v in self.account_config:
             if type(v) is int:
@@ -47,15 +49,20 @@ class WebTrader(object):
 
     def prepare(self, need_data):
         """登录的统一接口
-        :param need_data 登录所需数据"""
+        :param need_data 登录所需数据
+        """
         self.read_config(need_data)
         self.autologin()
 
-    def autologin(self):
-        """实现自动登录"""
-        is_login_ok = self.login()
-        if not is_login_ok:
-            self.autologin()
+    def autologin(self, limit=10):
+        """实现自动登录
+        :param limit: 登录次数限制
+        """
+        for _ in range(limit):
+            if self.login():
+                break
+        else:
+            raise NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
         self.keepalive()
 
     def login(self):
@@ -73,13 +80,16 @@ class WebTrader(object):
         while True:
             if self.heart_active:
                 try:
-                    response = self.balance
+                    response = self.heartbeat()
+                    self.check_account_live(response)
                 except:
-                    pass
-                self.check_account_live(response)
+                    self.autologin()
                 time.sleep(10)
             else:
                 time.sleep(1)
+
+    def heartbeat(self):
+        return self.balance
 
     def check_account_live(self, response):
         pass
@@ -118,13 +128,56 @@ class WebTrader(object):
         """获取当日委托列表"""
         return self.do(self.config['entrust'])
 
+    @property
+    def current_deal(self):
+        return self.get_current_deal()
+
+    def get_current_deal(self):
+        """获取当日委托列表"""
+        # return self.do(self.config['current_deal'])
+        # TODO 目前仅在 佣金宝子类 中实现
+        log.info('目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充')
+
+    @property
+    def exchangebill(self):
+        """
+        默认提供最近30天的交割单, 通常只能返回查询日期内最新的 90 天数据。
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
+
+    def get_ipo_limit(self, stock_code):
+        """
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码 ID
+        :return:
+        """
+        # TODO 目前仅在 佣金宝 中实现
+        log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
+
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
         :param params: 交易所需的动态参数"""
         request_params = self.create_basic_params()
         request_params.update(params)
         response_data = self.request(request_params)
-        format_json_data = self.format_response_data(response_data)
+        try:
+            format_json_data = self.format_response_data(response_data)
+        except:
+            # Caused by server force logged out
+            return None
         return_data = self.fix_error_data(format_json_data)
         try:
             self.check_login_status(return_data)
@@ -149,7 +202,7 @@ class WebTrader(object):
     def fix_error_data(self, data):
         """若是返回错误移除外层的列表
         :param data: 需要判断是否包含错误信息的数据"""
-        pass
+        return data
 
     def format_response_data_type(self, response_data):
         """格式化返回的值为正确的类型

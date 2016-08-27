@@ -12,7 +12,7 @@ class TestEasytrader(unittest.TestCase):
         result = helpers.get_stock_type('691777')
         self.assertEqual(result, 'sh')
 
-        result = helpers.get_stock_type(162411)
+        result = helpers.get_stock_type('sz162411')
         self.assertEqual(result, 'sz')
 
     def test_format_response_data_type(self):
@@ -97,6 +97,11 @@ class TestEasytrader(unittest.TestCase):
         result = helpers.str2num(test_data, 'float')
         self.assertAlmostEqual(result, normal_data)
 
+    def test_ht_format_exchagnebill_request_data(self):
+        user = easytrader.use('ht')
+        import datetime
+        # print(datetime.datetime.now().strftime("%Y%m%d"))
+        # user.exchangebill
 
 if __name__ == '__main__':
     unittest.main()

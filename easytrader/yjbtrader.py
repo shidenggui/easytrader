@@ -1,18 +1,20 @@
 # coding: utf-8
+from __future__ import division
+
 import json
 import os
 import random
-import re
+import tempfile
 import urllib
 
+import demjson
 import requests
 import six
 
 from . import helpers
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-
-log = helpers.get_logger(__file__)
+from .log import log
 
 
 class YJBTrader(WebTrader):
@@ -20,12 +22,11 @@ class YJBTrader(WebTrader):
 
     def __init__(self):
         super(YJBTrader, self).__init__()
-        self.cookie = None
         self.account_config = None
         self.s = requests.session()
         self.s.mount('https://', helpers.Ssl3HttpAdapter())
 
-    def login(self):
+    def login(self, throw=False):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko'
         }
@@ -36,7 +37,9 @@ class YJBTrader(WebTrader):
         verify_code = self.handle_recognize_code()
         if not verify_code:
             return False
-        login_status = self.post_login_data(verify_code)
+        login_status, result = self.post_login_data(verify_code)
+        if login_status is False and throw:
+            raise NotLoginError(result)
         return login_status
 
     def handle_recognize_code(self):
@@ -45,7 +48,7 @@ class YJBTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
@@ -74,17 +77,8 @@ class YJBTrader(WebTrader):
         log.debug('login response: %s' % login_response.text)
 
         if login_response.text.find('上次登陆') != -1:
-            return True
-        return False
-
-    @property
-    def token(self):
-        return self.cookie['JSESSIONID']
-
-    @token.setter
-    def token(self, token):
-        self.cookie = dict(JSESSIONID=token)
-        self.keepalive()
+            return True, None
+        return False, login_response.text
 
     def cancel_entrust(self, entrust_no, stock_code):
         """撤单
@@ -96,6 +90,29 @@ class YJBTrader(WebTrader):
                 stock_code=stock_code
         )
         return self.do(cancel_params)
+
+    @property
+    def current_deal(self):
+        return self.get_current_deal()
+
+    def get_current_deal(self):
+        """获取当日成交列表"""
+        """
+        [{'business_amount': '成交数量',
+        'business_price': '成交价格',
+        'entrust_amount': '委托数量',
+        'entrust_bs': '买卖方向',
+        'stock_account': '证券帐号',
+        'fund_account': '资金帐号',
+        'position_str': '定位串',
+        'business_status': '成交状态',
+        'date': '发生日期',
+        'business_type': '成交类别',
+        'business_time': '成交时间',
+        'stock_code': '证券代码',
+        'stock_name': '证券名称'}]
+        """
+        return self.do(self.config['current_deal'])
 
     # TODO: 实现买入卖出的各种委托类型
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
@@ -127,6 +144,28 @@ class YJBTrader(WebTrader):
                 entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
+
+    def get_ipo_limit(self, stock_code):
+        """
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码!!!
+        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
+        """
+        need_info = self.__get_trade_need_info(stock_code)
+        params = dict(
+                self.config['ipo_enable_amount'],
+                CSRF_Token='undefined',
+                timestamp=random.random(),
+                stock_account=need_info['stock_account'],  # '沪深帐号'
+                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+                entrust_prop=0,
+                stock_code=stock_code
+        )
+        data = self.do(params)
+        if 'error_no' in data.keys() and data['error_no'] != "0":
+            log.debug('查询错误: %s' % (data['error_info']))
+            return None
+        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'], last_price=float(data['last_price']))
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
@@ -175,16 +214,13 @@ class YJBTrader(WebTrader):
         return basic_params
 
     def request(self, params):
-        r = self.s.get(self.trade_prefix, params=params, cookies=self.cookie)
+        r = self.s.get(self.trade_prefix, params=params)
         return r.text
 
     def format_response_data(self, data):
         # 获取 returnJSON
         return_json = json.loads(data)['returnJson']
-        add_key_quote = re.sub('\w+:', lambda x: '"%s":' % x.group().rstrip(':'), return_json)
-        # 替换所有单引号到双引号
-        change_single_double_quote = add_key_quote.replace("'", '"')
-        raw_json_data = json.loads(change_single_double_quote)
+        raw_json_data = demjson.decode(return_json)
         fun_data = raw_json_data['Func%s' % raw_json_data['function_id']]
         header_index = 1
         remove_header_data = fun_data[header_index:]

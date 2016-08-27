@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import anyjson as json
 import click
 import dill
@@ -12,12 +14,13 @@ ACCOUNT_OBJECT_FILE = 'account.session'
 @click.option('--prepare', type=click.Path(exists=True), help='指定登录账户文件路径')
 @click.option('--get', help='调用 easytrader 中对应的变量')
 @click.option('--do', help='调用 easytrader 中对应的函数名')
+@click.option('--debug', default=False, help='是否输出 easytrader 的 debug 日志')
 @click.argument('params', nargs=-1)
-def main(prepare, use, do, get, params):
+def main(prepare, use, do, get, params, debug):
     if get is not None:
         do = get
-    if prepare is not None and use in ['ht', 'yjb', 'yh']:
-        user = easytrader.use(use)
+    if prepare is not None and use in ['ht', 'yjb', 'yh', 'gf', 'xq']:
+        user = easytrader.use(use, debug)
         user.prepare(prepare)
         with open(ACCOUNT_OBJECT_FILE, 'wb') as f:
             dill.dump(user, f)
