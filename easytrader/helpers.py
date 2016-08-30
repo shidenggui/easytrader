@@ -7,10 +7,10 @@ import subprocess
 import sys
 import uuid
 
-import logbook
 import six
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
+
 from .log import log
 
 if six.PY2:
@@ -145,7 +145,7 @@ def detect_gf_result(image_path):
 
 
 def detect_yh_result(image_path):
-    from PIL import ImageFilter, Image
+    from PIL import Image
     import pytesseract
     img = Image.open(image_path)
     for x in range(img.width):

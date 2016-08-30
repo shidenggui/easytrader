@@ -1,6 +1,5 @@
 # coding:utf8
 import logging
-import os
 
 log = logging.getLogger('easytrader')
 log.setLevel(logging.DEBUG)

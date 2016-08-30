@@ -7,18 +7,17 @@ import os
 import random
 import re
 import socket
-import threading
+import tempfile
 import urllib
 import uuid
 from collections import OrderedDict
-import tempfile
 
 import requests
 import six
 
 from . import helpers
-from .webtrader import WebTrader, NotLoginError
 from .log import log
+from .webtrader import WebTrader, NotLoginError
 
 
 class HTTrader(WebTrader):

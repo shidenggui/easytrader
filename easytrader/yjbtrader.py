@@ -12,9 +12,9 @@ import requests
 import six
 
 from . import helpers
+from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-from .log import log
 
 
 class YJBTrader(WebTrader):

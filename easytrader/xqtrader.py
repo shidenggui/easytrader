@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-import os
-import requests
 import json
-import urllib
+import os
 import time
+import urllib
+
+import requests
 import six
 
-from . import helpers
+from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-from .log import log
 
 if six.PY2:
     import urllib2

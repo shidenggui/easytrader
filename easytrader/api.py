@@ -3,10 +3,10 @@ import logging
 
 from .gftrader import GFTrader
 from .httrader import HTTrader
+from .log import log
 from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
-from .log import log
 
 
 def use(broker, debug=True, **kwargs):

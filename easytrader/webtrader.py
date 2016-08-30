@@ -3,7 +3,6 @@ import os
 import re
 import time
 from threading import Thread
-from logbook import Logger, FileHandler
 
 import six
 
