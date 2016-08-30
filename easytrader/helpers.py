@@ -71,6 +71,7 @@ def recognize_verify_code(image_path, broker='ht'):
         if six.PY2:
             if sys.platform == 'win32':
                 from subprocess import PIPE, Popen, STDOUT
+
                 def get_status_output(cmd, input=None, cwd=None, env=None):
                     pipe = Popen(cmd, shell=True, cwd=cwd, env=env, stdout=PIPE, stderr=STDOUT)
                     (output, errout) = pipe.communicate(input=input)
@@ -101,11 +102,11 @@ def recognize_verify_code(image_path, broker='ht'):
     system_success = 0
     if system_result != system_success:
         os.system(
-                'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract "{}" result -psm 7'.format(
-                        image_path))
+            'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract "{}" result -psm 7'.format(
+                image_path))
 
     # 获取识别的验证码
-    verify_code_result = 'result_%d.txt'%os.getpid()
+    verify_code_result = 'result_%d.txt' % os.getpid()
     try:
         with open(verify_code_result) as f:
             recognized_code = f.readline()
@@ -142,17 +143,19 @@ def detect_gf_result(image_path):
     res = pytesseract.image_to_string(med_res)
     return res.replace(' ', '')
 
+
 def detect_yh_result(image_path):
     from PIL import ImageFilter, Image
     import pytesseract
     img = Image.open(image_path)
     for x in range(img.width):
         for y in range(img.height):
-            (r,g,b) = img.getpixel((x,y))
+            (r, g, b) = img.getpixel((x, y))
             if r > 100 and g > 100 and b > 100:
-                img.putpixel((x,y), (256,256,256))
+                img.putpixel((x, y), (256, 256, 256))
     res = pytesseract.image_to_string(img)
     return res
+
 
 def detect_yh_result(image_path):
     from PIL import Image
@@ -165,15 +168,15 @@ def detect_yh_result(image_path):
     for x in range(img.width):
         for y in range(img.height):
             (r, g, b) = img.getpixel((x, y))
-            brightness.append( r+g+b )
-    avgBrightness = int( numpy.mean(brightness) )
+            brightness.append(r + g + b)
+    avgBrightness = int(numpy.mean(brightness))
 
     for x in range(img.width):
         for y in range(img.height):
             (r, g, b) = img.getpixel((x, y))
-            if  ( (r+g+b)>avgBrightness/1.5 ) or (y<3) or (y>17) or (x<5) or ( x>(img.width-5) ):
+            if ((r + g + b) > avgBrightness / 1.5) or (y < 3) or (y > 17) or (x < 5) or (x > (img.width - 5)):
                 img.putpixel((x, y), (256, 256, 256))
-    
+
     res = pytesseract.image_to_string(img)
     return res
 
@@ -181,7 +184,7 @@ def detect_yh_result(image_path):
 def get_mac():
     # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
     return ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-            uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+        uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
 
 def grep_comma(num_str):

@@ -12,10 +12,12 @@ from .log import log
 
 if six.PY2:
     import sys
-    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr #获取标准输入、标准输出和标准错误输出
+
+    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr  # 获取标准输入、标准输出和标准错误输出
     reload(sys)
-    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde #保持标准输入、标准输出和标准错误输出
+    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde  # 保持标准输入、标准输出和标准错误输出
     sys.setdefaultencoding('utf8')
+
 
 class NotLoginError(Exception):
     def __init__(self, result=None):
@@ -155,7 +157,6 @@ class WebTrader(object):
         :param end_date: 20160211
         :return:
         """
-        # TODO 目前仅在 华泰子类 中实现
         log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
     def get_ipo_limit(self, stock_code):
@@ -164,7 +165,6 @@ class WebTrader(object):
         :param stock_code: 申购代码 ID
         :return:
         """
-        # TODO 目前仅在 佣金宝 中实现
         log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
 
     def do(self, params):

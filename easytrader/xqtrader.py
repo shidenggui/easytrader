@@ -182,10 +182,11 @@ class XueQiuTrader(WebTrader):
 
     def __time_strftime(self, time_stamp):
         try:
-            ltime = time.localtime(time_stamp/1000)
+            ltime = time.localtime(time_stamp / 1000)
             return time.strftime("%Y-%m-%d %H:%M:%S", ltime)
-        except :
+        except:
             return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+
     def get_position(self):
         """
         获取持仓
@@ -303,7 +304,7 @@ class XueQiuTrader(WebTrader):
             raise TraderError(u"没有足够的现金进行操作")
         if stock['flag'] != 1:
             raise TraderError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
-        if volume==0:
+        if volume == 0:
             raise TraderError(u"操作金额不能为零")
 
         # 计算调仓调仓份额
