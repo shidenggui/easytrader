@@ -11,8 +11,8 @@ import requests
 import six
 
 from . import helpers
-from .log import log
 from .webtrader import WebTrader
+from .log import log
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1

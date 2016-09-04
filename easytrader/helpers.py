@@ -1,9 +1,10 @@
 # coding: utf-8
 import datetime
+import re
 import json
 import os
 import ssl
-import subprocess
+from subprocess import getoutput
 import sys
 import uuid
 
@@ -60,66 +61,69 @@ def recognize_verify_code(image_path, broker='ht'):
     :param image_path: 图片路径
     :param broker: 券商 ['ht', 'yjb', 'gf', 'yh']
     :return recognized: verify code string"""
-    if broker in ['ht', 'yjb']:
-        if broker == 'ht':
-            verify_code_tool = 'getcode_jdk1.5.jar'
-            param = ''
-        else:
-            verify_code_tool = 'yjb_verify_code.jar'
-            param = 'guojin'
-        # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
-        if six.PY2:
-            if sys.platform == 'win32':
-                from subprocess import PIPE, Popen, STDOUT
-
-                def get_status_output(cmd, input=None, cwd=None, env=None):
-                    pipe = Popen(cmd, shell=True, cwd=cwd, env=env, stdout=PIPE, stderr=STDOUT)
-                    (output, errout) = pipe.communicate(input=input)
-                    return output.decode().rstrip('\r\n')
-
-                getcmdout_func = lambda: _
-                getcmdout_func.getoutput = get_status_output
-            else:
-                import commands
-                getcmdout_func = commands
-        else:
-            getcmdout_func = subprocess
-        out_put = getcmdout_func.getoutput('java -version')
-        log.debug('java detect result: %s' % out_put)
-        if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
-            tool_path = os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool)
-            out_put = getcmdout_func.getoutput('java -jar "{}" {} {}'.format(tool_path, param, image_path))
-            log.debug('recognize output: %s' % out_put)
-            verify_code_start = -4
-            return out_put[verify_code_start:]
+    if broker == 'ht':
+        return detect_ht_result(image_path)
+    elif broker == 'yib':
+        return detect_yjb_result(image_path)
     elif broker == 'gf':
         return detect_gf_result(image_path)
     elif broker == 'yh':
         return detect_yh_result(image_path)
     # 调用 tesseract 识别
-    # ubuntu 15.10 无法识别的手动 export TESSDATA_PREFIX
-    system_result = os.system('tesseract "{}" result -psm 7'.format(image_path))
-    system_success = 0
-    if system_result != system_success:
-        os.system(
-            'export TESSDATA_PREFIX="/usr/share/tesseract-ocr/tessdata/"; tesseract "{}" result -psm 7'.format(
-                image_path))
+    return default_verify_code_detect(image_path)
 
-    # 获取识别的验证码
-    verify_code_result = 'result_%d.txt' % os.getpid()
-    try:
-        with open(verify_code_result) as f:
-            recognized_code = f.readline()
-    except UnicodeDecodeError:
-        with open(verify_code_result, encoding='gbk') as f:
-            recognized_code = f.readline()
-    # 移除空格和换行符
-    return_index = -1
-    recognized_code = recognized_code.replace(' ', '')[:return_index]
 
-    os.remove(verify_code_result)
+def detect_ht_result(image_path):
+    code = detect_verify_code_by_java(image_path, 'ht')
+    if not code:
+        return default_verify_code_detect(image_path)
+    return code
 
-    return recognized_code
+
+def detect_yjb_result(image_path):
+    code = detect_verify_code_by_java(image_path, 'yjb')
+    if not code:
+        return default_verify_code_detect(image_path)
+    return code
+
+
+def detect_verify_code_by_java(image_path, broker):
+    jars = {
+        'ht': ('getcode_jdk1.5.jar', ''),
+        'yjb': ('yjb_verify_code.jar', 'guojin')
+    }
+    verify_code_tool, param = jars[broker]
+    # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
+    # noinspection PyGlobalUndefined
+    global getoutput
+    if six.PY2:
+        if sys.platform == 'win32':
+            from subprocess import PIPE, Popen, STDOUT
+
+            def getoutput(cmd, input=None, cwd=None, env=None):
+                pipe = Popen(cmd, shell=True, cwd=cwd, env=env, stdout=PIPE, stderr=STDOUT)
+                (output, err_out) = pipe.communicate(input=input)
+                return output.decode().rstrip('\r\n')
+        else:
+            import commands
+            getoutput = commands.getoutput
+    out_put = getoutput('java -version')
+    log.debug('java detect result: %s' % out_put)
+    if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
+        tool_path = os.path.join(os.path.dirname(__file__), 'thirdlibrary', verify_code_tool)
+        out_put = getoutput('java -jar "{}" {} {}'.format(tool_path, param, image_path))
+        log.debug('recognize output: %s' % out_put)
+        verify_code_start = -4
+        return out_put[verify_code_start:]
+
+
+def default_verify_code_detect(image_path):
+    from PIL import Image
+    import pytesseract
+    img = Image.open(image_path)
+    code = pytesseract.image_to_string(img)
+    valid_chars = re.findall('[0-9a-z]', code, re.IGNORECASE)
+    return ''.join(valid_chars)
 
 
 def detect_gf_result(image_path):
