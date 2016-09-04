@@ -1,4 +1,5 @@
 # coding: utf-8
+from __future__ import division
 import datetime
 import re
 import json
@@ -151,20 +152,6 @@ def detect_gf_result(image_path):
 def detect_yh_result(image_path):
     from PIL import Image
     import pytesseract
-    img = Image.open(image_path)
-    for x in range(img.width):
-        for y in range(img.height):
-            (r, g, b) = img.getpixel((x, y))
-            if r > 100 and g > 100 and b > 100:
-                img.putpixel((x, y), (256, 256, 256))
-    res = pytesseract.image_to_string(img)
-    return res
-
-
-def detect_yh_result(image_path):
-    from PIL import Image
-    import pytesseract
-    import numpy
 
     img = Image.open(image_path)
 
@@ -173,12 +160,12 @@ def detect_yh_result(image_path):
         for y in range(img.height):
             (r, g, b) = img.getpixel((x, y))
             brightness.append(r + g + b)
-    avgBrightness = int(numpy.mean(brightness))
+    avg_brightness = sum(brightness) // len(brightness)
 
     for x in range(img.width):
         for y in range(img.height):
             (r, g, b) = img.getpixel((x, y))
-            if ((r + g + b) > avgBrightness / 1.5) or (y < 3) or (y > 17) or (x < 5) or (x > (img.width - 5)):
+            if ((r + g + b) > avg_brightness / 1.5) or (y < 3) or (y > 17) or (x < 5) or (x > (img.width - 5)):
                 img.putpixel((x, y), (256, 256, 256))
 
     res = pytesseract.image_to_string(img)
