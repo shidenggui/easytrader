@@ -24,6 +24,12 @@ class NotLoginError(Exception):
         self.result = result
 
 
+class TradeError(Exception):
+    def __init__(self, raw=None):
+        super(TradeError, self).__init__()
+        self.raw = raw
+
+
 class WebTrader(object):
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
     config_path = ''
@@ -33,11 +39,8 @@ class WebTrader(object):
         self.trade_prefix = self.config['prefix']
         self.account_config = ''
         self.heart_active = True
-        if six.PY2:
-            self.heart_thread = Thread(target=self.send_heartbeat)
-            self.heart_thread.setDaemon(True)
-        else:
-            self.heart_thread = Thread(target=self.send_heartbeat, daemon=True)
+        self.heart_thread = Thread(target=self.send_heartbeat)
+        self.heart_thread.setDaemon(True)
 
     def read_config(self, path):
         try:
@@ -136,8 +139,7 @@ class WebTrader(object):
     def get_current_deal(self):
         """获取当日委托列表"""
         # return self.do(self.config['current_deal'])
-        # TODO 目前仅在 佣金宝子类 中实现
-        log.info('目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充')
+        log.warning('目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充')
 
     @property
     def exchangebill(self):
@@ -156,7 +158,7 @@ class WebTrader(object):
         :param end_date: 20160211
         :return:
         """
-        log.info('目前仅在 华泰子类 中实现, 其余券商需要补充')
+        log.warning('目前仅在 华泰子类 中实现, 其余券商需要补充')
 
     def get_ipo_limit(self, stock_code):
         """
@@ -164,7 +166,7 @@ class WebTrader(object):
         :param stock_code: 申购代码 ID
         :return:
         """
-        log.info('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
+        log.warning('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
