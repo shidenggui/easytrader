@@ -26,9 +26,9 @@ class NotLoginError(Exception):
 
 
 class TradeError(Exception):
-    def __init__(self, raw=None):
+    def __init__(self, message=None):
         super(TradeError, self).__init__()
-        self.raw = raw
+        self.message = message
 
 
 class WebTrader(object):
