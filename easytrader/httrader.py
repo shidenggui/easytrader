@@ -134,7 +134,7 @@ class HTTrader(WebTrader):
         need_data_index = 0
         need_data = search_result.groups()[need_data_index]
         bytes_data = base64.b64decode(need_data)
-        log.debug('trade info bytes data: ', bytes_data)
+        log.debug('trade info bytes data: %s' % bytes_data)
         try:
             str_data = bytes_data.decode('gbk')
         except UnicodeDecodeError:
