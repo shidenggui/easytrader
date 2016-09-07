@@ -1,4 +1,5 @@
 # coding: utf-8
+import logging
 import os
 import re
 import time
@@ -84,8 +85,13 @@ class WebTrader(object):
         while True:
             if self.heart_active:
                 try:
+                    log_level = log.level
+
+                    log.setLevel(logging.ERROR)
                     response = self.heartbeat()
                     self.check_account_live(response)
+
+                    log.setLevel(log_level)
                 except:
                     self.autologin()
                 time.sleep(10)
