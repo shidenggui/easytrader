@@ -75,6 +75,12 @@ class HTTrader(WebTrader):
         self.__set_trade_need_info(trade_info)
 
         return True
+        
+    def logout(self):
+        if self.s is not None:
+            self.s = None
+        
+        return True
 
     def __go_login_page(self):
         """访问登录页面获取 cookie"""
