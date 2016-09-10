@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
-import math
 import os
+import re
 import time
 
 import requests
@@ -17,7 +17,20 @@ class XueQiuTrader(WebTrader):
 
     def __init__(self):
         super(XueQiuTrader, self).__init__()
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0',
+            'Host': 'xueqiu.com',
+            'Pragma': 'no-cache',
+            'Connection': 'keep-alive',
+            'Accept': '*/*',
+            'Accept-Encoding': 'gzip,deflate,sdch',
+            'Cache-Control': 'no-cache',
+            'Referer': 'http://xueqiu.com/P/ZH003694',
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept-Language': 'zh-CN,zh;q=0.8'
+        }
         self.session = requests.Session()
+        self.session.headers.update(headers)
         self.account_config = None
         self.multiple = 1000000  # 资金换算倍数
 
@@ -42,18 +55,6 @@ class XueQiuTrader(WebTrader):
         return login_status
 
     def post_login_data(self):
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0',
-            'Host': 'xueqiu.com',
-            'Pragma': 'no-cache',
-            'Connection': 'keep-alive',
-            'Accept': '*/*',
-            'Accept-Encoding': 'gzip,deflate,sdch',
-            'Cache-Control': 'no-cache',
-            'Referer': 'http://xueqiu.com/P/ZH003694',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept-Language': 'zh-CN,zh;q=0.8'
-        }
         login_post_data = {
             'username': self.account_config.get('username', ''),
             'areacode': '86',
@@ -61,7 +62,7 @@ class XueQiuTrader(WebTrader):
             'remember_me': '0',
             'password': self.account_config['password']
         }
-        login_response = self.session.post(self.config['login_api'], data=login_post_data, headers=headers)
+        login_response = self.session.post(self.config['login_api'], data=login_post_data)
         login_status = json.loads(login_response.text)
         if 'error_description' in login_status:
             return False, login_status['error_description']
@@ -109,10 +110,13 @@ class XueQiuTrader(WebTrader):
         """
         url = self.config['portfolio_url'] + portfolio_code
         html = self.__get_html(url)
-        pos_start = html.find('SNB.cubeInfo = ') + 15
-        pos_end = html.find('SNB.cubePieData')
-        json_data = html[pos_start:pos_end]
-        portfolio_info = json.loads(json_data)
+        match_info = re.search(r'(?<=SNB.cubeInfo = ).*(?=;\n)', html)
+        if match_info is None:
+            raise Exception('cant get portfolio info, portfolio html : {}'.format(html))
+        try:
+            portfolio_info = json.loads(match_info.group())
+        except Exception as e:
+            raise Exception('get portfolio info error: {}'.format(e))
         return portfolio_info
 
     def get_balance(self):
@@ -251,8 +255,8 @@ class XueQiuTrader(WebTrader):
     def adjust_weight(self, stock_code, weight):
         """
         雪球组合调仓, weight 为调整后的仓位比例
-        :param stock_code: 股票代码
-        :param weight: 希望调整之后的权重
+        :param stock_code: str 股票代码
+        :param weight: float 调整之后的持仓百分比， 0 - 100 之间的浮点数
         """
 
         stock = self.__search_stock_info(stock_code)
@@ -261,8 +265,8 @@ class XueQiuTrader(WebTrader):
         if stock['flag'] != 1:
             raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
 
-        # 仓位比例向下取整
-        weight = math.floor(weight)
+        # 仓位比例向下取两位数
+        weight = round(weight, 2)
         # 获取原有仓位信息
         position_list = self.__get_position()
 
@@ -295,23 +299,19 @@ class XueQiuTrader(WebTrader):
                 "price": str(stock['current'])
             })
 
-        remain_weight = 100 - sum([i.get('weight') for i in position_list])
+        remain_weight = 100 - sum(i.get('weight') for i in position_list)
+        cash = round(remain_weight, 2)
         log.debug("调仓比例:%f, 剩余持仓 :%f" % (weight, remain_weight))
-        data = {
-            "cash": remain_weight,
+        data = urlencode({
+            "cash": cash,
             "holdings": str(json.dumps(position_list)),
             "cube_symbol": str(self.account_config['portfolio_code']),
             'segment': 'true',
             'comment': ""
-        }
-        data = (urllib.urlencode(data)) if six.PY2 else (urllib.parse.urlencode(data))
-
-        self.headers['Referer'] = self.config['referer'] % self.account_config['portfolio_code']
+        })
 
         try:
-            rebalance_res = self.requests.session().post(self.config['rebalance_url'], headers=self.headers,
-                                                         cookies=self.cookies,
-                                                         params=data)
+            rebalance_res = self.session.post(self.config['rebalance_url'], params=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return
