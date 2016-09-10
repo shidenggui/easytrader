@@ -303,19 +303,18 @@ class HTTrader(WebTrader):
         return self.do(params)
         
     @property
-        def today_trade(self):
-            """
-            返回当天交易记录。
-            :return:
-            """
-            # TODO 目前仅在 华泰子类 中实现
-            return self.get_today_trade()
+    def today_trade(self):
+        """
+        返回当天交易记录。
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        return self.get_today_trade()
 
-        def get_today_trade(self):
-            """
-            查询当天交易记录
-
-            :return:
-            """
-            params = self.config['today_trade'].copy()
-            return self.do(params)
+    def get_today_trade(self):
+        """
+        查询当天交易记录。
+        :return:
+        """
+        params = self.config['today_trade'].copy()
+        return self.do(params)
