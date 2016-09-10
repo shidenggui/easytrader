@@ -1,19 +1,14 @@
 # -*- coding: utf-8 -*-
-
 import json
 import os
 import time
-import urllib
 
 import requests
-import six
+from six.moves.urllib.parse import urlencode
 
 from .log import log
 from .webtrader import NotLoginError, TradeError
 from .webtrader import WebTrader
-
-if six.PY2:
-    pass
 
 
 class XueQiuTrader(WebTrader):
@@ -53,7 +48,7 @@ class XueQiuTrader(WebTrader):
             'Connection': 'keep-alive',
             'Accept': '*/*',
             'Accept-Encoding': 'gzip,deflate,sdch',
-            'Cache-Conrol': 'no-cache',
+            'Cache-Control': 'no-cache',
             'Referer': 'http://xueqiu.com/P/ZH003694',
             'X-Requested-With': 'XMLHttpRequest',
             'Accept-Language': 'zh-CN,zh;q=0.8'
@@ -67,7 +62,7 @@ class XueQiuTrader(WebTrader):
         }
         login_response = self.session.post(self.config['login_api'], data=login_post_data, headers=headers)
         login_status = json.loads(login_response.text)
-        if 'error_description' in login_status.keys():
+        if 'error_description' in login_status:
             return False, login_status['error_description']
         return True, "SUCCESS"
 
@@ -173,7 +168,7 @@ class XueQiuTrader(WebTrader):
                                   'keep_cost_price': volume / 100,
                                   'last_price': volume / 100,
                                   'market_value': volume,
-                                  'position_str': 'xxxxxx',
+                                  'position_str': 'random',
                                   'stock_code': pos['stock_symbol'],
                                   'stock_name': pos['stock_name']
                                   })
@@ -408,17 +403,13 @@ class XueQiuTrader(WebTrader):
         cash = round(cash, 2)
         log.debug("weight:%f, cash:%f" % (weight, cash))
 
-        data = {
+        data = urlencode({
             "cash": cash,
             "holdings": str(json.dumps(position_list)),
             "cube_symbol": str(self.account_config['portfolio_code']),
             'segment': 1,
             'comment': ""
-        }
-        if six.PY2:
-            data = (urllib.urlencode(data))
-        else:
-            data = (urllib.parse.urlencode(data))
+        })
 
         try:
             rebalance_res = self.session.post(self.config['rebalance_url'], params=data)
@@ -428,7 +419,7 @@ class XueQiuTrader(WebTrader):
         else:
             log.debug('调仓 %s%s: %d' % (entrust_bs, stock['name'], rebalance_res.status_code))
             rebalance_status = json.loads(rebalance_res.text)
-            if 'error_description' in rebalance_status.keys() and rebalance_res.status_code != 200:
+            if 'error_description' in rebalance_status and rebalance_res.status_code != 200:
                 log.error('调仓错误: %s' % (rebalance_status['error_description']))
                 return [{'error_no': rebalance_status['error_code'],
                          'error_info': rebalance_status['error_description']}]
