@@ -96,5 +96,18 @@
     "function_id": 308,
     "stock_account": "",
     "position_str": ""
+  },
+  "today_trade": {
+    "cssweb_type": "GET_TODAY_TRADE",
+    "request_num": 100,
+    "query_direction": 1,
+    "start_date": "",
+    "exchange_type": "",
+    "stock_code": "",
+    "deliver_type": 1,
+    "query_direction": 1,
+    "function_id": 402,
+    "stock_account": "",
+    "position_str": ""
   }
 }

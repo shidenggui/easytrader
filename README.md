@@ -284,6 +284,18 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
   "business_price": "成交均价",
 ]}
 
+#### 查询当天交易
+
+##### 华泰
+
+查询当天交易记录
+
+```python
+user.today_trade   
+
+user.get_today_trade()
+```
+
 # 未确认的key有, farex, fare3
 # 未确认的表头有 结算汇率, 备注
 ```
