@@ -388,6 +388,12 @@ user.get_ipo_limit('申购代码')
 'last_price': '发行价',}
 ```
 
+#### 雪球组合调仓
+
+```python
+user.adjust_weight('000001', 10)
+```
+
 ### 命令行模式
 
 #### 登录
