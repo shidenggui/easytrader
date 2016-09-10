@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import math
 import os
 import time
 
@@ -248,16 +249,17 @@ class XueQiuTrader(WebTrader):
         return True
 
     def adjust_weight(self, stock_code, weight):
-        ''' 雪球组合调仓, weight 为调整后的仓位比例
-        '''
-        import math
+        """
+        雪球组合调仓, weight 为调整后的仓位比例
+        :param stock_code: 股票代码
+        :param weight: 希望调整之后的权重
+        """
 
         stock = self.__search_stock_info(stock_code)
-        balance = self.get_balance()[0]
-        if stock == None:
-            raise TraderError(u"没有查询要操作的股票信息")
+        if stock is None:
+            raise TradeError(u"没有查询要操作的股票信息")
         if stock['flag'] != 1:
-            raise TraderError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+            raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
 
         # 仓位比例向下取整
         weight = math.floor(weight)
@@ -265,35 +267,33 @@ class XueQiuTrader(WebTrader):
         position_list = self.__get_position()
 
         # 调整后的持仓
-        is_have = False
         for position in position_list:
             if position['stock_id'] == stock['stock_id']:
-                is_have = True
                 position['proactive'] = True
                 position['weight'] = weight
 
         if weight != 0 and stock['stock_id'] not in [k['stock_id'] for k in position_list]:
             position_list.append({
-                    "code": stock['code'],
-                    "name": stock['name'],
-                    "enName": stock['enName'],
-                    "hasexist": stock['hasexist'],
-                    "flag": stock['flag'],
-                    "type": stock['type'],
-                    "current": stock['current'],
-                    "chg": stock['chg'],
-                    "percent": str(stock['percent']),
-                    "stock_id": stock['stock_id'],
-                    "ind_id": stock['ind_id'],
-                    "ind_name": stock['ind_name'],
-                    "ind_color": stock['ind_color'],
-                    "textname": stock['name'],
-                    "segment_name": stock['ind_name'],
-                    "weight": weight,
-                    "url": "/S/" + stock['code'],
-                    "proactive": True,
-                    "price": str(stock['current'])
-                })
+                "code": stock['code'],
+                "name": stock['name'],
+                "enName": stock['enName'],
+                "hasexist": stock['hasexist'],
+                "flag": stock['flag'],
+                "type": stock['type'],
+                "current": stock['current'],
+                "chg": stock['chg'],
+                "percent": str(stock['percent']),
+                "stock_id": stock['stock_id'],
+                "ind_id": stock['ind_id'],
+                "ind_name": stock['ind_name'],
+                "ind_color": stock['ind_color'],
+                "textname": stock['name'],
+                "segment_name": stock['ind_name'],
+                "weight": weight,
+                "url": "/S/" + stock['code'],
+                "proactive": True,
+                "price": str(stock['current'])
+            })
 
         remain_weight = 100 - sum([i.get('weight') for i in position_list])
         log.debug("调仓比例:%f, 剩余持仓 :%f" % (weight, remain_weight))
@@ -324,7 +324,6 @@ class XueQiuTrader(WebTrader):
                          'error_info': rebalance_status['error_description']}]
             else:
                 log.debug('调仓成功 %s: 持仓比例%d' % (stock['name'], weight))
-
 
     def __trade(self, stock_code, price=0, amount=0, volume=0, entrust_bs='buy'):
         """
