@@ -141,7 +141,7 @@ def detect_gf_result(image_path):
             if img.getpixel((x, y)) < (100, 100, 100):
                 img.putpixel((x, y), (256, 256, 256))
     gray = img.convert('L')
-    two = gray.point(lambda x: 0 if 68 < x < 90 else 256)
+    two = gray.point(lambda p: 0 if 68 < p < 90 else 256)
     min_res = two.filter(ImageFilter.MinFilter)
     med_res = min_res.filter(ImageFilter.MedianFilter)
     for _ in range(2):
