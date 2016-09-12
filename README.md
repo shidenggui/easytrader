@@ -284,6 +284,18 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
   "business_price": "成交均价",
 ]}
 
+#### 查询当天交易
+
+##### 华泰
+
+查询当天交易记录
+
+```python
+user.today_trade   
+
+user.get_today_trade()
+```
+
 # 未确认的key有, farex, fare3
 # 未确认的表头有 结算汇率, 备注
 ```
@@ -386,6 +398,12 @@ user.get_ipo_limit('申购代码')
 {'high_amount': '最高申购股数',
 'enable_amount': '申购额度',
 'last_price': '发行价',}
+```
+
+#### 雪球组合调仓
+
+```python
+user.adjust_weight('000001', 10)
 ```
 
 ### 命令行模式

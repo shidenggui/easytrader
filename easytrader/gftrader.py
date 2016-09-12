@@ -14,13 +14,13 @@ from . import helpers
 from .webtrader import WebTrader
 from .log import log
 
-
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
 SESSIONIDPOS = 32
 HOLDER_POS = 11
 SH = 0
 SZ = 1
+
 
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
@@ -75,11 +75,11 @@ class GFTrader(WebTrader):
 
     def post_login_data(self, verify_code):
         login_params = dict(
-                self.config['login'],
-                mac=helpers.get_mac(),
-                username=self.account_config['username'],
-                password=self.account_config['password'],
-                tmp_yzm=verify_code
+            self.config['login'],
+            mac=helpers.get_mac(),
+            username=self.account_config['username'],
+            password=self.account_config['password'],
+            tmp_yzm=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.info('login response: {}'.format(login_response.text))
@@ -92,7 +92,7 @@ class GFTrader(WebTrader):
 
     def create_basic_params(self):
         basic_params = dict(
-                dse_sessionId=self.sessionid
+            dse_sessionId=self.sessionid
         )
         return basic_params
 
@@ -155,8 +155,8 @@ class GFTrader(WebTrader):
         stock_account = self.holdername[SH]['stock_account'] if exchange_type == '1' \
             else self.holdername[SZ]['stock_account']
         return dict(
-                exchange_type=exchange_type,
-                stock_account=stock_account
+            exchange_type=exchange_type,
+            stock_account=stock_account
         )
 
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
@@ -168,9 +168,9 @@ class GFTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['buy'],
-                entrust_amount=amount if amount else volume // price // 100 * 100,
-                entrust_prop=entrust_prop
+            self.config['buy'],
+            entrust_amount=amount if amount else volume // price // 100 * 100,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, price, other=params)
 
@@ -183,9 +183,9 @@ class GFTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['sell'],
-                entrust_amount=amount if amount else volume // price,
-                entrust_prop=entrust_prop
+            self.config['sell'],
+            entrust_amount=amount if amount else volume // price,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, price, other=params)
 
@@ -195,8 +195,8 @@ class GFTrader(WebTrader):
         :param amount: 申购金额
         """
         params = dict(
-                self.config['cnjj_apply'],
-                entrust_amount=amount
+            self.config['cnjj_apply'],
+            entrust_amount=amount
         )
         return self.__trade(stock_code, 0, other=params)
 
@@ -206,8 +206,8 @@ class GFTrader(WebTrader):
         :param amount: 赎回份额
         """
         params = dict(
-                self.config['cnjj_redeem'],
-                entrust_amount=amount
+            self.config['cnjj_redeem'],
+            entrust_amount=amount
         )
         return self.__trade(stock_code, 1, other=params)
 
@@ -217,9 +217,9 @@ class GFTrader(WebTrader):
         :param price: 认购金额
         """
         params = dict(
-                self.config['fundsubscribe'],
-                entrust_amount=1,
-                entrust_prop=entrust_prop
+            self.config['fundsubscribe'],
+            entrust_amount=1,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, price, other=params)
 
@@ -229,9 +229,9 @@ class GFTrader(WebTrader):
         :param amount: 申购金额
         """
         params = dict(
-                self.config['fundpurchase'],
-                entrust_amount=1,
-                entrust_prop=entrust_prop
+            self.config['fundpurchase'],
+            entrust_amount=1,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, price, other=params)
 
@@ -241,9 +241,9 @@ class GFTrader(WebTrader):
         :param amount: 赎回份额
         """
         params = dict(
-                self.config['fundredemption'],
-                entrust_amount=amount,
-                entrust_prop=entrust_prop
+            self.config['fundredemption'],
+            entrust_amount=amount,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, 1, other=params)
 
@@ -253,9 +253,9 @@ class GFTrader(WebTrader):
         :param amount: 合并份额
         """
         params = dict(
-                self.config['fundmerge'],
-                entrust_amount=amount,
-                entrust_prop=entrust_prop
+            self.config['fundmerge'],
+            entrust_amount=amount,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, 1, other=params)
 
@@ -265,9 +265,9 @@ class GFTrader(WebTrader):
         :param amount: 分拆份额
         """
         params = dict(
-                self.config['fundsplit'],
-                entrust_amount=amount,
-                entrust_prop=entrust_prop
+            self.config['fundsplit'],
+            entrust_amount=amount,
+            entrust_prop=entrust_prop
         )
         return self.__trade(stock_code, 1, other=params)
 
@@ -275,8 +275,8 @@ class GFTrader(WebTrader):
         """牛熊宝查询
         """
         params = dict(
-                self.config['nxbQueryPrice'],
-                fund_code=fund_code
+            self.config['nxbQueryPrice'],
+            fund_code=fund_code
         )
         return self.do(params)
 
@@ -289,12 +289,12 @@ class GFTrader(WebTrader):
         """
         # TODO: What's auto_deal
         params = dict(
-                self.config['nxbentrust'],
-                fund_code=fund_code,
-                entrust_amount=amount,
-                entrust_price=price,
-                entrust_bs=bs,
-                auto_deal=auto_deal
+            self.config['nxbentrust'],
+            fund_code=fund_code,
+            entrust_amount=amount,
+            entrust_price=price,
+            entrust_bs=bs,
+            auto_deal=auto_deal
         )
         return self.do(params)
 
@@ -303,11 +303,10 @@ class GFTrader(WebTrader):
         param: entrust_no: 单号，通过调用nxbQueryEntrust查询
         """
         params = dict(
-                self.config['nxbentrustcancel'],
-                entrust_no=entrust_no
+            self.config['nxbentrustcancel'],
+            entrust_no=entrust_no
         )
         return self.do(params)
-
 
     def nxbQueryEntrust(self, start_date="0", end_date="0", query_type="1"):
         """当日委托
@@ -316,16 +315,16 @@ class GFTrader(WebTrader):
         :param query_type: 委托查询类型,0为历史查询，1为当日查询
         """
         params = dict(
-                self.config['nxbQueryEntrust'],
-                query_type=query_type,
-                prodta_no="98",
-                entrust_no="0",
-                fund_code="",
-                start_date=start_date,
-                end_date=end_date,
-                position_str="0",
-                limit="10",
-                start="0"
+            self.config['nxbQueryEntrust'],
+            query_type=query_type,
+            prodta_no="98",
+            entrust_no="0",
+            fund_code="",
+            start_date=start_date,
+            end_date=end_date,
+            position_str="0",
+            limit="10",
+            start="0"
         )
         if query_type == "1":
             params['query_mode'] = "1"
@@ -335,13 +334,13 @@ class GFTrader(WebTrader):
         """当日转换
         """
         params = dict(
-                self.config['nxbQueryDeliver'],
-                query_type="2",
-                prodta_no="98",
-                fund_code="",
-                position_str="0",
-                limit="10",
-                start="0"
+            self.config['nxbQueryDeliver'],
+            query_type="2",
+            prodta_no="98",
+            fund_code="",
+            position_str="0",
+            limit="10",
+            start="0"
         )
         return self.do(params)
 
@@ -349,15 +348,15 @@ class GFTrader(WebTrader):
         """历史转换
         """
         params = dict(
-                self.config['nxbQueryHisDeliver'],
-                query_type="2",
-                prodta_no="98",
-                fund_code="",
-                position_str="0",
-                limit="50",
-                start="0",
-                start_date=start_date,
-                end_date=end_date
+            self.config['nxbQueryHisDeliver'],
+            query_type="2",
+            prodta_no="98",
+            fund_code="",
+            position_str="0",
+            limit="50",
+            start="0",
+            start_date=start_date,
+            end_date=end_date
         )
         return self.do(params)
 
@@ -365,9 +364,9 @@ class GFTrader(WebTrader):
         """牛熊宝代码查询？
         """
         params = dict(
-                self.config['queryOfStkCodes'],
-                prodta_no="98",
-                business_type="2"
+            self.config['queryOfStkCodes'],
+            prodta_no="98",
+            business_type="2"
         )
         return self.do(params)
 
@@ -375,23 +374,23 @@ class GFTrader(WebTrader):
         """牛熊宝持仓查询
         """
         params = dict(
-                self.config['queryNXBOfStock'],
-                fund_company="98",
-                query_mode="0",
-                start="0",
-                limit="10"
+            self.config['queryNXBOfStock'],
+            fund_company="98",
+            query_mode="0",
+            start="0",
+            limit="10"
         )
         return self.do(params)
 
     def __trade(self, stock_code, price, other):
         need_info = self.__get_trade_need_info(stock_code)
         trade_param = dict(
-                other,
-                stock_account=need_info['stock_account'],
-                exchange_type=need_info['exchange_type'],
-                stock_code=stock_code,
-                entrust_price=price,
-                dse_sessionId=self.sessionid
+            other,
+            stock_account=need_info['stock_account'],
+            exchange_type=need_info['exchange_type'],
+            stock_code=stock_code,
+            entrust_price=price,
+            dse_sessionId=self.sessionid
         )
         return self.do(trade_param)
 
@@ -399,12 +398,12 @@ class GFTrader(WebTrader):
         """撤单
         :param entrust_no: 委单号"""
         cancel_params = dict(
-                self.config['cancel_entrust'],
-                entrust_no=entrust_no,
-                dse_sessionId=self.sessionid
+            self.config['cancel_entrust'],
+            entrust_no=entrust_no,
+            dse_sessionId=self.sessionid
         )
         return self.do(cancel_params)
-        
+
     @property
     def exchangebill(self):
         start_date, end_date = helpers.get_30_date()
@@ -413,15 +412,15 @@ class GFTrader(WebTrader):
     def getStockQuotation(self, stockcode):
         exchange_info = self.__get_trade_need_info(stockcode)
         params = dict(
-                self.config['queryStockInfo'],
-                exchange_type = exchange_info['exchange_type'],
-                stock_code = stockcode
+            self.config['queryStockInfo'],
+            exchange_type=exchange_info['exchange_type'],
+            stock_code=stockcode
         )
         request_params = self.create_basic_params()
         request_params.update(params)
         response_data = self.request(request_params)
         response_data = str(response_data)
-        response_data = response_data[response_data.find('hq')+3:response_data.find('hqtype')-1]
+        response_data = response_data[response_data.find('hq') + 3:response_data.find('hqtype') - 1]
         response_data = response_data.replace('\\x', '\\u00')
         return json.loads(response_data)
 
