@@ -75,11 +75,11 @@ class HTTrader(WebTrader):
         self.__set_trade_need_info(trade_info)
 
         return True
-        
+
     def logout(self):
         if self.s is not None:
             self.s = None
-        
+
         return True
 
     def __go_login_page(self):
@@ -307,7 +307,7 @@ class HTTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
-        
+
     @property
     def today_trade(self):
         """
@@ -324,3 +324,11 @@ class HTTrader(WebTrader):
         """
         params = self.config['today_trade'].copy()
         return self.do(params)
+
+    @property
+    def trade(self):
+        return self.get_trade()
+
+    def get_trade(self):
+        """获取当日成交列表"""
+        return self.do(self.config['trade'])
