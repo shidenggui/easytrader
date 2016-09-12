@@ -1,11 +1,11 @@
 # coding: utf-8
 from __future__ import division
+
 import datetime
-import re
 import json
 import os
+import re
 import ssl
-from subprocess import getoutput
 import sys
 import uuid
 
@@ -96,7 +96,6 @@ def detect_verify_code_by_java(image_path, broker):
     verify_code_tool, param = jars[broker]
     # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
     # noinspection PyGlobalUndefined
-    global getoutput
     if six.PY2:
         if sys.platform == 'win32':
             from subprocess import PIPE, Popen, STDOUT
@@ -108,6 +107,8 @@ def detect_verify_code_by_java(image_path, broker):
         else:
             import commands
             getoutput = commands.getoutput
+    else:
+        from subprocess import getoutput
     out_put = getoutput('java -version')
     log.debug('java detect result: %s' % out_put)
     if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
