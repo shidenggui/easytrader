@@ -238,8 +238,8 @@ def get_today_ipo_data():
     today_ipo = []
 
     for line in json_data['data']:
-        if datetime.datetime(2016, 9, 14).ctime()[:10] == line[3][:10]:
-            # if datetime.datetime.now().ctime()[:10] == line[3][:10]:
+        # if datetime.datetime(2016, 9, 14).ctime()[:10] == line[3][:10]:
+        if datetime.datetime.now().ctime()[:10] == line[3][:10]:
             today_ipo.append({
                 'stock_code': line[0],
                 'stock_name': line[1],
