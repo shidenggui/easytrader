@@ -398,6 +398,23 @@ user.get_ipo_limit('申购代码')
 'last_price': '发行价',}
 ```
 
+#### 查询今天可以申购的新股信息
+
+```python
+from easytrader import helpers
+ipo_data = helpers.get_today_ipo_data()
+print(ipo_data)
+```
+
+**return**
+
+```python
+[{'stock_code': '股票代码',
+  'stock_name': '股票名称',
+  'price': 发行价,
+  'apply_code': '申购代码'}]
+```
+
 #### 雪球组合调仓
 
 ```python
