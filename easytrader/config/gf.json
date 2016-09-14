@@ -140,12 +140,5 @@
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "querySecuSubequity",
     "limit": 50
-  },
-  "today_entrust": {
-    "classname": "com.gf.etrade.control.StockUF2Control",
-    "method": "queryDRWT",
-    "request_num": 50,
-    "action_in": 0,
-    "query_direction": 0
   }
 }
