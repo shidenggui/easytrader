@@ -129,5 +129,16 @@
   "queryStockInfo": {
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "getStockHQ"
+  },
+  "today_ipo_list": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryNewStkcode",
+    "request_num": 50,
+    "query_direction": 1
+  },
+  "today_ipo_limit": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "querySecuSubequity",
+    "limit": 50
   }
 }
