@@ -437,3 +437,23 @@ class GFTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
+        
+    @property
+    def today_ipo_list(self):
+        '''
+
+        查询今日ipo的股票列表
+        :return:
+        '''
+        params = self.config['today_ipo_list'].copy()
+        return self.do(params)
+
+   
+    def today_ipo_limit(self):
+        '''
+
+        查询今日账户新股申购额度
+        :return:
+        '''
+        params = self.config['today_ipo_limit'].copy()
+        return self.do(params)
