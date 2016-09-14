@@ -3,7 +3,7 @@
 * 进行自动的程序化股票交易
 * 实现自动登录
 * 支持命令行调用，方便其他语言适配
-* 支持 Python3 / Python2, Linux / Win
+* 支持 Python3 / Python2, Linux / Win, 推荐使用 `Python3`
 * 有兴趣的可以加群 `549879767` 、`429011814`(已满) 一起讨论
 
 **开发环境** : `Ubuntu 16.04` / `Python 3.5`
@@ -41,7 +41,7 @@
 
 ### 安装
 
-```python
+```shell
 pip install easytrader
 ```
 
@@ -49,7 +49,7 @@ pip install easytrader
 
 ### 升级
 
-```python
+```shell
 pip install easytrader --upgrade
 ```
 
@@ -64,6 +64,7 @@ import easytrader
 #### 设置账户:
 
 ##### 佣金宝
+
 ```python
 user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 ```
@@ -93,7 +94,7 @@ user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
 #### 登录帐号
 
 ```python
-user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
+user.prepare('/path/to/your/ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 ```
 
 **注**:
@@ -103,12 +104,10 @@ user.prepare('ht.json') // 或者 yjb.json 或者 yh.json 等配置文件路径
 
 格式可以参照 `Github` 目录下对应的 `json` 文件
 
-
 * 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
 * 银河需要配置 `yh.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
-
 
 [如何获取配置所需信息, 可参考此文章](http://www.celuetan.com/topic/5731e9ee705ee8f61eb681fd)
 
@@ -283,6 +282,7 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
   "entrust_no": "合同编号",
   "business_price": "成交均价",
 ]}
+```
 
 #### 查询当天交易
 
@@ -292,8 +292,6 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
 
 ```python
 user.today_trade   
-
-user.get_today_trade()
 ```
 
 # 未确认的key有, farex, fare3
@@ -400,6 +398,23 @@ user.get_ipo_limit('申购代码')
 'last_price': '发行价',}
 ```
 
+#### 查询今天可以申购的新股信息
+
+```python
+from easytrader import helpers
+ipo_data = helpers.get_today_ipo_data()
+print(ipo_data)
+```
+
+**return**
+
+```python
+[{'stock_code': '股票代码',
+  'stock_name': '股票名称',
+  'price': 发行价,
+  'apply_code': '申购代码'}]
+```
+
 #### 雪球组合调仓
 
 ```python
@@ -434,6 +449,14 @@ user.adjust_weight('000001', 10)
 ```
 
 #### Q&A
+
+##### Question
+
+哪里可以找到对应的 `ht.json` , `xq.json` 的说明
+
+##### Answer
+
+这个文件需要自己新建，对应的格式在 `github` 项目的根目录下有对应的模板
 
 ##### Question
 

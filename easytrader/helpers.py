@@ -1,11 +1,11 @@
 # coding: utf-8
 from __future__ import division
+
 import datetime
-import re
 import json
 import os
+import re
 import ssl
-from subprocess import getoutput
 import sys
 import uuid
 
@@ -96,7 +96,6 @@ def detect_verify_code_by_java(image_path, broker):
     verify_code_tool, param = jars[broker]
     # 检查 java 环境，若有则调用 jar 包处理 (感谢空中园的贡献)
     # noinspection PyGlobalUndefined
-    global getoutput
     if six.PY2:
         if sys.platform == 'win32':
             from subprocess import PIPE, Popen, STDOUT
@@ -108,6 +107,8 @@ def detect_verify_code_by_java(image_path, broker):
         else:
             import commands
             getoutput = commands.getoutput
+    else:
+        from subprocess import getoutput
     out_put = getoutput('java -version')
     log.debug('java detect result: %s' % out_put)
     if out_put.find('java version') != -1 or out_put.find('openjdk') != -1:
@@ -140,7 +141,7 @@ def detect_gf_result(image_path):
             if img.getpixel((x, y)) < (100, 100, 100):
                 img.putpixel((x, y), (256, 256, 256))
     gray = img.convert('L')
-    two = gray.point(lambda x: 0 if 68 < x < 90 else 256)
+    two = gray.point(lambda p: 0 if 68 < p < 90 else 256)
     min_res = two.filter(ImageFilter.MinFilter)
     med_res = min_res.filter(ImageFilter.MedianFilter)
     for _ in range(2):
@@ -175,7 +176,7 @@ def detect_yh_result(image_path):
 def get_mac():
     # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
     return ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-        uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+            uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
 
 def grep_comma(num_str):
@@ -197,3 +198,53 @@ def get_30_date():
     end_date = now.date()
     start_date = end_date - datetime.timedelta(days=30)
     return start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")
+
+
+def get_today_ipo_data():
+    """
+    查询今天可以申购的新股信息
+    :return: 今日可申购新股列表 apply_code申购代码 price发行价格
+    """
+
+    import random
+    import json
+    import datetime
+    import requests
+
+    agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:43.0) Gecko/20100101 Firefox/43.0'
+    send_headers = {
+        'Host': 'xueqiu.com',
+        'User-Agent': agent,
+        'Accept': 'application/json, text/javascript, */*; q=0.01',
+        'Accept-Language': 'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+        'Accept-Encoding': 'deflate',
+        'Cache-Control': 'no-cache',
+        'X-Requested-With': 'XMLHttpRequest',
+        'Referer': 'https://xueqiu.com/hq',
+        'Connection': 'keep-alive'
+    }
+
+    sj = random.randint(1000000000000, 9999999999999)
+    home_page_url = 'https://xueqiu.com'
+    ipo_data_url = "https://xueqiu.com/proipo/query.json?column=symbol,name,onl_subcode,onl_subbegdate,actissqty,onl" \
+                   "_actissqty,onl_submaxqty,iss_price,onl_lotwiner_stpub_date,onl_lotwinrt,onl_lotwin_amount,stock_" \
+                   "income&orderBy=onl_subbegdate&order=desc&stockType=&page=1&size=30&_=%s" % (str(sj))
+
+    session = requests.session()
+    session.get(home_page_url, headers=send_headers)  # 产生cookies
+    ipo_response = session.post(ipo_data_url, headers=send_headers)
+
+    json_data = json.loads(ipo_response.text)
+    today_ipo = []
+
+    for line in json_data['data']:
+        # if datetime.datetime(2016, 9, 14).ctime()[:10] == line[3][:10]:
+        if datetime.datetime.now().ctime()[:10] == line[3][:10]:
+            today_ipo.append({
+                'stock_code': line[0],
+                'stock_name': line[1],
+                'apply_code': line[2],
+                'price': line[7]
+            })
+
+    return today_ipo

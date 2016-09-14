@@ -436,21 +436,22 @@ class XueQiuTrader(WebTrader):
                          'entrust_type': '雪球虚拟委托',
                          'entrust_status': '-'}]
 
-    def buy(self, stock_code, price=0, amount=0, volume=0):
+    def buy(self, stock_code, price=0, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
         :param stock_code: 股票代码
         :param price: 买入价格
         :param amount: 买入股数
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param entrust_prop:
         """
         return self.__trade(stock_code, price, amount, volume, 'buy')
 
-    def sell(self, stock_code, price=0, amount=0, volume=0):
+    def sell(self, stock_code, price=0, amount=0, volume=0, entrust_prop=0):
         """卖出股票
-        :param stock_code:
-        :param price:
-        :param amount:
-        :param volume:
-        :return:
+        :param stock_code: 股票代码
+        :param price: 卖出价格
+        :param amount: 卖出股数
+        :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
+        :param entrust_prop:
         """
         return self.__trade(stock_code, price, amount, volume, 'sell')

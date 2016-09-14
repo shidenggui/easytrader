@@ -142,14 +142,6 @@ class WebTrader(object):
         return self.do(self.config['entrust'])
 
     @property
-    def trade(self):
-        return self.get_trade()
-
-    def get_trade(self):
-        """获取当日成交列表"""
-        return self.do(self.config['trade'])
-
-    @property
     def current_deal(self):
         return self.get_current_deal()
 
