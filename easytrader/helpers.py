@@ -228,7 +228,7 @@ def get_today_ipo_data():
     home_page_url = 'https://xueqiu.com'
     ipo_data_url = "https://xueqiu.com/proipo/query.json?column=symbol,name,onl_subcode,onl_subbegdate,actissqty,onl" \
                    "_actissqty,onl_submaxqty,iss_price,onl_lotwiner_stpub_date,onl_lotwinrt,onl_lotwin_amount,stock_" \
-                   "income&orderBy=onl_subbegdate&order=desc&stockType=&page=1&size=10&_=%s" % (str(sj))
+                   "income&orderBy=onl_subbegdate&order=desc&stockType=&page=1&size=30&_=%s" % (str(sj))
 
     session = requests.session()
     session.get(home_page_url, headers=send_headers)  # 产生cookies
