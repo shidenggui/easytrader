@@ -1,4 +1,12 @@
 package easytrader;
+
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
+
+import com.alibaba.fastjson.JSONObject;
+
 //# coding: utf-8
 //from __future__ import division
 //
@@ -33,10 +41,15 @@ package easytrader;
 //                                       ssl_version=ssl.PROTOCOL_TLSv1)
 //
 //
+public class Helpers {
+	
+	public static JSONObject file2dict(String path) throws IOException {
 //def file2dict(path):
 //    with open(path, encoding='utf-8') as f:
 //        return json.load(f)
-//
+			String jsonString = FileUtils.readFileToString(new File(path), "utf-8");
+			return JSONObject.parseObject(jsonString);
+	}
 //
 //def get_stock_type(stock_code):
 //    """判断股票ID对应的证券市场
@@ -249,3 +262,4 @@ package easytrader;
 //            })
 //
 //    return today_ipo
+}

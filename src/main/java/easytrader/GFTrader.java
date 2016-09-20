@@ -25,10 +25,10 @@ package easytrader;
 //
 //
 class GFTrader extends WebTrader {
-//    config_path = os.path.dirname(__file__) + '/config/gf.json'
-//
+	
+   private String config_path = GFTrader.class.getClassLoader().getResource("/config/gf.json").getPath();
+
 	public GFTrader() {
-//    def __init__(self):
 //        super(GFTrader, self).__init__()
 //        self.cookie = None
 //        self.account_config = None
@@ -37,6 +37,7 @@ class GFTrader extends WebTrader {
 //        self.sessionid = ''
 //        self.holdername = list()
 	}
+	
 //    def __handle_recognize_code(self):
 //        """获取并识别返回的验证码
 //        :return:失败返回 False 成功返回 验证码"""
@@ -56,17 +57,20 @@ class GFTrader extends WebTrader {
 //            return False
 //        return verify_code
 //
-//    def __go_login_page(self):
+    public void __go_login_page() {
 //        """访问登录页面获取 cookie"""
 //        if self.s is not None:
 //            self.s.get(self.config['logout_api'])
 //        self.s = requests.session()
 //        self.s.get(self.config['login_page'])
 //
-//    def login(self, throw=False):
-//        """实现广发证券的自动登录"""
-//        self.__go_login_page()
-//        verify_code = self.__handle_recognize_code()
+    }
+	/**
+	 * 实现广发证券的自动登录
+	 */
+    public boolean login() {
+        this.__go_login_page();
+        verify_code = this.__handle_recognize_code();
 //
 //        if not verify_code:
 //            return False
@@ -76,6 +80,7 @@ class GFTrader extends WebTrader {
 //            return False
 //        return True
 //
+    }
 //    def post_login_data(self, verify_code):
 //        login_params = dict(
 //            self.config['login'],
@@ -460,4 +465,10 @@ class GFTrader extends WebTrader {
 //        '''
 //        params = self.config['today_ipo_limit'].copy()
 //        return self.do(params)
+	
+	public static void main(String[] args) {
+		GFTrader trader = new GFTrader();
+		trader.prepare("/path/to/your/ht.json"); // 或者 yjb.json 或者 yh.json 等配置文件路径
+		trader.balance();
+	}
 }
