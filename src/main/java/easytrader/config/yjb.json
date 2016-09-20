@@ -1,0 +1,60 @@
+{
+  "login_page": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/",
+  "login_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/exchange.action",
+  "verify_code_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/user/extraCode.jsp",
+  "prefix": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/stock/exchange.action",
+  "logout_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/stock/exchange.action?function_id=20&login_type=stock",
+  "login": {
+    "function_id": 200,
+    "login_type": "stock",
+    "version": 200,
+    "identity_type": "",
+    "remember_me": "",
+    "input_content": 1,
+    "content_type": 0,
+    "loginPasswordType": "B64",
+    "disk_serial_id": "ST3250820AS",
+    "cpuid": "-41315-FA76141D",
+    "machinecode": "-41315-FA76141D"
+  },
+  "buy": {
+    "service_type": "stock",
+    "request_id": "buystock_302"
+  },
+  "sell": {
+    "service_type": "stock",
+    "request_id": "sellstock_302"
+  },
+  "position": {
+    "request_id": "mystock_403"
+  },
+  "balance": {
+    "request_id": "mystock_405"
+  },
+  "entrust": {
+    "request_id": "trust_401",
+    "sort_direction": 1,
+    "deliver_type": "",
+    "service_type": "stock"
+  },
+  "cancel_entrust": {
+    "request_id": "chedan_304"
+  },
+  "current_deal": {
+    "request_id": "bargain_402",
+    "sort_direction": 1,
+    "service_type": "stock"
+  },
+  "ipo_enable_amount": {
+    "request_id": "buystock_300"
+  },
+  "exchangetype4stock": {
+    "service_type": "stock",
+    "function_id": "105"
+  },
+  "account4stock": {
+    "service_type": "stock",
+    "function_id": "407",
+    "window_id": "StockMarketTrade"
+  }
+}

@@ -1,0 +1,113 @@
+{
+  "login_page": "https://service.htsc.com.cn/service/login.jsp",
+  "login_api": "https://service.htsc.com.cn/service/loginAction.do?method=login",
+  "trade_info_page": "https://service.htsc.com.cn/service/flashbusiness_new3.jsp?etfCode=",
+  "verify_code_api": "https://service.htsc.com.cn/service/pic/verifyCodeImage.jsp",
+  "prefix": "https://tradegw.htsc.com.cn",
+  "logout_api": "https://service.htsc.com.cn/service/login.jsp?logout=yes",
+  "login": {
+    "loginEvent": 1,
+    "topath": "null",
+    "accountType": 1,
+    "userType": "jy",
+    "hddInfo": "ST3250820AS"
+  },
+  "position": {
+    "cssweb_type": "GET_STOCK_POSITION",
+    "function_id": 403,
+    "exchange_type": "",
+    "stock_account": "",
+    "stock_code": "",
+    "query_direction": "",
+    "query_mode": 0,
+    "request_num": 100,
+    "position_str": ""
+  },
+  "balance": {
+    "cssweb_type": "GET_FUNDS",
+    "function_id": 405,
+    "identity_type": "",
+    "money_type": ""
+  },
+  "entrust": {
+    "cssweb_type": "GET_TODAY_ENTRUST",
+    "function_id": 401,
+    "exchange_type": "",
+    "stock_account": "",
+    "stock_code": "",
+    "query_direction": "",
+    "sort_direction": 0,
+    "request_num": 100,
+    "position_str": ""
+  },
+  "trade": {
+    "cssweb_type": "GET_TODAY_TRADE",
+    "function_id": 402,
+    "exchange_type": "",
+    "stock_account": "",
+    "stock_code": "",
+    "query_direction": 1,
+    "request_num": 100,
+    "query_mode": 0,
+    "position_str": ""
+  },
+  "buy": {
+    "cssweb_type": "STOCK_BUY",
+    "function_id": 302,
+    "exchange_type": "",
+    "stock_account": "",
+    "stock_code": "",
+    "query_direction": "",
+    "sort_direction": 0,
+    "request_num": 100,
+    "identity_type": "",
+    "entrust_bs": 1
+  },
+  "sell": {
+    "cssweb_type": "STOCK_SALE",
+    "function_id": 302,
+    "exchange_type": "",
+    "stock_account": "",
+    "stock_code": "",
+    "query_direction": "",
+    "sort_direction": 0,
+    "request_num": 100,
+    "identity_type": "",
+    "entrust_bs": 2
+  },
+  "cancel_entrust": {
+    "cssweb_type": "STOCK_CANCEL",
+    "function_id": 304,
+    "exchange_type": "",
+    "stock_code": "",
+    "identity_type": "",
+    "entrust_bs": 2,
+    "batch_flag": 0
+  },
+  "exchangebill":{
+    "cssweb_type": "GET_EXCHANGEBILL",
+    "request_num": 100,
+    "end_date": "",
+    "start_date": "",
+    "exchange_type": "",
+    "stock_code": "",
+    "deliver_type": 1,
+    "query_direction": "",
+    "function_id": 308,
+    "stock_account": "",
+    "position_str": ""
+  },
+  "today_trade": {
+    "cssweb_type": "GET_TODAY_TRADE",
+    "request_num": 100,
+    "query_direction": 1,
+    "start_date": "",
+    "exchange_type": "",
+    "stock_code": "",
+    "deliver_type": 1,
+    "query_direction": 1,
+    "function_id": 402,
+    "stock_account": "",
+    "position_str": ""
+  }
+}
