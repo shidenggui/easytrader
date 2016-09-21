@@ -71,7 +71,7 @@ public class Helpers {
 //    return 'sz'
 //
 //
-//def recognize_verify_code(image_path, broker='ht'):
+public static String recognize_verify_code(String image_path,String broker) {
 //    """识别验证码，返回识别后的字符串，使用 tesseract 实现
 //    :param image_path: 图片路径
 //    :param broker: 券商 ['ht', 'yjb', 'gf', 'yh']
@@ -86,7 +86,7 @@ public class Helpers {
 //        return detect_yh_result(image_path)
 //    # 调用 tesseract 识别
 //    return default_verify_code_detect(image_path)
-//
+}
 //
 //def detect_ht_result(image_path):
 //    code = detect_verify_code_by_java(image_path, 'ht')

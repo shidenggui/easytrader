@@ -35,7 +35,7 @@ abstract class WebTrader {
     private String config_path = "";
 //
 	private JSONObject account_config;
-	private JSONObject config;
+	protected JSONObject config;
 	private JSONObject global_config;
 	
 	public WebTrader() {

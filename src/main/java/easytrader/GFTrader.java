@@ -1,5 +1,14 @@
 package easytrader;
 
+import java.io.IOException;
+
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+
 //# coding: utf-8
 //from __future__ import division
 //
@@ -28,6 +37,8 @@ class GFTrader extends WebTrader {
 	
    private String config_path = GFTrader.class.getClassLoader().getResource("/config/gf.json").getPath();
 
+   private CloseableHttpClient httpClient;
+   
 	public GFTrader() {
 //        super(GFTrader, self).__init__()
 //        self.cookie = None
@@ -36,13 +47,25 @@ class GFTrader extends WebTrader {
 //        self.exchange_stock_account = dict()
 //        self.sessionid = ''
 //        self.holdername = list()
+		httpClient = HttpClientBuilder.create().build();
 	}
 	
-//    def __handle_recognize_code(self):
-//        """获取并识别返回的验证码
-//        :return:失败返回 False 成功返回 验证码"""
+	/**
+	 * 获取并识别返回的验证码
+	 *  
+	 * @return 失败返回 False 成功返回 验证码
+	 * @author Darkness
+	 * @date 2016年9月21日 下午2:43:20
+	 * @version V1.0
+	 */
+	public void  __handle_recognize_code() {
 //        # 获取验证码
-//        verify_code_response = self.s.get(self.config['verify_code_api'])
+		HttpGet httpGet = new HttpGet(this.config.getString("verify_code_api"));
+        try {
+			CloseableHttpResponse verify_code_response = httpClient.execute(httpGet);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 //        # 保存验证码
 //        image_path = tempfile.mktemp()
 //        with open(image_path, 'wb') as f:
@@ -56,14 +79,24 @@ class GFTrader extends WebTrader {
 //        if len(verify_code) != ht_verify_code_length:
 //            return False
 //        return verify_code
-//
+	}
+	
+	/**
+	 * 访问登录页面获取 cookie
+	 *  
+	 * @author Darkness
+	 * @date 2016年9月21日 下午2:38:56
+	 * @version V1.0
+	 */
     public void __go_login_page() {
-//        """访问登录页面获取 cookie"""
-//        if self.s is not None:
-//            self.s.get(self.config['logout_api'])
-//        self.s = requests.session()
-//        self.s.get(self.config['login_page'])
-//
+		try {
+			HttpGet httpGet = new HttpGet(this.config.getString("logout_api"));
+			HttpResponse response = httpClient.execute(httpGet);
+			httpGet = new HttpGet(this.config.getString("login_page"));
+			response = httpClient.execute(httpGet);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 	/**
 	 * 实现广发证券的自动登录
