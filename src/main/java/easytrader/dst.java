@@ -23,6 +23,9 @@ public class dst {
 		File abc = new File("/Users/darkness/git/easytrader/abc");
 		List<String> errors = new ArrayList<>();
 		for (File string : abc.listFiles()) {
+			if(!string.getName().endsWith(".jpg")) {
+				continue;
+			}
 			String code = process(string.getPath());
 			if(code.length() !=5) {
 				errors.add("识别失败：" + code + "==" + string.getName());
@@ -39,6 +42,7 @@ public class dst {
 	
 	public static String process(String file) {
         TessBaseAPI api = new TessBaseAPI();
+        
         
         if (api.Init(".", "eng") != 0) {
             throw new RuntimeException("Could not initialize tesseract.");
