@@ -7,7 +7,7 @@ import java.util.HashMap;
 
 import javax.imageio.ImageIO;
 
- class ImageUtil {
+public class ImageUtil {
 
 	public static BufferedImage filterScale(BufferedImage img, float ratio) {
 		final int w = (int) (ratio * img.getWidth());
