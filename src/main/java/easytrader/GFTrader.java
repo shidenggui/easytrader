@@ -33,7 +33,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 //SZ = 1
 //
 //
-class GFTrader extends WebTrader {
+class GFTrader {//extends WebTrader {
 	
    private String config_path = GFTrader.class.getClassLoader().getResource("/config/gf.json").getPath();
 
@@ -60,12 +60,12 @@ class GFTrader extends WebTrader {
 	 */
 	public void  __handle_recognize_code() {
 //        # 获取验证码
-		HttpGet httpGet = new HttpGet(this.config.getString("verify_code_api"));
-        try {
-			CloseableHttpResponse verify_code_response = httpClient.execute(httpGet);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		HttpGet httpGet = new HttpGet(this.config.getString("verify_code_api"));
+//        try {
+//			CloseableHttpResponse verify_code_response = httpClient.execute(httpGet);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 //        # 保存验证码
 //        image_path = tempfile.mktemp()
 //        with open(image_path, 'wb') as f:
@@ -89,21 +89,21 @@ class GFTrader extends WebTrader {
 	 * @version V1.0
 	 */
     public void __go_login_page() {
-		try {
-			HttpGet httpGet = new HttpGet(this.config.getString("logout_api"));
-			HttpResponse response = httpClient.execute(httpGet);
-			httpGet = new HttpGet(this.config.getString("login_page"));
-			response = httpClient.execute(httpGet);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			HttpGet httpGet = new HttpGet(this.config.getString("logout_api"));
+//			HttpResponse response = httpClient.execute(httpGet);
+//			httpGet = new HttpGet(this.config.getString("login_page"));
+//			response = httpClient.execute(httpGet);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
     }
 	/**
 	 * 实现广发证券的自动登录
 	 */
     public boolean login() {
         this.__go_login_page();
-        verify_code = this.__handle_recognize_code();
+//        verify_code = this.__handle_recognize_code();
 //
 //        if not verify_code:
 //            return False
@@ -113,6 +113,7 @@ class GFTrader extends WebTrader {
 //            return False
 //        return True
 //
+        return false;
     }
 //    def post_login_data(self, verify_code):
 //        login_params = dict(
@@ -501,7 +502,7 @@ class GFTrader extends WebTrader {
 	
 	public static void main(String[] args) {
 		GFTrader trader = new GFTrader();
-		trader.prepare("/path/to/your/ht.json"); // 或者 yjb.json 或者 yh.json 等配置文件路径
-		trader.balance();
+//		trader.prepare("/path/to/your/ht.json"); // 或者 yjb.json 或者 yh.json 等配置文件路径
+//		trader.balance();
 	}
 }

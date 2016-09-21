@@ -71,7 +71,8 @@ public class Helpers {
 //    return 'sz'
 //
 //
-public static String recognize_verify_code(String image_path,String broker) {
+	//http://pretius.com/using-tesseract-ocr-to-extract-scanned-invoice-data-in-java-application/
+//public static String recognize_verify_code(String image_path,String broker) {
 //    """识别验证码，返回识别后的字符串，使用 tesseract 实现
 //    :param image_path: 图片路径
 //    :param broker: 券商 ['ht', 'yjb', 'gf', 'yh']
@@ -262,4 +263,3 @@ public static String recognize_verify_code(String image_path,String broker) {
 //            })
 //
 //    return today_ipo
-}
