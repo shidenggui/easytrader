@@ -20,7 +20,7 @@ public class dst {
 
 	//http://blog.sina.com.cn/s/blog_68b0f46d0102wb57.html
 	public static void main(String[] args) {
-		File abc = new File("/Users/darkness/git/easytrader/abc");
+		File abc = new File("C:\\Users\\Administrator\\git\\easytrader\\abc");
 		List<String> errors = new ArrayList<>();
 		for (File string : abc.listFiles()) {
 			if(!string.getName().endsWith(".jpg")) {
