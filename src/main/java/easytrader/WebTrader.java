@@ -31,12 +31,12 @@ import com.alibaba.fastjson.JSONObject;
 
 abstract class WebTrader {
 	
-    private String global_config_path = WebTrader.class.getClassLoader().getResource("/easytrader/config/global.json").getPath();
-    private String config_path = "";
+    private String global_config_path = WebTrader.class.getClassLoader().getResource("easytrader/config/global.json").getPath();
+//    private String config_path = "";
 //
-	private JSONObject account_config;
+    protected JSONObject account_config;
 	protected JSONObject config;
-	private JSONObject global_config;
+	protected JSONObject global_config;
 	
 	public WebTrader() {
         this.__read_config();
@@ -144,13 +144,15 @@ abstract class WebTrader {
     public void __read_config() {
 //        """读取 config"""
         try {
-			this.config = Helpers.file2dict(this.config_path);
+			this.config = Helpers.file2dict(this.config_path());
 			this.global_config = Helpers.file2dict(this.global_config_path);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 //        self.config.update(self.global_config)
     }
+    
+    protected abstract String config_path();
 //    @property
     public JSONObject balance() {
         return this.get_balance();

@@ -1,13 +1,30 @@
 package easytrader;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.protocol.HTTP;
+import org.apache.http.util.EntityUtils;
+
+import com.alibaba.fastjson.JSONObject;
 
 //# coding: utf-8
 //from __future__ import division
@@ -33,12 +50,14 @@ import org.apache.http.impl.client.HttpClientBuilder;
 //SZ = 1
 //
 //
-class GFTrader {//extends WebTrader {
+class GFTrader extends WebTrader {
 	
-   private String config_path = GFTrader.class.getClassLoader().getResource("/config/gf.json").getPath();
 
    private CloseableHttpClient httpClient;
    
+   protected String config_path() {
+return GFTrader.class.getClassLoader().getResource("easytrader/config/gf.json").getPath();	   
+   }
 	public GFTrader() {
 //        super(GFTrader, self).__init__()
 //        self.cookie = None
@@ -58,14 +77,33 @@ class GFTrader {//extends WebTrader {
 	 * @date 2016年9月21日 下午2:43:20
 	 * @version V1.0
 	 */
-	public void  __handle_recognize_code() {
+	public String  __handle_recognize_code() {
+		String verifyCodeApi = this.config.getString("verify_code_api");
+		return __handle_recognize_code(verifyCodeApi);
+	}
+	
+	public String  __handle_recognize_code(String verifyCodeApi) {
 //        # 获取验证码
-//		HttpGet httpGet = new HttpGet(this.config.getString("verify_code_api"));
-//        try {
-//			CloseableHttpResponse verify_code_response = httpClient.execute(httpGet);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		
+		HttpGet httpGet = new HttpGet(verifyCodeApi);
+        try {
+			HttpResponse response = httpClient.execute(httpGet);
+
+			BufferedImage verifyCodeImage = ImageIO.read(response.getEntity().getContent());
+
+			EntityUtils.consume(response.getEntity());
+			
+			GFVerifyCode gfVerifyCode = new GFVerifyCode(verifyCodeImage);
+			String code = gfVerifyCode.getValue();
+			if(code.length() !=5) {
+				return __handle_recognize_code();
+			}
+//			if(code.length() !)
+			return code;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        return "";
 //        # 保存验证码
 //        image_path = tempfile.mktemp()
 //        with open(image_path, 'wb') as f:
@@ -89,33 +127,34 @@ class GFTrader {//extends WebTrader {
 	 * @version V1.0
 	 */
     public void __go_login_page() {
-//		try {
-//			HttpGet httpGet = new HttpGet(this.config.getString("logout_api"));
-//			HttpResponse response = httpClient.execute(httpGet);
-//			httpGet = new HttpGet(this.config.getString("login_page"));
-//			response = httpClient.execute(httpGet);
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		try {
+			HttpGet httpGet = new HttpGet(this.config.getString("logout_api"));
+			HttpResponse response = httpClient.execute(httpGet);
+			httpGet = new HttpGet(this.config.getString("login_page"));
+			response = httpClient.execute(httpGet);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
     }
 	/**
 	 * 实现广发证券的自动登录
 	 */
     public boolean login() {
         this.__go_login_page();
-//        verify_code = this.__handle_recognize_code();
+        String verify_code = this.__handle_recognize_code();
 //
 //        if not verify_code:
 //            return False
 //
+        this.post_login_data(verify_code);
 //        login_status, result = self.post_login_data(verify_code)
 //        if login_status is False:
 //            return False
 //        return True
 //
-        return false;
+        return true;
     }
-//    def post_login_data(self, verify_code):
+    public void post_login_data(String verify_code) {
 //        login_params = dict(
 //            self.config['login'],
 //            mac=helpers.get_mac(),
@@ -123,6 +162,38 @@ class GFTrader {//extends WebTrader {
 //            password=self.account_config['password'],
 //            tmp_yzm=verify_code
 //        )
+    	HashMap<String, String> login_params = this.config.getObject("login", HashMap.class);
+    	HttpPost post = new HttpPost(this.config.getString("login_api"));
+		List<NameValuePair> nvps = new ArrayList<>();
+	    nvps.add(new BasicNameValuePair("authtype", login_params.get("authtype")));
+		nvps.add(new BasicNameValuePair("disknum", login_params.get("disknum")));
+		nvps.add(new BasicNameValuePair("loginType", login_params.get("loginType")));
+		nvps.add(new BasicNameValuePair("origin", login_params.get("origin")));
+		nvps.add(new BasicNameValuePair("mac", "BC:5F:F4:F9:7A:9D"));
+		
+		nvps.add(new BasicNameValuePair("username", this.account_config.getString("username")));
+		nvps.add(new BasicNameValuePair("password", this.account_config.getString("password")));
+		
+		nvps.add(new BasicNameValuePair("tmp_yzm", verify_code));
+		// 把控制台输入的验证码填入
+		try {
+			post.setEntity(new UrlEncodedFormEntity(nvps, HTTP.UTF_8));
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			CloseableHttpResponse response = httpClient.execute(post);
+			
+			String responseText = EntityUtils.toString(response.getEntity());
+			System.out.println(responseText);
+			EntityUtils.consume(response.getEntity());
+			
+		} catch (ClientProtocolException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 //        login_response = self.s.post(self.config['login_api'], params=login_params)
 //        log.info('login response: {}'.format(login_response.text))
 //        if login_response.json()['success'] == True:
@@ -132,6 +203,7 @@ class GFTrader {//extends WebTrader {
 //            return True, None
 //        return False, login_response.text
 //
+    }
 //    def create_basic_params(self):
 //        basic_params = dict(
 //            dse_sessionId=self.sessionid
@@ -502,7 +574,41 @@ class GFTrader {//extends WebTrader {
 	
 	public static void main(String[] args) {
 		GFTrader trader = new GFTrader();
-//		trader.prepare("/path/to/your/ht.json"); // 或者 yjb.json 或者 yh.json 等配置文件路径
-//		trader.balance();
+		trader.prepare(userDir() + "gf.json"); // 或者 yjb.json 或者 yh.json 等配置文件路径
+		trader.balance();
+//		trader.__handle_recognize_code("https://trade.gf.com.cn/yzm.jpgx");
+	}
+
+	private static String userDir() {
+		return System.getProperty("user.dir") + File.separator;
+	}
+	@Override
+	protected void check_account_live(JSONObject response) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	protected Map<String, String> create_basic_params() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected String request(Map<String, String> params) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected JSONObject format_response_data(String data) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public JSONObject check_login_status(JSONObject return_data) {
+		// TODO Auto-generated method stub
+		return return_data;
 	}
 }
