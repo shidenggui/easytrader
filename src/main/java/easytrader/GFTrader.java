@@ -1,5 +1,7 @@
 package easytrader;
-
+http://blog.csdn.net/lllkey/article/details/17526323
+	http://blog.sina.com.cn/s/blog_4829b9400101pxs6.html
+		https://my.oschina.net/u/1251149/blog/299010
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
