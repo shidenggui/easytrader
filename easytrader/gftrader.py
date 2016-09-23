@@ -457,3 +457,54 @@ class GFTrader(WebTrader):
         '''
         params = self.config['today_ipo_limit'].copy()
         return self.do(params)
+    
+     def login_rzrq(self):
+        '''
+
+        登录融资融券平台
+        :return:
+        '''
+        params = self.config['rzrq'].copy()
+        return self.do(params)
+
+    def rzrq_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的融资融券交割单
+         :param start_date: 20160211
+         :param end_date: 20160211
+         :return:
+         """
+        params = self.config['rzrq_exchangebill'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
+
+    def entrust_his(self, start_date, end_date):
+        """
+        查询指定日期内的历史委托单
+         :param start_date: 20160211
+         :param end_date: 20160211
+         :return:
+         """
+        params = self.config['entrust_his'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
+
+    def rzrq_entrust_his(self, start_date, end_date):
+        """
+        查询指定日期内的融资融券历史委托单
+         :param start_date: 20160211
+         :param end_date: 20160211
+         :return:
+         """
+        params = self.config['rzrq_entrust_his'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
