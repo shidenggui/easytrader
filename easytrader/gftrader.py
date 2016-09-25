@@ -458,7 +458,7 @@ class GFTrader(WebTrader):
         params = self.config['today_ipo_limit'].copy()
         return self.do(params)
     
-     def login_rzrq(self):
+    def login_rzrq(self):
         '''
 
         登录融资融券平台
@@ -507,4 +507,15 @@ class GFTrader(WebTrader):
             "start_date": start_date,
             "end_date": end_date,
         })
+        return self.do(params)
+    
+    def do_job(self, request_type, **kwargs):
+        '''
+        直接输入请求类型，以及相关参数列表，返回执行结果
+        :param request_type:请求类型，这个请求类型必须在config/gf.json里面，例如position
+        :param kwargs:请求相关的参数
+        :return:返回请求结果。
+        '''
+        params = self.config[request_type].copy()
+        params.update(kwargs)
         return self.do(params)
