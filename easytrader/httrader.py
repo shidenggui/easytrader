@@ -228,7 +228,7 @@ class HTTrader(WebTrader):
         exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' \
             else self.__sz_exchange_type
         # 获取股票对应的证券帐号
-        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type \
+        stock_account = self.__sh_stock_account if (hasattr(self,'__sh_exchange_type') and exchange_type == self.__sh_exchange_type) \
             else self.__sz_stock_account
         return dict(
             exchange_type=exchange_type,
