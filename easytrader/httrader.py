@@ -224,12 +224,20 @@ class HTTrader(WebTrader):
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
-        # 获取股票对应的证券市场
-        exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' \
-            else self.__sz_exchange_type
-        # 获取股票对应的证券帐号
-        stock_account = self.__sh_stock_account if (hasattr(self,'__sh_exchange_type') and exchange_type == self.__sh_exchange_type) \
-            else self.__sz_stock_account
+        #判断股票类型和是否存在对应证券账号
+        if helpers.get_stock_type(stock_code) == 'sh':
+            if hasattr(self,'__sh_stock_account') == False:
+                raise Exception("没有上证账户，不可买入上证股票。")
+            else:
+                exchange_type = self.__sh_exchange_type
+                stock_account = self.__sh_stock_account
+        else:
+            if hasattr(self,'__sz_stock_account') == False:
+                raise Exception("没有深证账户，不可买入深证股票。")
+            else:
+                exchange_type = self.__sz_exchange_type
+                stock_account = self.__sz_stock_account
+
         return dict(
             exchange_type=exchange_type,
             stock_account=stock_account
