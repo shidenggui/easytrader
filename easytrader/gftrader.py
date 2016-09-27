@@ -149,7 +149,7 @@ class GFTrader(WebTrader):
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
         # 获取股票对应的证券市场
-          exchange_type = 1 if helpers.get_stock_type(stock_code) == 'sh' \
+        exchange_type = 1 if helpers.get_stock_type(stock_code) == 'sh' \
             else 2
         # 获取股票对应的证券帐号
         stock_account = self.holdername[SH]['stock_account'] if exchange_type == '1' \
