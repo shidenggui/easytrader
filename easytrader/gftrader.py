@@ -138,13 +138,12 @@ class GFTrader(WebTrader):
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)
         jsholder = eval(jsholder[0])
-
-        if len(jsholder) < 3:
-            self.holdername.append(jsholder[0])
-            self.holdername.append(jsholder[1])
-            return
-        self.holdername.append(jsholder[1])
-        self.holdername.append(jsholder[2])
+        for jsholder_sh in  jsholder:
+            if jsholder_sh['exchange_name']=='上海':
+                self.holdername.append(jsholder_sh)
+        for jsholder_sz in  jsholder:
+            if jsholder_sz['exchange_name']=='深圳':
+                self.holdername.append(jsholder_sz)
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
