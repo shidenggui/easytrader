@@ -37,7 +37,7 @@
 > 华泰 / 佣金宝 的自动登录需要安装以下二者之一， 银河的自动登录需要安装下列的 tesseract： 
 
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
-* `tesseract` : 保证在命令行下 `tesseract` 可用
+* `tesseract` : 非 `pytesseract`, 需要单独安装, [地址](https://github.com/tesseract-ocr/tesseract/wiki),保证在命令行下 `tesseract` 可用
 
 ### 安装
 
