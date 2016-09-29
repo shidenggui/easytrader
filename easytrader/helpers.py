@@ -121,16 +121,12 @@ def detect_verify_code_by_java(image_path, broker):
 
 def default_verify_code_detect(image_path):
     from PIL import Image
-    import pytesseract
     img = Image.open(image_path)
-    code = pytesseract.image_to_string(img)
-    valid_chars = re.findall('[0-9a-z]', code, re.IGNORECASE)
-    return ''.join(valid_chars)
+    return invoke_tesseract_to_recognize(img)
 
 
 def detect_gf_result(image_path):
     from PIL import ImageFilter, Image
-    import pytesseract
     img = Image.open(image_path)
     if hasattr(img, "width"):
         width, height = img.width, img.height
@@ -146,13 +142,11 @@ def detect_gf_result(image_path):
     med_res = min_res.filter(ImageFilter.MedianFilter)
     for _ in range(2):
         med_res = med_res.filter(ImageFilter.MedianFilter)
-    res = pytesseract.image_to_string(med_res)
-    return res.replace(' ', '')
+    return invoke_tesseract_to_recognize(med_res)
 
 
 def detect_yh_result(image_path):
     from PIL import Image
-    import pytesseract
 
     img = Image.open(image_path)
 
@@ -169,14 +163,23 @@ def detect_yh_result(image_path):
             if ((r + g + b) > avg_brightness / 1.5) or (y < 3) or (y > 17) or (x < 5) or (x > (img.width - 5)):
                 img.putpixel((x, y), (256, 256, 256))
 
-    res = pytesseract.image_to_string(img)
-    return res
+    return invoke_tesseract_to_recognize(img)
+
+
+def invoke_tesseract_to_recognize(img):
+    import pytesseract
+    try:
+        res = pytesseract.image_to_string(img)
+    except FileNotFoundError:
+        raise Exception('tesseract 未安装，请至 https://github.com/tesseract-ocr/tesseract/wiki 查看安装教程')
+    valid_chars = re.findall('[0-9a-z]', res, re.IGNORECASE)
+    return ''.join(valid_chars)
 
 
 def get_mac():
     # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
     return ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-            uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+        uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
 
 def grep_comma(num_str):
