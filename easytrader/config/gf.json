@@ -173,5 +173,15 @@
     "end_date": "",
     "deliver_type": 1,
     "query_mode": 0
+  },
+  "capitalflow": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryFundjour",
+    "limit": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
   }
 }

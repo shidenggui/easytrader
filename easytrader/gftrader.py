@@ -518,3 +518,17 @@ class GFTrader(WebTrader):
         params = self.config[request_type].copy()
         params.update(kwargs)
         return self.do(params)
+
+    def capitalflow(self, start_date, end_date):
+        """
+        查询指定日期内的资金流水
+         :param start_date: 开始时间，例如：20160211
+         :param end_date: 技术时间，例如：20160211
+         :return: 指定时间段内的资金流水数据
+         """
+        params = self.config['capitalflow'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
