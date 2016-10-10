@@ -13,4 +13,4 @@
 20160909 新增函数adjust_weight，用于雪球组合比例调仓
              
 adjust_weight函数包含两个参数，stock_code 指定调仓股票代码，weight 指定调仓比例      
-其中weight向下取整，解决组合调仓bug
+
