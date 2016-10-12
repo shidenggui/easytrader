@@ -100,7 +100,7 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.getcwd()+'/vcode'
+        image_path = os.path.join(os.getcwd(),'vcode')
         print("验证码图片保存在：{}".format(image_path))
 
         with open(image_path, 'wb') as f:
@@ -112,6 +112,7 @@ class HTTrader(WebTrader):
         verify_code = input("请输入验证码：")
         if verify_code == "":
             return False
+        verify_code = str(verify_code)
         return verify_code
         # verify_code = helpers.recognize_verify_code(image_path)
         # log.debug('verify code detect result: %s' % verify_code)
