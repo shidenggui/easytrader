@@ -5,7 +5,6 @@ import click
 import dill
 
 import easytrader
-from easytrader.helpers import disable_log
 
 ACCOUNT_OBJECT_FILE = 'account.session'
 
@@ -29,8 +28,6 @@ def main(prepare, use, do, get, params, debug):
         with open(ACCOUNT_OBJECT_FILE, 'rb') as f:
             user = dill.load(f)
 
-        if not debug:
-            disable_log()
         if len(params) > 0:
             result = getattr(user, do)(*params)
         else:

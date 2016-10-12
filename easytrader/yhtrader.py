@@ -9,23 +9,24 @@ import requests
 
 from . import helpers
 from .helpers import EntrustProp
-from .webtrader import WebTrader, NotLoginError
 from .log import log
-
+from .webtrader import WebTrader, NotLoginError
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
 HOLDER_NAME = 0
 
+
 # 用于将一个list按一定步长切片，返回这个list切分后的list
-def slice_list(step = None, num = None, data_list=None):
-    if not ( (step is None) & (num is None) ):
+def slice_list(step=None, num=None, data_list=None):
+    if not ((step is None) & (num is None)):
         if num is not None:
-            step = math.ceil(len(data_list)/num)
-        return [data_list[ i : i + step] for i in range(0, len(data_list), step)]
+            step = math.ceil(len(data_list) / num)
+        return [data_list[i: i + step] for i in range(0, len(data_list), step)]
     else:
         print("step和num不能同时为空")
         return False
+
 
 class YHTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/yh.json'
@@ -89,12 +90,12 @@ class YHTrader(WebTrader):
 
     def post_login_data(self, verify_code):
         login_params = dict(
-                self.config['login'],
-                mac=helpers.get_mac(),
-                clientip='',
-                inputaccount=self.account_config['inputaccount'],
-                trdpwd=self.account_config['trdpwd'],
-                checkword=verify_code
+            self.config['login'],
+            mac=helpers.get_mac(),
+            clientip='',
+            inputaccount=self.account_config['inputaccount'],
+            trdpwd=self.account_config['trdpwd'],
+            checkword=verify_code
         )
         log.debug('login params: %s' % login_params)
         login_response = self.s.post(self.config['login_api'], params=login_params)
@@ -113,23 +114,24 @@ class YHTrader(WebTrader):
         self.cookie = dict(JSESSIONID=token)
         self.keepalive()
 
-    def check_available_cancels(self, parsed = True):
+    def check_available_cancels(self, parsed=True):
         """
         @Contact: Emptyset <21324784@qq.com>
         检查撤单列表
         """
         try:
-            response = self.s.get( "https://www.chinastock.com.cn/trade/webtrade/stock/StockEntrustCancel.jsp", cookies=self.cookie )
+            response = self.s.get("https://www.chinastock.com.cn/trade/webtrade/stock/StockEntrustCancel.jsp",
+                                  cookies=self.cookie)
             if response.status_code != 200:
                 return False
-            html = response.text.replace("\t","").replace("\n","").replace("\r","")
+            html = response.text.replace("\t", "").replace("\n", "").replace("\r", "")
             if html.find("请重新登录") != -1:
                 return False
             pattern = r'<tr\s(?:[a-zA-Z0-9\:\=\'\"\(\)\s]*)>(.+)</tr></TBODY>'
             result1 = re.findall(pattern, html)[0]
             pattern = r'<td\s(?:[a-zA-Z0-9=_\"\:]*)>([\S]+)</td>'
             parsed_data = re.findall(pattern, result1)
-            cancel_list = slice_list(step = 12, data_list = parsed_data)
+            cancel_list = slice_list(step=12, data_list=parsed_data)
             # print(cancel_list)
         except Exception as e:
             return []
@@ -138,33 +140,33 @@ class YHTrader(WebTrader):
             for item in cancel_list:
                 if len(item) == 12:
                     item_dict = {
-                        "time"  :   item[0]
-                    ,   "code"  :   item[1]
-                    ,   "name"  :   item[2]
-                    ,   "status":   item[3]
-                    ,   "iotype":   item[4]
-                    ,   "price" :   float(item[5])
-                    ,   "volume":   int(item[6])
-                    ,   "entrust_num": item[7]
-                    ,   "trans_vol": int(item[8])
-                    ,   "canceled_vol": int(item[9])
-                    ,   "investor_code": item[10]
-                    ,   "account":      item[11]
+                        "time": item[0]
+                        , "code": item[1]
+                        , "name": item[2]
+                        , "status": item[3]
+                        , "iotype": item[4]
+                        , "price": float(item[5])
+                        , "volume": int(item[6])
+                        , "entrust_num": item[7]
+                        , "trans_vol": int(item[8])
+                        , "canceled_vol": int(item[9])
+                        , "investor_code": item[10]
+                        , "account": item[11]
                     }
                 elif len(item) == 11:
                     item_dict = {
-                        "time"  :   item[0]
-                    ,   "code"  :   item[1]
-                    ,   "name"  :   item[2]
-                    ,   "status":   item[3]
-                    ,   "iotype":   ""
-                    ,   "price" :   float(item[4])
-                    ,   "volume":   int(item[5])
-                    ,   "entrust_num": item[6]
-                    ,   "trans_vol": int(item[7])
-                    ,   "canceled_vol": int(item[8])
-                    ,   "investor_code": item[9]
-                    ,   "account":      item[10]
+                        "time": item[0]
+                        , "code": item[1]
+                        , "name": item[2]
+                        , "status": item[3]
+                        , "iotype": ""
+                        , "price": float(item[4])
+                        , "volume": int(item[5])
+                        , "entrust_num": item[6]
+                        , "trans_vol": int(item[7])
+                        , "canceled_vol": int(item[8])
+                        , "investor_code": item[9]
+                        , "account": item[10]
                     }
                 else:
                     continue
@@ -177,9 +179,9 @@ class YHTrader(WebTrader):
         :param stock_code: 股票代码"""
         need_info = self.__get_trade_need_info(stock_code)
         cancel_params = dict(
-                self.config['cancel_entrust'],
-                orderSno=entrust_no,
-                secuid=need_info['stock_account']
+            self.config['cancel_entrust'],
+            orderSno=entrust_no,
+            secuid=need_info['stock_account']
         )
         cancel_response = self.s.post(self.config['trade_api'], params=cancel_params)
         log.debug('cancel trust: %s' % cancel_response.text)
@@ -201,36 +203,36 @@ class YHTrader(WebTrader):
         import time
         list_entrust_no = entrust_no.split(",")
         # 一次批量撤单不能超过15个
-        list_entrust_no = slice_list( step = 15, data_list = list_entrust_no )
+        list_entrust_no = slice_list(step=15, data_list=list_entrust_no)
         result = list()
         for item in list_entrust_no:
             if item[-1] == "":
-                num = len( item ) - 1
+                num = len(item) - 1
             else:
-                num = len( item )
+                num = len(item)
             cancel_data = {
-                "ajaxFlag":"stock_batch_cancel"
-            ,   "num": num
-            ,   "orderSno": ",".join(item)
+                "ajaxFlag": "stock_batch_cancel"
+                , "num": num
+                , "orderSno": ",".join(item)
             }
             while True:
                 try:
                     cancel_response = self.s.post(
                         "https://www.chinastock.com.cn/trade/AjaxServlet"
-                    ,   data = cancel_data
-                    ,   timeout = 1
+                        , data=cancel_data
+                        , timeout=1
                     )
                     if cancel_response.status_code == 200:
                         cancel_response_json = cancel_response.json()
                         # 如果出现“系统超时请重新登录”之类的错误信息，直接返回False
                         if "result_type" in cancel_response_json and "result_type" == 'error':
                             return False
-                        result.append( cancel_response_json )
+                        result.append(cancel_response_json)
                         break
                     else:
-                        log.debug( '{}'.format( cancel_response ) )
+                        log.debug('{}'.format(cancel_response))
                 except Exception as e:
-                    log.debug( '{}'.format(e) )
+                    log.debug('{}'.format(e))
             time.sleep(0.2)
         return result
 
@@ -238,13 +240,13 @@ class YHTrader(WebTrader):
     def current_deal(self):
         return self.get_current_deal()
 
-    def get_current_deal(self, date = None):
+    def get_current_deal(self, date=None):
         """
         获取当日成交列表.
         """
         return self.do(self.config['current_deal'])
 
-    def get_deal(self, date = None):
+    def get_deal(self, date=None):
         """
         @Contact: Emptyset <21324784@qq.com>
         获取历史日成交列表
@@ -257,19 +259,20 @@ class YHTrader(WebTrader):
             data = {}
         else:
             data = {
-                "sdate" : date,
-                "edate" : date
+                "sdate": date,
+                "edate": date
             }
         try:
-            response = self.s.post( "https://www.chinastock.com.cn/trade/webtrade/stock/stock_cj_query.jsp", data = data, cookies=self.cookie )
+            response = self.s.post("https://www.chinastock.com.cn/trade/webtrade/stock/stock_cj_query.jsp", data=data,
+                                   cookies=self.cookie)
             if response.status_code != 200:
                 return False
             if response.text.find("重新登录") != -1:
                 return False
-            res = self.format_response_data( response.text )
+            res = self.format_response_data(response.text)
             return res
         except Exception as e:
-            log.warning("撤单出错".format(e) )
+            log.warning("撤单出错".format(e))
             return False
 
     def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
@@ -289,9 +292,9 @@ class YHTrader(WebTrader):
             bsflag = '0a'
 
         params = dict(
-                self.config['buy'],
-                bsflag=bsflag,
-                qty=amount if amount else volume // price // 100 * 100
+            self.config['buy'],
+            bsflag=bsflag,
+            qty=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -312,9 +315,9 @@ class YHTrader(WebTrader):
             bsflag = '0f'
 
         params = dict(
-                self.config['sell'],
-                bsflag=bsflag,
-                qty=amount if amount else volume // price
+            self.config['sell'],
+            bsflag=bsflag,
+            qty=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -324,9 +327,9 @@ class YHTrader(WebTrader):
         :param amount: 申购份额
         """
         params = dict(
-                self.config['fundpurchase'],
-                price=1,  # 价格默认为1
-                qty=amount
+            self.config['fundpurchase'],
+            price=1,  # 价格默认为1
+            qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -336,9 +339,9 @@ class YHTrader(WebTrader):
         :param amount: 赎回份额
         """
         params = dict(
-                self.config['fundredemption'],
-                price=1,  # 价格默认为1
-                qty=amount
+            self.config['fundredemption'],
+            price=1,  # 价格默认为1
+            qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -348,9 +351,9 @@ class YHTrader(WebTrader):
         :param amount: 认购份额
         """
         params = dict(
-                self.config['fundsubscribe'],
-                price=1,  # 价格默认为1
-                qty=amount
+            self.config['fundsubscribe'],
+            price=1,  # 价格默认为1
+            qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -360,8 +363,8 @@ class YHTrader(WebTrader):
         :param amount: 分拆份额
         """
         params = dict(
-                self.config['fundsplit'],
-                qty=amount
+            self.config['fundsplit'],
+            qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -371,8 +374,8 @@ class YHTrader(WebTrader):
         :param amount: 合并份额
         """
         params = dict(
-                self.config['fundmerge'],
-                qty=amount
+            self.config['fundmerge'],
+            qty=amount
         )
         return self.__tradefund(stock_code, other=params)
 
@@ -384,10 +387,10 @@ class YHTrader(WebTrader):
                 return check_data
         need_info = self.__get_trade_need_info(stock_code)
         trade_params = dict(
-                other,
-                stockCode=stock_code,
-                market=need_info['exchange_type'],
-                secuid=need_info['stock_account']
+            other,
+            stockCode=stock_code,
+            market=need_info['exchange_type'],
+            secuid=need_info['stock_account']
         )
 
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
@@ -402,15 +405,15 @@ class YHTrader(WebTrader):
                 return check_data
         need_info = self.__get_trade_need_info(stock_code)
         trade_params = dict(
-                other,
-                stockCode=stock_code,
-                price=price,
-                market=need_info['exchange_type'],
-                secuid=need_info['stock_account']
+            other,
+            stockCode=stock_code,
+            price=price,
+            market=need_info['exchange_type'],
+            secuid=need_info['stock_account']
         )
         trade_response = self.s.post(self.config['trade_api'], params=trade_params)
-        log.debug( "{}".format( self.config['trade_api'] ) )
-        log.debug( "{}".format( trade_params ) )
+        log.debug("{}".format(self.config['trade_api']))
+        log.debug("{}".format(trade_params))
         log.debug('trade response: %s' % trade_response.text)
         return trade_response.json()
 
@@ -420,14 +423,14 @@ class YHTrader(WebTrader):
         sz_exchange_type = '0'
         exchange_type = sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' else sz_exchange_type
         return dict(
-                exchange_type=exchange_type,
-                stock_account=self.exchange_stock_account[exchange_type]
+            exchange_type=exchange_type,
+            stock_account=self.exchange_stock_account[exchange_type]
         )
 
     def create_basic_params(self):
         basic_params = dict(
-                CSRF_Token='undefined',
-                timestamp=random.random(),
+            CSRF_Token='undefined',
+            timestamp=random.random(),
         )
         return basic_params
 
@@ -491,16 +494,16 @@ class YHTrader(WebTrader):
 
     def heartbeat(self):
         heartbeat_params = dict(
-                ftype='bsn'
+            ftype='bsn'
         )
         res = self.s.post(self.config['heart_beat'], params=heartbeat_params)
         # log.debug( "Heart Beat Response: {}".format(res.text) )
 
     def unlockscreen(self):
         unlock_params = dict(
-                password=self.account_config['trdpwd'],
-                mainAccount=self.account_config['inputaccount'],
-                ftype='bsn'
+            password=self.account_config['trdpwd'],
+            mainAccount=self.account_config['inputaccount'],
+            ftype='bsn'
         )
         log.debug('unlock params: %s' % unlock_params)
         unlock_resp = self.s.post(self.config['unlock'], params=unlock_params)
