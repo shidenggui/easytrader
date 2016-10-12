@@ -107,8 +107,8 @@ class HTTrader(WebTrader):
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
-        ht_verify_code_length = 4
-        if len(verify_code) != ht_verify_code_length:
+        #ht_verify_code_length = 4
+        if not verify_code :
             return False
         return verify_code
 
@@ -134,8 +134,22 @@ class HTTrader(WebTrader):
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """
-        trade_info_response = self.s.get(self.config['trade_info_page'])
+        top_url = "https://service.htsc.com.cn/service/jy.jsp?sub_top=jy"
 
+        text = self.s.get(top_url).text
+
+        startStr = "name=\"BIframe\" width=\"100%\" src=\""
+        endStr = "\" scrolling=\"no\" frameborder=0"
+
+        startP = text.find(startStr) + len(startStr)
+        endP = text.find(endStr)
+
+        html = text[startP:endP]
+
+        new_url = "https://service.htsc.com.cn" + html
+
+        trade_info_response = self.s.get(new_url)
+        
         # 查找登录信息
         search_result = re.search(r'var data = "([/=\w\+]+)"', trade_info_response.text)
         if not search_result:
