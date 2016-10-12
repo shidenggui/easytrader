@@ -2,7 +2,7 @@
   "login_page": "https://service.htsc.com.cn/service/login.jsp",
   "login_api": "https://service.htsc.com.cn/service/loginAction.do?method=login",
   "trade_info_page": "https://service.htsc.com.cn/service/flashbusiness_new3.jsp?etfCode=",
-  "verify_code_api": "https://service.htsc.com.cn/service/pic/verifyCodeImage.jsp",
+  "verify_code_api": "https://service.htsc.com.cn/service/verifyCodeAction.do?method=getVerifyCode",
   "prefix": "https://tradegw.htsc.com.cn",
   "logout_api": "https://service.htsc.com.cn/service/login.jsp?logout=yes",
   "login": {
