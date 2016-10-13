@@ -78,7 +78,7 @@ def recognize_verify_code(image_path, broker='ht'):
     :return recognized: verify code string"""
 
     if broker == 'ht':
-        return ht_verify_code_new(image_path)
+        return detect_ht_result(image_path)
     elif broker == 'yjb':
         return detect_yjb_result(image_path)
     elif broker == 'gf':
