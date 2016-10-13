@@ -31,7 +31,7 @@ class HTTrader(WebTrader):
 
         self.__set_ip_and_mac()
         self.fund_account = None
-
+        
         # 账户初始化为None
         self.__sh_stock_account = None
         self.__sz_stock_account = None
@@ -61,9 +61,8 @@ class HTTrader(WebTrader):
     def login(self, throw=False):
         """实现华泰的自动登录"""
         self.__go_login_page()
-        verify_code = False
-        while verify_code==False:
-            verify_code = self.__handle_recognize_code()
+
+        verify_code = self.__handle_recognize_code()
         if not verify_code:
             return False
 
@@ -100,29 +99,18 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(os.getcwd(),'vcode')
-        print("验证码图片保存在：{}".format(image_path))
-
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d' % os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
-        """
-        注意：这是一个临时PR，验证码的改动暂时无法直接识别
-        临时改为由用户输入
-        """
-        verify_code = input("请输入验证码：")
-        if verify_code == "":
+
+        verify_code = helpers.recognize_verify_code(image_path)
+        log.debug('verify code detect result: %s' % verify_code)
+        os.remove(image_path)
+
+        #ht_verify_code_length = 4
+        if not verify_code : 
             return False
-        verify_code = str(verify_code)
         return verify_code
-        # verify_code = helpers.recognize_verify_code(image_path)
-        # log.debug('verify code detect result: %s' % verify_code)
-        # os.remove(image_path)
-        #
-        # ht_verify_code_length = 4
-        # if len(verify_code) != ht_verify_code_length:
-        #     return False
-        #
-        # return verify_code
 
     def __check_login_status(self, verify_code):
         # 设置登录所需参数
@@ -146,7 +134,24 @@ class HTTrader(WebTrader):
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """
-        trade_info_response = self.s.get(self.config['trade_info_page'])
+        #trade_info_response = self.s.get(self.config['trade_info_page'])
+
+        top_url = "https://service.htsc.com.cn/service/jy.jsp?sub_top=jy"
+
+        text = self.s.get(top_url).text
+
+        startStr = "name=\"BIframe\" width=\"100%\" src=\""
+        endStr = "\" scrolling=\"no\" frameborder=0"
+
+        startP = text.find(startStr) + len(startStr)
+        endP = text.find(endStr)
+
+        html = text[startP:endP]
+
+        new_url = "https://service.htsc.com.cn" + html
+
+        trade_info_response = self.s.get(new_url) 
+
 
         # 查找登录信息
         search_result = re.search(r'var data = "([/=\w\+]+)"', trade_info_response.text)

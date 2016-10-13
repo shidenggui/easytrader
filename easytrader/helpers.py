@@ -57,13 +57,35 @@ def get_stock_type(stock_code):
     return 'sz'
 
 
+def ht_verify_code_new(image_path):
+    '显示图片，人肉读取，手工输入'
+    
+    #import matplotlib.pyplot as plt # plt 用于显示图片
+    #import matplotlib.image as mpimg # mpimg 用于读取图片
+    from PIL import Image
+
+    img2 = Image.open( image_path )
+
+    #plt.imshow(img2) # 显示图片
+    #plt.axis('off') # 不显示坐标轴
+    #plt.show()
+
+    img2.show()
+
+    # 关闭图片后输入答案
+    s = input('input the pics answer :')
+
+    return s
+
+
 def recognize_verify_code(image_path, broker='ht'):
     """识别验证码，返回识别后的字符串，使用 tesseract 实现
     :param image_path: 图片路径
     :param broker: 券商 ['ht', 'yjb', 'gf', 'yh']
     :return recognized: verify code string"""
+
     if broker == 'ht':
-        return detect_ht_result(image_path)
+        return ht_verify_code_new(image_path)
     elif broker == 'yjb':
         return detect_yjb_result(image_path)
     elif broker == 'gf':
