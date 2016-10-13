@@ -94,7 +94,7 @@ class WebTrader(object):
                     log.setLevel(log_level)
                 except:
                     self.autologin()
-                time.sleep(10)
+                time.sleep(30)
             else:
                 time.sleep(1)
 
