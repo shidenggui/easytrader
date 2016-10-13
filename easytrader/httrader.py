@@ -97,7 +97,10 @@ class HTTrader(WebTrader):
         """获取并识别返回的验证码
         :return:失败返回 False 成功返回 验证码"""
         # 获取验证码
-        verify_code_response = self.s.get(self.config['verify_code_api'])
+        
+        browser_headers={'User-Agent':'Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36'}
+        verify_code_response = self.s.get(self.config['verify_code_api'] ,headers = browser_headers )        
+        
         # 保存验证码
         image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d' % os.getpid())
         with open(image_path, 'wb') as f:
