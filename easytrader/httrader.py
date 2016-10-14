@@ -91,6 +91,15 @@ class HTTrader(WebTrader):
         if self.s is not None:
             self.s.get(self.config['logout_api'])
         self.s = requests.session()
+        self.s.headers.update({
+            'Connection': 'keep-alive',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
+            'Accept': '*/*',
+            'Referer': 'https://service.htsc.com.cn/service/login.jsp',
+            'Accept-Encoding': 'gzip, deflate, sdch, br'
+        })
         self.s.get(self.config['login_page'])
 
     def __handle_recognize_code(self):
