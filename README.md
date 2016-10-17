@@ -21,7 +21,6 @@
 ### 支持券商
 
 * 佣金宝
-* 华泰
 * 银河 by @[ruyiqf](https://github.com/ruyiqf)
 * 广发 by @[ruyiqf](https://github.com/ruyiqf)
 
@@ -34,7 +33,7 @@
 
 > pip install -r requirements.txt
 
-> 华泰 / 佣金宝 的自动登录需要安装以下二者之一， 银河的自动登录需要安装下列的 tesseract： 
+> 佣金宝 的自动登录需要安装以下二者之一， 银河的自动登录需要安装下列的 tesseract： 
 
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 非 `pytesseract`, 需要单独安装, [地址](https://github.com/tesseract-ocr/tesseract/wiki),保证在命令行下 `tesseract` 可用
@@ -68,16 +67,6 @@ import easytrader
 ```python
 user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 ```
-
-##### 华泰
-
-```python
-user = easytrader.use('ht') # 华泰支持 ['ht', 'HT', '华泰']
-```
-
-
-注: 如果你的华泰账户是以 `08` 开头，而且可以正常登录，但是其他操作返回 `账户记录表不存在` 等错误时，请尝试 `user = easytrader.use('ht', remove_zero=False)`
-
 
 ##### 银河 
 
@@ -207,11 +196,6 @@ user.sell('162411', price=0.55, amount=100)
 ```
 #### 撤单
 
-##### 华泰
-
-```python
-user.cancel_entrust('委托单号')
-```
 ##### 佣金宝
 
 ```python
@@ -252,7 +236,7 @@ user.fundsplit('基金代码', '基金份额')
 
 #### 查询交割单
 
-##### 华泰/广发
+##### 广发
 
 需要注意通常券商只会返回有限天数最新的交割单，如查询2015年整年数据, 华泰只会返回年末的90天的交割单
 
@@ -282,20 +266,6 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
   "entrust_no": "合同编号",
   "business_price": "成交均价",
 ]}
-```
-
-#### 查询当天交易
-
-##### 华泰
-
-查询当天交易记录
-
-```python
-user.today_trade   
-```
-
-# 未确认的key有, farex, fare3
-# 未确认的表头有 结算汇率, 备注
 ```
 
 #### 查询当日成交
