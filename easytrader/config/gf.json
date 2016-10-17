@@ -24,7 +24,7 @@
   "entrust":{
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "queryDRWT",
-    "action_in": 1,
+    "action_in": 0,
     "request_num": 100,
     "query_direction": 0,
     "start": 0,
@@ -183,5 +183,9 @@
     "end_date": "",
     "deliver_type": 1,
     "query_mode": 0
+  },
+  "exit": {
+    "classname": "com.gf.etrade.control.AuthenticateControl",
+    "method": "logout"
   }
 }
