@@ -532,3 +532,25 @@ class GFTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
+    
+    def exit(self):
+        '''
+        退出系统
+        :return:
+        '''
+        params = self.config['exit'].copy()
+        log.debug(self.do(params))
+        self.heart_active = False
+
+
+    def get_entrust(self,action_in=0):
+        '''
+
+        :param action_in: 当值为0，返回全部委托；当值为1时，返回可撤委托
+        :return:
+        '''
+        params = self.config['entrust'].copy()
+        params.update({
+            "action_in": action_in,
+        })
+        return self.do(params)
