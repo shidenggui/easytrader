@@ -1,7 +1,9 @@
 # coding=utf-8
+import logging
+
 from .gftrader import GFTrader
-from .helpers import disable_log
 from .httrader import HTTrader
+from .log import log
 from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
@@ -20,14 +22,14 @@ def use(broker, debug=True, **kwargs):
         >>> user.prepare('ht.json')
     """
     if not debug:
-        disable_log()
-    if broker.lower() in ['ht', 'HT', '华泰']:
+        log.handlers = [logging.NullHandler()]
+    if broker.lower() in ['ht', '华泰']:
         return HTTrader(**kwargs)
-    if broker.lower() in ['yjb', 'YJB', '佣金宝']:
+    if broker.lower() in ['yjb', '佣金宝']:
         return YJBTrader()
-    if broker.lower() in ['yh', 'YH', '银河']:
+    if broker.lower() in ['yh', '银河']:
         return YHTrader()
-    if broker.lower() in ['xq', 'XQ', '雪球']:
+    if broker.lower() in ['xq', '雪球']:
         return XueQiuTrader()
-    if broker.lower() in ['gf', 'GF', '广发']:
+    if broker.lower() in ['gf', '广发']:
         return GFTrader()

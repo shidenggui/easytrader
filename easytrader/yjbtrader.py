@@ -4,6 +4,7 @@ from __future__ import division
 import json
 import os
 import random
+import tempfile
 import urllib
 
 import demjson
@@ -11,10 +12,9 @@ import requests
 import six
 
 from . import helpers
+from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-
-log = helpers.get_logger(__file__)
 
 
 class YJBTrader(WebTrader):
@@ -22,7 +22,6 @@ class YJBTrader(WebTrader):
 
     def __init__(self):
         super(YJBTrader, self).__init__()
-        self.cookie = None
         self.account_config = None
         self.s = requests.session()
         self.s.mount('https://', helpers.Ssl3HttpAdapter())
@@ -49,7 +48,7 @@ class YJBTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d' % os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
@@ -68,11 +67,11 @@ class YJBTrader(WebTrader):
         else:
             password = urllib.parse.unquote(self.account_config['password'])
         login_params = dict(
-                self.config['login'],
-                mac_addr=helpers.get_mac(),
-                account_content=self.account_config['account'],
-                password=password,
-                validateCode=verify_code
+            self.config['login'],
+            mac_addr=helpers.get_mac(),
+            account_content=self.account_config['account'],
+            password=password,
+            validateCode=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
@@ -81,23 +80,14 @@ class YJBTrader(WebTrader):
             return True, None
         return False, login_response.text
 
-    @property
-    def token(self):
-        return self.cookie['JSESSIONID']
-
-    @token.setter
-    def token(self, token):
-        self.cookie = dict(JSESSIONID=token)
-        self.keepalive()
-
     def cancel_entrust(self, entrust_no, stock_code):
         """撤单
         :param entrust_no: 委托单号
         :param stock_code: 股票代码"""
         cancel_params = dict(
-                self.config['cancel_entrust'],
-                entrust_no=entrust_no,
-                stock_code=stock_code
+            self.config['cancel_entrust'],
+            entrust_no=entrust_no,
+            stock_code=stock_code
         )
         return self.do(cancel_params)
 
@@ -134,9 +124,9 @@ class YJBTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['buy'],
-                entrust_bs=1,  # 买入1 卖出2
-                entrust_amount=amount if amount else volume // price // 100 * 100
+            self.config['buy'],
+            entrust_bs=1,  # 买入1 卖出2
+            entrust_amount=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -149,11 +139,34 @@ class YJBTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['sell'],
-                entrust_bs=2,  # 买入1 卖出2
-                entrust_amount=amount if amount else volume // price
+            self.config['sell'],
+            entrust_bs=2,  # 买入1 卖出2
+            entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
+
+    def get_ipo_limit(self, stock_code):
+        """
+        查询新股申购额度申购上限
+        :param stock_code: 申购代码!!!
+        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
+        """
+        need_info = self.__get_trade_need_info(stock_code)
+        params = dict(
+            self.config['ipo_enable_amount'],
+            CSRF_Token='undefined',
+            timestamp=random.random(),
+            stock_account=need_info['stock_account'],  # '沪深帐号'
+            exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+            entrust_prop=0,
+            stock_code=stock_code
+        )
+        data = self.do(params)
+        if 'error_no' in data.keys() and data['error_no'] != "0":
+            log.debug('查询错误: %s' % (data['error_info']))
+            return None
+        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'],
+                    last_price=float(data['last_price']))
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
@@ -163,13 +176,13 @@ class YJBTrader(WebTrader):
                 return check_data
         need_info = self.__get_trade_need_info(stock_code)
         return self.do(dict(
-                other,
-                stock_account=need_info['stock_account'],  # '沪深帐号'
-                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
-                entrust_prop=entrust_prop,  # 委托方式
-                stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
-                elig_riskmatch_flag=1,  # 用户风险等级
-                entrust_price=price,
+            other,
+            stock_account=need_info['stock_account'],  # '沪深帐号'
+            exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+            entrust_prop=entrust_prop,  # 委托方式
+            stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
+            elig_riskmatch_flag=1,  # 用户风险等级
+            entrust_price=price,
         ))
 
     def __get_trade_need_info(self, stock_code):
@@ -184,25 +197,25 @@ class YJBTrader(WebTrader):
         if exchange_type not in self.exchange_stock_account:
             stock_account_index = 0
             response_data = self.do(dict(
-                    self.config['account4stock'],
-                    exchange_type=exchange_type,
-                    stock_code=stock_code
+                self.config['account4stock'],
+                exchange_type=exchange_type,
+                stock_code=stock_code
             ))[stock_account_index]
             self.exchange_stock_account[exchange_type] = response_data['stock_account']
         return dict(
-                exchange_type=exchange_type,
-                stock_account=self.exchange_stock_account[exchange_type]
+            exchange_type=exchange_type,
+            stock_account=self.exchange_stock_account[exchange_type]
         )
 
     def create_basic_params(self):
         basic_params = dict(
-                CSRF_Token='undefined',
-                timestamp=random.random(),
+            CSRF_Token='undefined',
+            timestamp=random.random(),
         )
         return basic_params
 
     def request(self, params):
-        r = self.s.get(self.trade_prefix, params=params, cookies=self.cookie)
+        r = self.s.get(self.trade_prefix, params=params)
         return r.text
 
     def format_response_data(self, data):

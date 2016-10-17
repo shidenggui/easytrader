@@ -89,7 +89,6 @@ setup(
         install_requires=[
             'demjson',
             'requests',
-            'logbook',
             'anyjson',
             'six'
         ],

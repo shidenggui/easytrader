@@ -7,7 +7,7 @@ import os
 import random
 import re
 import socket
-import threading
+import tempfile
 import urllib
 import uuid
 from collections import OrderedDict
@@ -16,24 +16,8 @@ import requests
 import six
 
 from . import helpers
+from .log import log
 from .webtrader import WebTrader, NotLoginError
-
-log = helpers.get_logger(__file__)
-
-# 移除心跳线程产生的日志
-debug_log = log.debug
-
-
-def remove_heart_log(*args, **kwargs):
-    if six.PY2:
-        if threading.current_thread().name == 'MainThread':
-            debug_log(*args, **kwargs)
-    else:
-        if threading.current_thread() == threading.main_thread():
-            debug_log(*args, **kwargs)
-
-
-log.debug = remove_heart_log
 
 
 class HTTrader(WebTrader):
@@ -48,6 +32,10 @@ class HTTrader(WebTrader):
         self.__set_ip_and_mac()
         self.fund_account = None
 
+        # 账户初始化为None
+        self.__sh_stock_account = None
+        self.__sz_stock_account = None
+
     def __set_ip_and_mac(self):
         """获取本机IP和MAC地址"""
         # 获取ip
@@ -58,7 +46,7 @@ class HTTrader(WebTrader):
 
         # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
         self.__mac = ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-                uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+            uuid.getnode())[2:].zfill(12)))[:-1]).upper()
 
     def __get_user_name(self):
         # 华泰账户以 08 开头的有些需移除 fund_account 开头的 0
@@ -92,11 +80,26 @@ class HTTrader(WebTrader):
 
         return True
 
+    def logout(self):
+        if self.s is not None:
+            self.s = None
+
+        return True
+
     def __go_login_page(self):
         """访问登录页面获取 cookie"""
         if self.s is not None:
             self.s.get(self.config['logout_api'])
         self.s = requests.session()
+        self.s.headers.update({
+            'Connection': 'keep-alive',
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache',
+            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
+            'Accept': '*/*',
+            'Referer': 'https://service.htsc.com.cn/service/login.jsp',
+            'Accept-Encoding': 'gzip, deflate, sdch, br'
+        })
         self.s.get(self.config['login_page'])
 
     def __handle_recognize_code(self):
@@ -105,7 +108,7 @@ class HTTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'])
         # 保存验证码
-        image_path = os.path.join(os.getcwd(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d' % os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
@@ -113,21 +116,20 @@ class HTTrader(WebTrader):
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
-        ht_verify_code_length = 4
-        if len(verify_code) != ht_verify_code_length:
+        if not verify_code:
             return False
         return verify_code
 
     def __check_login_status(self, verify_code):
         # 设置登录所需参数
         params = dict(
-                userName=self.account_config['userName'],
-                trdpwd=self.account_config['trdpwd'],
-                trdpwdEns=self.account_config['trdpwd'],
-                servicePwd=self.account_config['servicePwd'],
-                macaddr=self.__mac,
-                lipInfo=self.__ip,
-                vcode=verify_code
+            userName=self.account_config['userName'],
+            trdpwd=self.account_config['trdpwd'],
+            trdpwdEns=self.account_config['trdpwd'],
+            servicePwd=self.account_config['servicePwd'],
+            macaddr=self.__mac,
+            lipInfo=self.__ip,
+            vcode=verify_code
         )
         params.update(self.config['login'])
 
@@ -140,17 +142,31 @@ class HTTrader(WebTrader):
 
     def __get_trade_info(self):
         """ 请求页面获取交易所需的 uid 和 password """
-        trade_info_response = self.s.get(self.config['trade_info_page'])
+        top_url = "https://service.htsc.com.cn/service/jy.jsp?sub_top=jy"
+
+        text = self.s.get(top_url).text
+
+        start_str = 'name="BIframe" width="100%" src="'
+        end_str = '" scrolling="no" frameborder=0'
+
+        start_p = text.find(start_str) + len(start_str)
+        end_p = text.find(end_str)
+
+        html = text[start_p:end_p]
+
+        new_url = "https://service.htsc.com.cn" + html
+
+        trade_info_response = self.s.get(new_url)
 
         # 查找登录信息
-        search_result = re.search(r'var data = "([/=\w\+]+)"', trade_info_response.text)
+        search_result = re.search(r'var data = "([/=\w+]+)"', trade_info_response.text)
         if not search_result:
             return False
 
         need_data_index = 0
         need_data = search_result.groups()[need_data_index]
         bytes_data = base64.b64decode(need_data)
-        log.debug('trade info bytes data: ', bytes_data)
+        log.debug('trade info bytes data: %s' % bytes_data)
         try:
             str_data = bytes_data.decode('gbk')
         except UnicodeDecodeError:
@@ -164,8 +180,8 @@ class HTTrader(WebTrader):
         :param json_data:登录成功返回的json数据
         """
         for account_info in json_data['item']:
-            if account_info['stock_account'].startswith('A'):
-                # 沪 A  股东代码以 A 开头，同时需要是数字，沪 B 帐号以 C 开头
+            if account_info['stock_account'].startswith('A') or account_info['stock_account'].startswith('B'):
+                # 沪 A  股东代码以 A 开头，同时需要是数字，沪 B 帐号以 C 开头，机构账户以B开头
                 if account_info['exchange_type'].isdigit():
                     self.__sh_exchange_type = account_info['exchange_type']
                 self.__sh_stock_account = account_info['stock_account']
@@ -174,7 +190,7 @@ class HTTrader(WebTrader):
             elif account_info['stock_account'].startswith('0'):
                 self.__sz_exchange_type = account_info['exchange_type']
                 self.__sz_stock_account = account_info['stock_account']
-                log.debug('sz_A stock account %s' % self.__sz_stock_account)
+                log.debug('sz_B stock account %s' % self.__sz_stock_account)
 
         self.__fund_account = json_data['fund_account']
         self.__client_risklevel = json_data['branch_no']
@@ -187,8 +203,8 @@ class HTTrader(WebTrader):
         """撤单
         :param entrust_no: 委托单号"""
         cancel_params = dict(
-                self.config['cancel_entrust'],
-                entrust_no=entrust_no
+            self.config['cancel_entrust'],
+            entrust_no=entrust_no
         )
         return self.do(cancel_params)
 
@@ -202,8 +218,8 @@ class HTTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['buy'],
-                entrust_amount=amount if amount else volume // price // 100 * 100
+            self.config['buy'],
+            entrust_amount=amount if amount else volume // price // 100 * 100
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -216,48 +232,56 @@ class HTTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['sell'],
-                entrust_amount=amount if amount else volume // price
+            self.config['sell'],
+            entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
     def __trade(self, stock_code, price, entrust_prop, other):
         need_info = self.__get_trade_need_info(stock_code)
         return self.do(dict(
-                other,
-                stock_account=need_info['stock_account'],  # '沪深帐号'
-                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
-                entrust_prop=entrust_prop,  # 委托方式
-                stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
-                entrust_price=price
+            other,
+            stock_account=need_info['stock_account'],  # '沪深帐号'
+            exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+            entrust_prop=entrust_prop,  # 委托方式
+            stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
+            entrust_price=price
         ))
 
     def __get_trade_need_info(self, stock_code):
         """获取股票对应的证券市场和帐号"""
-        # 获取股票对应的证券市场
-        exchange_type = self.__sh_exchange_type if helpers.get_stock_type(stock_code) == 'sh' \
-            else self.__sz_exchange_type
-        # 获取股票对应的证券帐号
-        stock_account = self.__sh_stock_account if exchange_type == self.__sh_exchange_type \
-            else self.__sz_stock_account
+        # 判断股票类型和是否存在对应证券账号
+        if helpers.get_stock_type(stock_code) == 'sh':
+            if self.__sh_stock_account is None:
+                raise Exception("没有上证账户，不可买入、卖出上证股票。")
+            else:
+                exchange_type = self.__sh_exchange_type
+                stock_account = self.__sh_stock_account
+        else:
+            if self.__sz_stock_account is None:
+                raise Exception("没有深证账户，不可买入、卖出深证股票。")
+            else:
+                exchange_type = self.__sz_exchange_type
+                stock_account = self.__sz_stock_account
+
         return dict(
-                exchange_type=exchange_type,
-                stock_account=stock_account
+            exchange_type=exchange_type,
+            stock_account=stock_account
         )
 
     def create_basic_params(self):
         basic_params = OrderedDict(
-                uid=self.__uid,
-                version=1,
-                custid=self.account_config['userName'],
-                op_branch_no=self.__branch_no,
-                branch_no=self.__branch_no,
-                op_entrust_way=7,
-                op_station=self.__op_station,
-                fund_account=self.fund_account,
-                password=self.__trdpwd,
-                identity_type='',
-                ram=random.random()
+            uid=self.__uid,
+            version=1,
+            custid=self.account_config['userName'],
+            op_branch_no=self.__branch_no,
+            branch_no=self.__branch_no,
+            op_entrust_way=7,
+            op_station=self.__op_station,
+            fund_account=self.fund_account,
+            password=self.__trdpwd,
+            identity_type='',
+            ram=random.random()
         )
         return basic_params
 
@@ -317,3 +341,28 @@ class HTTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
+
+    @property
+    def today_trade(self):
+        """
+        返回当天交易记录。
+        :return:
+        """
+        # TODO 目前仅在 华泰子类 中实现
+        return self.get_today_trade()
+
+    def get_today_trade(self):
+        """
+        查询当天交易记录。
+        :return:
+        """
+        params = self.config['today_trade'].copy()
+        return self.do(params)
+
+    @property
+    def trade(self):
+        return self.get_trade()
+
+    def get_trade(self):
+        """获取当日成交列表"""
+        return self.do(self.config['trade'])

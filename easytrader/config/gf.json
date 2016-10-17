@@ -24,7 +24,7 @@
   "entrust":{
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "queryDRWT",
-    "action_in": 1,
+    "action_in": 0,
     "request_num": 100,
     "query_direction": 0,
     "start": 0,
@@ -48,6 +48,16 @@
   "sell": {
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "entrust",
+    "entrust_bs": 2
+  },
+  "cnjj_apply": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "CNJJSS",
+    "entrust_bs": 1
+  },
+  "cnjj_redeem": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "CNJJSS",
     "entrust_bs": 2
   },
   "fundsubscribe": {
@@ -74,5 +84,108 @@
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "doDZJYEntrust",
     "entrust_bs": ""
+  },
+  "nxbQueryPrice": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryPrice"
+  },
+  "nxbentrust": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbentrust"
+  },
+  "nxbQueryDeliver": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryDeliver"
+  },
+  "nxbQueryHisDeliver": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryHisDeliver"
+  },
+  "nxbQueryEntrust": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbQueryEntrust"
+  },
+  "queryOfStkCodes": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "queryOfStkCodes"
+  },
+  "queryNXBOfStock": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "queryNXBOfStock"
+  },
+  "nxbentrustcancel": {
+    "classname": "com.gf.etrade.control.NXBUF2Control",
+    "method": "nxbentrustcancel"
+  },
+  "exchangebill": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryDeliver",
+    "request_num": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1
+  },
+  "queryStockInfo": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "getStockHQ"
+  },
+  "today_ipo_list": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryNewStkcode",
+    "request_num": 50,
+    "query_direction": 1
+  },
+  "entrust_his": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryLSWT",
+    "request_num": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
+  },
+  "today_ipo_limit": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "querySecuSubequity",
+    "limit": 50
+  },
+  "rzrq": {
+    "classname": "com.gf.etrade.control.RZRQUF2Control",
+    "method": "ValidataLogin"
+  },
+  "rzrq_exchangebill": {
+    "classname": "com.gf.etrade.control.RZRQUF2Control",
+    "method": "queryDeliver",
+    "request_num": 50,
+    "query_direction": 1,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1
+  },
+  "rzrq_entrust_his": {
+    "classname": "com.gf.etrade.control.RZRQUF2Control",
+    "method": "queryLSWT",
+    "request_num": 50,
+    "query_direction": 1,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
+  },
+  "capitalflow": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryFundjour",
+    "limit": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
+  },
+  "exit": {
+    "classname": "com.gf.etrade.control.AuthenticateControl",
+    "method": "logout"
   }
 }
