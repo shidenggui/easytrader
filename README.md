@@ -21,6 +21,7 @@
 ### 支持券商
 
 * 佣金宝
+* 广发
 
 ### 模拟交易
 
@@ -30,7 +31,7 @@
 
 > pip install -r requirements.txt
 
-> 佣金宝 的自动登录需要安装以下二者之一， 银河的自动登录需要安装下列的 tesseract： 
+> 佣金宝 的自动登录需要安装以下二者之一， 广发的自动登录需要安装下列的 tesseract： 
 
 * `JAVA` : 推荐, 识别率高，安装简单, 需要命令行下 `java -version` 可用 (感谢空中园的贡献)
 * `tesseract` : 非 `pytesseract`, 需要单独安装, [地址](https://github.com/tesseract-ocr/tesseract/wiki),保证在命令行下 `tesseract` 可用
@@ -65,6 +66,13 @@ import easytrader
 user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 ```
 
+##### 广发
+
+```python
+user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
+```
+
+
 #### 登录帐号
 
 ```python
@@ -78,14 +86,13 @@ user.prepare('/path/to/your/ht.json') // 或者 yjb.json 或者 yh.json 等配�
 
 格式可以参照 `Github` 目录下对应的 `json` 文件
 
-* 华泰需要配置 `ht.json` 填入相关信息, `trdpwd` 加密后的密码首次需要登录后查看登录 `POST` 的 `trdpwd` 值确定
 * 佣金宝需要配置 `yjb.json` 并填入相关信息, 其中的 `password` 为加密后的 `password`
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 
 [如何获取配置所需信息, 可参考此文章](http://www.celuetan.com/topic/5731e9ee705ee8f61eb681fd)
 
 ### 交易相关
-以下用法以佣金宝为例，华泰类似
+以下用法以佣金宝为例
 
 #### 获取资金状况:
 
@@ -185,12 +192,6 @@ user.sell('162411', price=0.55, amount=100)
 ```python
 user.cancel_entrust('委托单号', '股票代码')
 ```
-##### 银河证券
-
-```python
-user.cancel_entrust('委托单号', '股票代码')
-```
-
 #### 查询交割单
 
 需要注意通常券商只会返回有限天数最新的交割单，如查询2015年整年数据, 华泰只会返回年末的90天的交割单

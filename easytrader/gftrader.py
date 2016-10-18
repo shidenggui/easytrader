@@ -11,8 +11,8 @@ import requests
 import six
 
 from . import helpers
-from .webtrader import WebTrader
 from .log import log
+from .webtrader import WebTrader
 
 VERIFY_CODE_POS = 0
 TRADE_MARKET = 1
@@ -20,6 +20,7 @@ SESSIONIDPOS = 32
 HOLDER_POS = 11
 SH = 0
 SZ = 1
+
 
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
@@ -137,11 +138,11 @@ class GFTrader(WebTrader):
         jsholder = jslist[HOLDER_POS]
         jsholder = re.findall(r'\[(.*)\]', jsholder)
         jsholder = eval(jsholder[0])
-        for jsholder_sh in  jsholder:
-            if jsholder_sh['exchange_name']=='上海':
+        for jsholder_sh in jsholder:
+            if jsholder_sh['exchange_name'] == '上海':
                 self.holdername.append(jsholder_sh)
-        for jsholder_sz in  jsholder:
-            if jsholder_sz['exchange_name']=='深圳':
+        for jsholder_sz in jsholder:
+            if jsholder_sz['exchange_name'] == '深圳':
                 self.holdername.append(jsholder_sz)
 
     def __get_trade_need_info(self, stock_code):
@@ -435,7 +436,7 @@ class GFTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
-        
+
     @property
     def today_ipo_list(self):
         '''
@@ -446,7 +447,6 @@ class GFTrader(WebTrader):
         params = self.config['today_ipo_list'].copy()
         return self.do(params)
 
-   
     def today_ipo_limit(self):
         '''
 
@@ -455,7 +455,7 @@ class GFTrader(WebTrader):
         '''
         params = self.config['today_ipo_limit'].copy()
         return self.do(params)
-    
+
     def login_rzrq(self):
         '''
 
@@ -506,7 +506,7 @@ class GFTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
-    
+
     def do_job(self, request_type, **kwargs):
         '''
         直接输入请求类型，以及相关参数列表，返回执行结果
@@ -531,7 +531,7 @@ class GFTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
-    
+
     def exit(self):
         '''
         退出系统
@@ -541,8 +541,7 @@ class GFTrader(WebTrader):
         log.debug(self.do(params))
         self.heart_active = False
 
-
-    def get_entrust(self,action_in=0):
+    def get_entrust(self, action_in=0):
         '''
 
         :param action_in: 当值为0，返回全部委托；当值为1时，返回可撤委托
