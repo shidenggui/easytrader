@@ -5,6 +5,8 @@
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3 / Python2, Linux / Win, 推荐使用 `Python3`
 * 有兴趣的可以加群 `549879767` 、`429011814`(已满) 一起讨论
+* 捐助: [支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png)  [微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png) 或者 银河开户可以找我(qq: 903618848), 佣金w2,基金最低消费1元
+
 
 **开发环境** : `Ubuntu 16.04` / `Python 3.5`
 
@@ -16,12 +18,12 @@
 
 [简单的股票量化交易框架 使用 easytrader 和 easyquotation](https://github.com/shidenggui/easyquant)
 
-捐助: [支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png)  [微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png)
 
 ### 支持券商
 
 * 佣金宝
 * 广发
+* 银河 
 
 ### 模拟交易
 
@@ -70,6 +72,12 @@ user = easytrader.use('yjb') # 佣金宝支持 ['yjb', 'YJB', '佣金宝']
 
 ```python
 user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
+```
+
+##### 银河
+
+```python
+user = easytrader.use('yh') # 银河支持 ['yh', 'YH', '银河']
 ```
 
 

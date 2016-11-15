@@ -12,11 +12,10 @@ import uuid
 import six
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
+from six.moves import input
 
 from .log import log
-
 from .thirdlibrary.yjb_captcha import YJBCaptcha
-
 
 if six.PY2:
     from io import open
@@ -87,9 +86,17 @@ def recognize_verify_code(image_path, broker='ht'):
     elif broker == 'gf':
         return detect_gf_result(image_path)
     elif broker == 'yh':
-        return detect_yh_result(image_path)
+        return input_verify_code_manual(image_path)
     # 调用 tesseract 识别
     return default_verify_code_detect(image_path)
+
+
+def input_verify_code_manual(image_path):
+    from PIL import Image
+    image = Image.open(image_path)
+    image.show()
+    code = input('image path: {}, input verify code answer:'.format(image_path))
+    return code
 
 
 def detect_ht_result(image_path):
