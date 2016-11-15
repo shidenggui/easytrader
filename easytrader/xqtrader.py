@@ -195,6 +195,10 @@ class XueQiuTrader(WebTrader):
         r = json.loads(r.text)
         return r['list']
 
+    @property
+    def history(self):
+        return self.__get_xq_history()
+
     def get_entrust(self):
         """
         获取委托单(目前返回5次调仓的结果)
