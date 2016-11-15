@@ -7,7 +7,7 @@ def calcThreshold(im):
     L = im.convert('L').histogram()
     sum = 0
     threshold = 0
-    for i in xrange(len(L)):
+    for i in range(len(L)):
         sum += L[i]
         if sum >= 260:
             threshold = i
