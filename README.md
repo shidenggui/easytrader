@@ -229,7 +229,51 @@ user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段,
   "entrust_no": "合同编号",
   "business_price": "成交均价",
 ]}
+
 ```
+
+#### 基金申购
+
+##### 银河
+
+```
+user.fundpurchase(stock_code, amount):
+```
+
+#### 基金赎回
+
+##### 银河
+
+```
+user.fundredemption(stock_code, amount):
+```
+
+#### 基金认购
+
+##### 银河
+
+```
+user.fundsubscribe(stock_code, amount):
+```
+
+
+#### 基金分拆
+
+##### 银河
+
+```
+user.fundsplit(stock_code, amount):
+```
+
+#### 基金合并
+
+##### 银河
+
+```
+user.fundmerge(stock_code, amount):
+```
+
+
 
 #### 查询当日成交
 

@@ -48,7 +48,6 @@ class YHTrader(WebTrader):
         self.s = requests.session()
         self.s.headers.update(headers)
         data = self.s.get(self.config['login_page'])
-        print(self.s.headers)
 
         # 查找验证码
         verify_code = self.handle_recognize_code()
