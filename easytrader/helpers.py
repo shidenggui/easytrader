@@ -9,6 +9,7 @@ import ssl
 import sys
 import uuid
 
+import requests
 import six
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager

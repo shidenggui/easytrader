@@ -41,12 +41,14 @@ class YHTrader(WebTrader):
     def login(self, throw=False):
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko',
+            'Referer': 'https://www.chinastock.com.cn/trade/webtrade/login.jsp'
         }
         if self.s is not None:
             self.s.get(self.config['logout_api'])
         self.s = requests.session()
         self.s.headers.update(headers)
         data = self.s.get(self.config['login_page'])
+        print(self.s.headers)
 
         # 查找验证码
         verify_code = self.handle_recognize_code()
@@ -74,7 +76,7 @@ class YHTrader(WebTrader):
         """获取并识别返回的验证码
         :return:失败返回 False 成功返回 验证码"""
         # 获取验证码
-        verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
+        verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(updateverify=random.random()))
         # 保存验证码
         image_path = os.path.join(os.getcwd(), 'vcode')
         with open(image_path, 'wb') as f:
