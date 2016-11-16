@@ -86,7 +86,7 @@ def recognize_verify_code(image_path, broker='ht'):
     elif broker == 'gf':
         return detect_gf_result(image_path)
     elif broker == 'yh':
-        return input_verify_code_manual(image_path)
+        return detect_yh_result(image_path)
     # 调用 tesseract 识别
     return default_verify_code_detect(image_path)
 
@@ -174,24 +174,19 @@ def detect_gf_result(image_path):
 
 
 def detect_yh_result(image_path):
-    from PIL import Image
-
-    img = Image.open(image_path)
-
-    brightness = list()
-    for x in range(img.width):
-        for y in range(img.height):
-            (r, g, b) = img.getpixel((x, y))
-            brightness.append(r + g + b)
-    avg_brightness = sum(brightness) // len(brightness)
-
-    for x in range(img.width):
-        for y in range(img.height):
-            (r, g, b) = img.getpixel((x, y))
-            if ((r + g + b) > avg_brightness / 1.5) or (y < 3) or (y > 17) or (x < 5) or (x > (img.width - 5)):
-                img.putpixel((x, y), (256, 256, 256))
-
-    return invoke_tesseract_to_recognize(img)
+    """封装了tesseract的中文识别，部署在daocloud上，服务端源码地址为： https://github.com/shidenggui/yh_verify_code_docker"""
+    api = 'http://easytrader.daoapp.io/yh'
+    with open(image_path, 'rb') as f:
+        try:
+            rep = requests.post(api, files={
+                'image': f
+            })
+            if rep.status_code != 200:
+                raise Exception('request {} error'.format(api))
+        except Exception as e:
+            log.error('自动识别银河验证码失败: {}, 请手动输入验证码'.format(e))
+            return input_verify_code_manual(image_path)
+    return rep.text
 
 
 def invoke_tesseract_to_recognize(img):
