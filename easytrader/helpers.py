@@ -176,7 +176,7 @@ def detect_gf_result(image_path):
 
 def detect_yh_result(image_path):
     """封装了tesseract的中文识别，部署在daocloud上，服务端源码地址为： https://github.com/shidenggui/yh_verify_code_docker"""
-    api = 'http://easytrader.daoapp.io/yh'
+    api = 'http://123.56.157.162:5000/yh'
     with open(image_path, 'rb') as f:
         try:
             rep = requests.post(api, files={
