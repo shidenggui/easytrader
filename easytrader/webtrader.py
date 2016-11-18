@@ -52,6 +52,9 @@ class WebTrader(object):
             if type(v) is int:
                 log.warn('配置文件的值最好使用双引号包裹，使用字符串类型，否则可能导致不可知的问题')
 
+    def watch_joinquant(self, user, password):
+
+
     def prepare(self, need_data):
         """登录的统一接口
         :param need_data 登录所需数据
