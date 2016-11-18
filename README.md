@@ -2,6 +2,7 @@
 
 * 进行自动的程序化股票交易
 * 实现自动登录
+* 支持跟踪 `joinquant` 的模拟交易
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3 / Python2, Linux / Win, 推荐使用 `Python3`
 * 有兴趣的可以加群 `549879767` 、`429011814`(已满) 一起讨论
@@ -337,6 +338,48 @@ print(ipo_data)
 ```python
 user.adjust_weight('000001', 10)
 ```
+
+### 跟踪 joinquant 的模拟交易
+
+#### 初始化跟踪的 trader
+
+这里以雪球为例
+
+```
+xq_user = easytrader.use('xq')
+xq_user.prepare('xq.json')
+```
+
+#### 初始化跟踪 joinquant 的 follower
+
+```
+jq_follower = easytrader.follower('jq')
+jq_follower.login(user='jq用户名', password='jq密码')
+```
+
+#### 连接 follower 和 trader
+
+```
+jq_follower.follow(xq_user, 'jq的模拟交易url(可以查看持仓的界面), 类似 https://www.joinquant.com/algorithm/live/index?backtestId=xxx')
+```
+
+正常会输出 
+
+
+![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/joinquant.jpg)
+
+
+enjoy it
+
+#### 多用户跟踪多策略
+
+```
+jq_follower.follow(users=[xq_user, yh_user], strategies=['模拟交易url1', '模拟交易url2‘])
+```
+
+#### 目录下产生的 cmd_cache.pk
+
+这是用来存储历史执行过的交易指令，防止在重启程序时重复执行交易过的指令，可以通过 `jq_follower.follow(xxx, cmd_cache=False)` 来关闭
 
 ### 命令行模式
 

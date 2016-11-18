@@ -3,10 +3,10 @@ import pickle
 import re
 import time
 from datetime import datetime
-from queue import Queue
 from threading import Thread
 
 import requests
+from six.moves.queue import Queue
 
 from .log import log
 
@@ -64,20 +64,31 @@ class JoinQuantFollower(object):
         strategies = self.warp_list(strategies)
 
         if cmd_cache:
-            if os.path.exists(self.CMD_CACHE_FILE):
-                with open(self.CMD_CACHE_FILE, 'rb') as f:
-                    self.expired_cmds = pickle.load(f)
+            self.load_expired_cmd_cache()
 
-        trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds})
-        trader.start()
+        self.start_trader_thread(users, trade_cmd_expire_seconds)
 
         for strategy_url in strategies:
-            strategy_id = self.extract_strategy_id(strategy_url)
-            strategy_name = self.extract_strategy_name(strategy_url)
+            try:
+                strategy_id = self.extract_strategy_id(strategy_url)
+                strategy_name = self.extract_strategy_name(strategy_url)
+            except:
+                log.error('抽取交易id和策略名失败, 无效的模拟交易url: {}'.format(strategy_url))
+                raise
             strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
                                      kwargs={'interval': track_interval})
             strategy_worker.start()
             log.info('开始跟踪策略: {}'.format(strategy_name))
+
+    def load_expired_cmd_cache(self):
+        if os.path.exists(self.CMD_CACHE_FILE):
+            with open(self.CMD_CACHE_FILE, 'rb') as f:
+                self.expired_cmds = pickle.load(f)
+
+    def start_trader_thread(self, users, trade_cmd_expire_seconds):
+        trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds})
+        trader.setDaemon(True)
+        trader.start()
 
     @staticmethod
     def warp_list(value):
