@@ -360,8 +360,11 @@ jq_follower.login(user='jq用户名', password='jq密码')
 #### 连接 follower 和 trader
 
 ```
-jq_follower.follow(xq_user, 'jq的模拟交易url(可以查看持仓的界面), 类似 https://www.joinquant.com/algorithm/live/index?backtestId=xxx')
+jq_follower.follow(xq_user, 'jq的模拟交易url')
+
 ```
+
+注: jq的模拟交易url指的是对应模拟交易对应的可以查看持仓, 交易记录的页面, 类似 `https://www.joinquant.com/algorithm/live/index?backtestId=xxx`
 
 正常会输出 
 
@@ -369,7 +372,7 @@ jq_follower.follow(xq_user, 'jq的模拟交易url(可以查看持仓的界面), 
 ![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/joinquant.jpg)
 
 
-enjoy it
+enjoy it 
 
 #### 多用户跟踪多策略
 
