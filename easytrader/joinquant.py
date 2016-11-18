@@ -1,3 +1,5 @@
+import os
+import pickle
 import re
 import time
 from datetime import datetime
@@ -6,19 +8,19 @@ from threading import Thread
 
 import requests
 
-from easytrader.log import log
+from .log import log
 
 
-class JoinQuant(object):
+class JoinQuantFollower(object):
     LOGIN_API = 'https://www.joinquant.com/user/login/doLogin?ajax=1'
     TRANSACTION_API = 'https://www.joinquant.com/algorithm/live/transactionDetail'
+    CMD_CACHE_FILE = 'cmd_cache.pk'
 
-    def __init__(self, user, password):
+    def __init__(self):
         self.trade_queue = Queue()
         self.expired_cmds = set()
 
         self.s = requests.Session()
-        self.login(user, password)
 
     def login(self, user, password):
         # mock headers
@@ -49,25 +51,33 @@ class JoinQuant(object):
         })
         log.info('登录成功')
 
-    def watch(self, users, strategies, track_interval=10, trade_cmd_expire_seconds=120):
+    def follow(self, users, strategies, track_interval=10, trade_cmd_expire_seconds=120, cmd_cache=True):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
             地址类似 https://www.joinquant.com/algorithm/live/index?backtestId=xxx
         :param track_interval: 轮训模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
+        :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         """
         users = self.warp_list(users)
         strategies = self.warp_list(strategies)
+
+        if cmd_cache:
+            if os.path.exists(self.CMD_CACHE_FILE):
+                with open(self.CMD_CACHE_FILE, 'rb') as f:
+                    self.expired_cmds = pickle.load(f)
 
         trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds})
         trader.start()
 
         for strategy_url in strategies:
             strategy_id = self.extract_strategy_id(strategy_url)
-            strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id],
+            strategy_name = self.extract_strategy_name(strategy_url)
+            strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
                                      kwargs={'interval': track_interval})
             strategy_worker.start()
+            log.info('开始跟踪策略: {}'.format(strategy_name))
 
     @staticmethod
     def warp_list(value):
@@ -79,15 +89,21 @@ class JoinQuant(object):
     def extract_strategy_id(strategy_url):
         return re.search(r'(?<=backtestId=)\w+', strategy_url).group()
 
-    def track_strategy_worker(self, strategy, interval=10):
+    def extract_strategy_name(self, strategy_url):
+        rep = self.s.get(strategy_url)
+        return self.re_find(r'(?<=title="点击修改策略名称"\>).*(?=\</span)', rep.content.decode('utf8'))
+
+    def track_strategy_worker(self, strategy, name, interval=10):
         """跟踪下单worker
         :param strategy: 策略id
+        :param name: 策略名字
         :param interval: 轮训策略的时间间隔，单位为秒"""
         while True:
             transactions = self.query_strategy_transaction(strategy)
             for t in transactions:
                 trade_cmd = {
                     'strategy': strategy,
+                    'strategy_name': name,
                     'action': t['action'],
                     'stock_code': t['stock_code'],
                     'amount': t['amount'],
@@ -96,8 +112,8 @@ class JoinQuant(object):
                 }
                 if self.is_cmd_expired(trade_cmd):
                     continue
-                log.info('策略 {} 发送指令到交易队列, 股票代码: {} 动作: {} 数量: {} 价格: {} 信号产生时间: {}'.format(
-                    strategy, trade_cmd['stock_code'], trade_cmd['action'], trade_cmd['amount'], trade_cmd['price'],
+                log.info('策略 [{}] 发送指令到交易队列, 股票: {} 动作: {} 数量: {} 价格: {} 信号产生时间: {}'.format(
+                    name, trade_cmd['stock_code'], trade_cmd['action'], trade_cmd['amount'], trade_cmd['price'],
                     trade_cmd['datetime']
                 ))
                 self.trade_queue.put(trade_cmd)
@@ -107,7 +123,7 @@ class JoinQuant(object):
     @staticmethod
     def generate_expired_cmd_key(cmd):
         return '{}_{}_{}_{}_{}'.format(
-            cmd['strategy'], cmd['stock_code'], cmd['action'], cmd['amount'], cmd['price'], cmd['datetime'])
+            cmd['strategy_name'], cmd['stock_code'], cmd['action'], cmd['amount'], cmd['price'], cmd['datetime'])
 
     def is_cmd_expired(self, cmd):
         key = self.generate_expired_cmd_key(cmd)
@@ -116,6 +132,9 @@ class JoinQuant(object):
     def add_cmd_to_expired_cmds(self, cmd):
         key = self.generate_expired_cmd_key(cmd)
         self.expired_cmds.add(key)
+
+        with open(self.CMD_CACHE_FILE, 'wb') as f:
+            pickle.dump(self.expired_cmds, f)
 
     def trade_worker(self, users, expire_seconds=120):
         while True:
@@ -126,8 +145,9 @@ class JoinQuant(object):
                 expire = (now - trade_cmd['datetime']).total_seconds()
                 if expire > expire_seconds:
                     log.warning(
-                        '策略 {} 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃'.format(
-                            trade_cmd['strategy'], trade_cmd['stock_code'], trade_cmd['action'], trade_cmd['amount'],
+                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃'.format(
+                            trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
+                            trade_cmd['amount'],
                             trade_cmd['price'], trade_cmd['datetime'], now, expire_seconds))
                     break
                 args = {
@@ -136,15 +156,21 @@ class JoinQuant(object):
                     'amount': trade_cmd['amount']
                 }
                 try:
-                    getattr(user, trade_cmd['action'])(**args)
+                    response = getattr(user, trade_cmd['action'])(**args)
                 except Exception as e:
                     trader_name = type(user).__name__
+                    err_msg = '{}: {}'.format(type(e).__name__, e.message)
                     log.error(
-                        '{} 执行 策略 {} 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}'.format(
-                            trader_name, trade_cmd['strategy'], trade_cmd['stock_code'], trade_cmd['action'],
+                        '{} 执行 策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}'.format(
+                            trader_name, trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
                             trade_cmd['amount'],
-                            trade_cmd['price'], trade_cmd['datetime'], e))
+                            trade_cmd['price'], trade_cmd['datetime'], err_msg))
                     continue
+                log.info(
+                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 执行成功, 返回: {}'.format(
+                        trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
+                        trade_cmd['amount'],
+                        trade_cmd['price'], trade_cmd['datetime'], response))
 
     def query_strategy_transaction(self, strategy):
         today_str = datetime.today().strftime('%Y-%m-%d')
@@ -167,9 +193,9 @@ class JoinQuant(object):
     def stock_shuffle_to_prefix(stock):
         assert len(stock) == 11, 'stock {} must like 123456.XSHG or 123456.XSHE'.format(stock)
         code = stock[:6]
-        if stock.find('XSHG'):
+        if stock.find('XSHG') != -1:
             return 'sh' + code
-        elif stock.find('XSHE'):
+        elif stock.find('XSHE') != -1:
             return 'sz' + code
         raise TypeError('not valid stock code: {}'.format(code))
 
@@ -184,8 +210,3 @@ class JoinQuant(object):
             t['stock_code'] = self.stock_shuffle_to_prefix(stock)
 
             t['action'] = 'buy' if t['transaction'] == '买' else 'sell'
-
-
-if __name__ == '__main__':
-    watcher = JoinQuant(user='18030129470', password='joinquant')
-    watcher.watch(None, 'https://www.joinquant.com/algorithm/live/index?backtestId=85b6c393368e9858bc913c330dcd0acf')

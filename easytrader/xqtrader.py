@@ -373,6 +373,7 @@ class XueQiuTrader(WebTrader):
                         raise TradeError(u"操作数量大于实际可卖出数量")
                     else:
                         position['weight'] = old_weight - weight
+                position['weight'] = round(position['weight'], 2)
         if not is_have:
             if entrust_bs == 'buy':
                 position_list.append({
@@ -391,7 +392,7 @@ class XueQiuTrader(WebTrader):
                     "ind_color": stock['ind_color'],
                     "textname": stock['name'],
                     "segment_name": stock['ind_name'],
-                    "weight": weight,
+                    "weight": round(weight, 2),
                     "url": "/S/" + stock['code'],
                     "proactive": True,
                     "price": str(stock['current'])
@@ -406,16 +407,16 @@ class XueQiuTrader(WebTrader):
         cash = round(cash, 2)
         log.debug("weight:%f, cash:%f" % (weight, cash))
 
-        data = urlencode({
+        data = {
             "cash": cash,
             "holdings": str(json.dumps(position_list)),
             "cube_symbol": str(self.account_config['portfolio_code']),
             'segment': 1,
             'comment': ""
-        })
+        }
 
         try:
-            rebalance_res = self.session.post(self.config['rebalance_url'], params=data)
+            rebalance_res = self.session.post(self.config['rebalance_url'], data=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return
