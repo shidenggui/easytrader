@@ -52,12 +52,24 @@ class WebTrader(object):
             if type(v) is int:
                 log.warn('配置文件的值最好使用双引号包裹，使用字符串类型，否则可能导致不可知的问题')
 
-    def prepare(self, need_data):
+    def prepare(self, config_file=None, user=None, password=None, **kwargs):
         """登录的统一接口
-        :param need_data 登录所需数据
+        :param config_file 登录数据文件，若无则选择参数登录模式
+        :param user: 各家券商的账号或者雪球的用户名
+        :param password: 密码, 券商为加密后的密码，雪球为明文密码
+        :param account: [雪球登录需要]雪球手机号(邮箱手机二选一)
+        :param portfolio_code: [雪球登录需要]组合代码
+        :param portfolio_market: [雪球登录需要]交易市场， 可选['cn', 'us', 'hk'] 默认 'cn'
         """
-        self.read_config(need_data)
+        if config_file is not None:
+            self.read_config(config_file)
+        else:
+            self._prepare_account(user, password, **kwargs)
         self.autologin()
+
+    def _prepare_account(self, user, password, **kwargs):
+        """映射用户名密码到对应的字段"""
+        raise Exception('支持参数登录需要实现此方法')
 
     def autologin(self, limit=10):
         """实现自动登录

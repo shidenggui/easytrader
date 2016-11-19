@@ -106,14 +106,18 @@ class YHTrader(WebTrader):
             return True, None
         return False, login_response.text
 
-    @property
-    def token(self):
-        return self.cookie['JSESSIONID']
+    def _prepare_account(self, user, password, **kwargs):
+        """
 
-    @token.setter
-    def token(self, token):
-        self.cookie = dict(JSESSIONID=token)
-        self.keepalive()
+        :param user:
+        :param password:
+        :param kwargs:
+        :return:
+        """
+        self.account_config = {
+            'inputaccount': user,
+            'trdpwd': password
+        }
 
     def check_available_cancels(self, parsed=True):
         """

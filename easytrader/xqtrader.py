@@ -5,7 +5,6 @@ import re
 import time
 
 import requests
-from six.moves.urllib.parse import urlencode
 
 from .log import log
 from .webtrader import NotLoginError, TradeError
@@ -53,6 +52,30 @@ class XueQiuTrader(WebTrader):
             raise NotLoginError(result)
         log.debug('login status: %s' % result)
         return login_status
+
+    def _prepare_account(self, user='', password='', **kwargs):
+        """
+        转换参数到登录所需的字典格式
+        :param user: 雪球邮箱(邮箱手机二选一)
+        :param password: 雪球密码
+        :param account: 雪球手机号(邮箱手机二选一)
+        :param portfolio_code: 组合代码
+        :param portfolio_market: 交易市场， 可选['cn', 'us', 'hk'] 默认 'cn'
+        :return:
+        """
+        if 'portfolio_code' not in kwargs:
+            raise TypeError('雪球登录需要设置 portfolio_code(组合代码) 参数')
+        if 'portfolio_market' not in kwargs:
+            kwargs['portfolio_market'] = 'cn'
+        if 'account' not in kwargs:
+            kwargs['account'] = ''
+        self.account_config = {
+            'username': user,
+            'account': kwargs['account'],
+            'password': password,
+            'portfolio_code': kwargs['portfolio_code'],
+            'portfolio_market': kwargs['portfolio_market']
+        }
 
     def post_login_data(self):
         login_post_data = {
@@ -306,16 +329,16 @@ class XueQiuTrader(WebTrader):
         remain_weight = 100 - sum(i.get('weight') for i in position_list)
         cash = round(remain_weight, 2)
         log.debug("调仓比例:%f, 剩余持仓 :%f" % (weight, remain_weight))
-        data = urlencode({
+        data = {
             "cash": cash,
             "holdings": str(json.dumps(position_list)),
             "cube_symbol": str(self.account_config['portfolio_code']),
             'segment': 'true',
             'comment': ""
-        })
+        }
 
         try:
-            rebalance_res = self.session.post(self.config['rebalance_url'], params=data)
+            rebalance_res = self.session.post(self.config['rebalance_url'], data=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return

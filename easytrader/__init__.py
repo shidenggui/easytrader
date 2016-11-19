@@ -7,5 +7,5 @@ from .yjbtrader import YJBTrader
 from .gftrader import GFTrader
 from .joinquant import JoinQuantFollower
 
-__version__ = '0.8.5'
+__version__ = '0.8.6'
 __author__ = 'shidenggui'
