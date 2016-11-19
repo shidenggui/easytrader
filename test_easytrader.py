@@ -1,6 +1,8 @@
 import unittest
+from datetime import datetime
 
 import easytrader
+from easytrader import JoinQuantFollower
 from easytrader import helpers
 
 
@@ -97,11 +99,48 @@ class TestEasytrader(unittest.TestCase):
         result = helpers.str2num(test_data, 'float')
         self.assertAlmostEqual(result, normal_data)
 
-    def test_ht_format_exchagnebill_request_data(self):
-        user = easytrader.use('ht')
-        import datetime
-        # print(datetime.datetime.now().strftime("%Y%m%d"))
-        # user.exchangebill
+
+class TestJoinQuantFollower(unittest.TestCase):
+    def test_extract_strategy_id(self):
+        cases = [('https://www.joinquant.com/algorithm/live/index?backtestId=aaaabbbbcccc',
+                  'aaaabbbbcccc')]
+        for test, result in cases:
+            extracted_id = JoinQuantFollower.extract_strategy_id(test)
+            self.assertEqual(extracted_id, result)
+
+    def test_stock_shuffle_to_prefix(self):
+        cases = [('123456.XSHG', 'sh123456'),
+                 ('000001.XSHE', 'sz000001')]
+        for test, result in cases:
+            self.assertEqual(
+                JoinQuantFollower.stock_shuffle_to_prefix(test),
+                result
+            )
+
+        with self.assertRaises(AssertionError):
+            JoinQuantFollower.stock_shuffle_to_prefix('1234')
+
+    def test_project_transactions(self):
+        cases = [([{'type': '市价单', 'price': 8.11, 'commission': 9.98, 'gains': 0, 'time': '14:50', 'date': '2016-11-18',
+                    'security': '股票', 'stock': '华纺股份(600448.XSHG)', 'transaction': '买', 'total': 33251,
+                    'status': '全部成交',
+                    'amount': "<span class='buy'>4100股</span>"}],
+                  [{'type': '市价单', 'price': 8.11, 'commission': 9.98, 'gains': 0, 'time': '14:50', 'date': '2016-11-18',
+                    'security': '股票', 'stock': '华纺股份(600448.XSHG)', 'transaction': '买', 'total': 33251,
+                    'status': '全部成交',
+                    'amount': 4100,
+                    'action': 'buy',
+                    'stock_code': 'sh600448',
+                    'datetime':
+                        datetime.strptime('2016-11-18 14:50', '%Y-%m-%d %H:%M')
+                    }])]
+        for test, result in cases:
+            JoinQuantFollower().project_transactions(test),
+            self.assertListEqual(
+                test,
+                result
+            )
+
 
 if __name__ == '__main__':
     unittest.main()
