@@ -1,3 +1,4 @@
+# coding:utf8
 from setuptools import setup
 
 import easytrader
