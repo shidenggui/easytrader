@@ -5,7 +5,7 @@ from .webtrader import WebTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
 from .gftrader import GFTrader
-from .joinquant import JoinQuantFollower
+from .joinquant_follower import JoinQuantFollower
 
-__version__ = '0.8.8'
+__version__ = '0.9.0'
 __author__ = 'shidenggui'

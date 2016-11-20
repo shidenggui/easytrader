@@ -1,5 +1,5 @@
 # coding:utf8
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function, division
 
 import os
 import pickle
@@ -14,10 +14,12 @@ from six.moves.queue import Queue
 from .log import log
 
 
-class JoinQuantFollower(object):
-    LOGIN_API = 'https://www.joinquant.com/user/login/doLogin?ajax=1'
-    TRANSACTION_API = 'https://www.joinquant.com/algorithm/live/transactionDetail'
+class BaseFollower(object):
+    LOGIN_PAGE = ''
+    LOGIN_API = ''
+    TRANSACTION_API = ''
     CMD_CACHE_FILE = 'cmd_cache.pk'
+    WEB_REFERER = ''
 
     def __init__(self):
         self.trade_queue = Queue()
@@ -25,14 +27,14 @@ class JoinQuantFollower(object):
 
         self.s = requests.Session()
 
-    def login(self, user, password):
+    def login(self, user, password, **kwargs):
         # mock headers
         headers = {
             'Accept': 'application/json, text/javascript, */*; q=0.01',
             'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'en-US,en;q=0.8',
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36',
-            'Referer': 'https://www.joinquant.com/user/login/index',
+            'Referer': self.WEB_REFERER,
             'X-Requested-With': 'XMLHttpRequest',
             'Origin': 'https://www.joinquant.com',
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
@@ -40,38 +42,56 @@ class JoinQuantFollower(object):
         self.s.headers.update(headers)
 
         # init cookie
-        self.s.get('https://www.joinquant.com/')
+        self.s.get(self.LOGIN_PAGE)
 
         # post for login
-        params = {
-            'CyLoginForm[username]': user,
-            'CyLoginForm[pwd]': password,
-            'ajax': 1
-        }
+        params = self.create_login_params(user, password, **kwargs)
         rep = self.s.post(self.LOGIN_API, data=params)
-        self.s.headers.update({
-            'cookie': rep.headers['set-cookie']
-        })
+
+        self.check_login_success(rep)
         log.info('登录成功')
 
-    def follow(self, users, strategies, track_interval=10, trade_cmd_expire_seconds=120, cmd_cache=True):
+    def check_login_success(self, rep):
+        """检查登录状态是否成功
+        :param rep: post login 接口返回的 response 对象
+        :raise 如果登录失败应该抛出 NotLoginError """
+        pass
+
+    def create_login_params(self, user, password, **kwargs):
+        """生成 post 登录接口的参数
+        :param user: 用户名
+        :param password: 密码
+        :return dict 登录参数的字典
+        """
+        pass
+
+    def follow(self, users, strategies, track_interval=10,
+               trade_cmd_expire_seconds=120, cmd_cache=True, **kwargs):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
-        :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
-            地址类似 https://www.joinquant.com/algorithm/live/index?backtestId=xxx
+        :param strategies: 雪球组合名, 类似 ZH123450
+        :param total_assets: 雪球组合对应的总资产， 格式 [ 组合1对应资金, 组合2对应资金 ]
+            若 strategies=['ZH000001', 'ZH000002'] 设置 total_assets=[10000, 10000], 则表明每个组合对应的资产为 1w 元，
+            假设组合 ZH000001 加仓 价格为 p 股票 A 10%, 则对应的交易指令为 买入 股票 A 价格 P 股数 1w * 10% / p 并按 100 取整
+        :param initial_assets:雪球组合对应的初始资产, 格式 [ 组合1对应资金, 组合2对应资金 ]
+            总资产由 初始资产 × 组合净值 算得， total_assets 会覆盖此参数
         :param track_interval: 轮训模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         """
         users = self.warp_list(users)
         strategies = self.warp_list(strategies)
+        total_assets = self.warp_list(kwargs.get('total_assets'))
+        initial_assets = self.warp_list(kwargs.get('initial_assets'))
 
         if cmd_cache:
             self.load_expired_cmd_cache()
 
         self.start_trader_thread(users, trade_cmd_expire_seconds)
 
-        for strategy_url in strategies:
+        for strategy_url, strategy_total_assets, strategy_initial_assets in zip(strategies, total_assets,
+                                                                                initial_assets):
+            assets = self.calculate_assets(strategy_url, strategy_total_assets, strategy_initial_assets)
             try:
                 strategy_id = self.extract_strategy_id(strategy_url)
                 strategy_name = self.extract_strategy_name(strategy_url)
@@ -79,7 +99,7 @@ class JoinQuantFollower(object):
                 log.error('抽取交易id和策略名失败, 无效的模拟交易url: {}'.format(strategy_url))
                 raise
             strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
-                                     kwargs={'interval': track_interval})
+                                     kwargs={'interval': track_interval, 'assets': assets})
             strategy_worker.start()
             log.info('开始跟踪策略: {}'.format(strategy_name))
 
@@ -101,19 +121,28 @@ class JoinQuantFollower(object):
 
     @staticmethod
     def extract_strategy_id(strategy_url):
-        return re.search(r'(?<=backtestId=)\w+', strategy_url).group()
+        """
+        抽取 策略 id，一般用于获取策略相关信息
+        :param strategy_url: 策略 url
+        :return: str 策略 id
+        """
+        pass
 
     def extract_strategy_name(self, strategy_url):
-        rep = self.s.get(strategy_url)
-        return self.re_find(r'(?<=title="点击修改策略名称"\>).*(?=\</span)', rep.content.decode('utf8'))
+        """
+        抽取 策略名，主要用于日志打印，便于识别
+        :param strategy_url:
+        :return: str 策略名
+        """
+        pass
 
-    def track_strategy_worker(self, strategy, name, interval=10):
+    def track_strategy_worker(self, strategy, name, interval=10, **kwargs):
         """跟踪下单worker
         :param strategy: 策略id
         :param name: 策略名字
         :param interval: 轮训策略的时间间隔，单位为秒"""
         while True:
-            transactions = self.query_strategy_transaction(strategy)
+            transactions = self.query_strategy_transaction(strategy, **kwargs)
             for t in transactions:
                 trade_cmd = {
                     'strategy': strategy,
@@ -132,7 +161,12 @@ class JoinQuantFollower(object):
                 ))
                 self.trade_queue.put(trade_cmd)
                 self.add_cmd_to_expired_cmds(trade_cmd)
-            time.sleep(interval)
+            try:
+                for _ in range(interval):
+                    time.sleep(1)
+            except KeyboardInterrupt:
+                log.info('程序退出')
+                break
 
     @staticmethod
     def generate_expired_cmd_key(cmd):
@@ -164,6 +198,14 @@ class JoinQuantFollower(object):
                             trade_cmd['amount'],
                             trade_cmd['price'], trade_cmd['datetime'], now, expire_seconds))
                     break
+                if trade_cmd['amount'] <= 0:
+                    log.warning(
+                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃'.format(
+                            trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
+                            trade_cmd['amount'],
+                            trade_cmd['price'], trade_cmd['datetime'], now))
+                    break
+
                 args = {
                     'stock_code': trade_cmd['stock_code'],
                     'price': trade_cmd['price'],
@@ -186,41 +228,50 @@ class JoinQuantFollower(object):
                         trade_cmd['amount'],
                         trade_cmd['price'], trade_cmd['datetime'], response))
 
-    def query_strategy_transaction(self, strategy):
-        today_str = datetime.today().strftime('%Y-%m-%d')
-        params = {
-            'backtestId': strategy,
-            'data': today_str,
-            'ajax': 1
-        }
+    def query_strategy_transaction(self, strategy, **kwargs):
+        params = self.create_query_transaction_params(strategy)
 
         rep = self.s.get(self.TRANSACTION_API, params=params)
-        transactions = rep.json()['data']['transaction']
-        self.project_transactions(transactions)
-        return transactions
+        history = rep.json()
+
+        transactions = self.extract_transactions(history)
+        self.project_transactions(transactions, **kwargs)
+        return self.order_transactions_sell_first(transactions)
+
+    def extract_transactions(self, history):
+        """
+        抽取接口返回中的调仓记录列表
+        :param history: 调仓接口返回信息的字典对象
+        :return: [] 调参历史记录的列表
+        """
+        pass
+
+    def create_query_transaction_params(self, strategy):
+        """
+        生成用于查询调参记录的参数
+        :param strategy: 策略 id
+        :return: dict 调参记录参数
+        """
+        pass
 
     @staticmethod
     def re_find(pattern, string, dtype=str):
         return dtype(re.search(pattern, string).group())
 
-    @staticmethod
-    def stock_shuffle_to_prefix(stock):
-        assert len(stock) == 11, 'stock {} must like 123456.XSHG or 123456.XSHE'.format(stock)
-        code = stock[:6]
-        if stock.find('XSHG') != -1:
-            return 'sh' + code
-        elif stock.find('XSHE') != -1:
-            return 'sz' + code
-        raise TypeError('not valid stock code: {}'.format(code))
+    def project_transactions(self, transactions, **kwargs):
+        """
+        修证调仓记录为内部使用的统一格式
+        :param transactions: [] 调仓记录的列表
+        :return: [] 修整后的调仓记录
+        """
+        pass
 
-    def project_transactions(self, transactions):
+    def order_transactions_sell_first(self, transactions):
+        # 调整调仓记录的顺序为先卖再买
+        sell_first_transactions = []
         for t in transactions:
-            t['amount'] = self.re_find('\d+', t['amount'], dtype=int)
-
-            time_str = '{} {}'.format(t['date'], t['time'])
-            t['datetime'] = datetime.strptime(time_str, '%Y-%m-%d %H:%M')
-
-            stock = self.re_find(r'\d{6}\.\w{4}', t['stock'])
-            t['stock_code'] = self.stock_shuffle_to_prefix(stock)
-
-            t['action'] = 'buy' if t['transaction'] == '买' else 'sell'
+            if t['action'] == 'sell':
+                sell_first_transactions.insert(0, t)
+            else:
+                sell_first_transactions.append(t)
+        return sell_first_transactions

@@ -3,8 +3,9 @@ import logging
 
 from .gftrader import GFTrader
 from .httrader import HTTrader
-from .joinquant import JoinQuantFollower
+from .joinquant_follower import JoinQuantFollower
 from .log import log
+from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
@@ -41,6 +42,8 @@ def use(broker, debug=True, **kwargs):
 def follower(platform, **kwargs):
     """用于生成特定的券商对象
     :param platform:平台支持 ['jq', 'joinquant', '聚宽’]
+    :param initial_assets: [雪球参数] 控制雪球初始资金，默认为一万, 总资金由 initial_assets * 组合当前净值 得出
+    :param total_assets: [雪球参数] 控制雪球总资金，无默认值, 若设置则覆盖 initial_assets
     :return the class of follower
 
     Usage::
@@ -54,3 +57,5 @@ def follower(platform, **kwargs):
     """
     if platform.lower() in ['jq', 'joinquant', '聚宽']:
         return JoinQuantFollower()
+    if platform.lower() in ['xq', 'xueqiu', '雪球']:
+        return XueQiuFollower(**kwargs)
