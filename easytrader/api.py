@@ -14,7 +14,8 @@ def use(broker, debug=True, **kwargs):
     """用于生成特定的券商对象
     :param broker:券商名支持 ['ht', 'HT', '华泰’] ['yjb', 'YJB', ’佣金宝'] ['yh', 'YH', '银河'] ['gf', 'GF', '广发']
     :param debug: 控制 debug 日志的显示, 默认为 True
-    :param remove_zero: ht 可用参数，是否移除 08 账户开头的 0, 默认 True
+    :param initial_assets: [雪球参数] 控制雪球初始资金，默认为一百万
+    :param remove_zero: [ht参数]，是否移除 08 账户开头的 0, 默认 True
     :return the class of trader
 
     Usage::
@@ -32,7 +33,7 @@ def use(broker, debug=True, **kwargs):
     if broker.lower() in ['yh', '银河']:
         return YHTrader()
     if broker.lower() in ['xq', '雪球']:
-        return XueQiuTrader()
+        return XueQiuTrader(**kwargs)
     if broker.lower() in ['gf', '广发']:
         return GFTrader()
 

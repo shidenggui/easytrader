@@ -100,6 +100,26 @@ class TestEasytrader(unittest.TestCase):
         self.assertAlmostEqual(result, normal_data)
 
 
+class TestXueQiuTrader(unittest.TestCase):
+    def test_set_initial_assets(self):
+        # default set to 1e6
+        xq_user = easytrader.use('xq')
+        self.assertEqual(xq_user.multiple, 1e6)
+
+        xq_user = easytrader.use('xq', initial_assets=1000)
+        self.assertEqual(xq_user.multiple, 1000)
+
+        # cant low than 1000
+        with self.assertRaises(ValueError):
+            xq_user = easytrader.use('xq', initial_assets=999)
+
+        # initial_assets must be number
+        cases = [None, '', b'', bool]
+        for v in cases:
+            with self.assertRaises(TypeError):
+                xq_user = easytrader.use('xq', initial_assets=v)
+
+
 class TestJoinQuantFollower(unittest.TestCase):
     def test_extract_strategy_id(self):
         cases = [('https://www.joinquant.com/algorithm/live/index?backtestId=aaaabbbbcccc',

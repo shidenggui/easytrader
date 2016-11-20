@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+from numbers import Number
 
 import requests
 
@@ -14,8 +15,16 @@ from .webtrader import WebTrader
 class XueQiuTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/xq.json'
 
-    def __init__(self):
+    def __init__(self, **kwargs):
         super(XueQiuTrader, self).__init__()
+
+        # 资金换算倍数
+        self.multiple = kwargs['initial_assets'] if 'initial_assets' in kwargs else 1000000
+        if not isinstance(self.multiple, Number):
+            raise TypeError('initial assets must be number(int, float)')
+        if self.multiple < 1e3:
+            raise ValueError('雪球初始资产不能小于1000元，当前预设值 {}'.format(self.multiple))
+
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0',
             'Host': 'xueqiu.com',
@@ -31,7 +40,6 @@ class XueQiuTrader(WebTrader):
         self.session = requests.Session()
         self.session.headers.update(headers)
         self.account_config = None
-        self.multiple = 1000000  # 资金换算倍数
 
     def autologin(self, **kwargs):
         """
