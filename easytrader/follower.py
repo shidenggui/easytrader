@@ -170,7 +170,7 @@ class BaseFollower(object):
 
     @staticmethod
     def generate_expired_cmd_key(cmd):
-        return '{}_{}_{}_{}_{}'.format(
+        return '{}_{}_{}_{}_{}_{}'.format(
             cmd['strategy_name'], cmd['stock_code'], cmd['action'], cmd['amount'], cmd['price'], cmd['datetime'])
 
     def is_cmd_expired(self, cmd):
