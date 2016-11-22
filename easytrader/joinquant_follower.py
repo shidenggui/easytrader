@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import re
+import time
 from datetime import datetime
 from threading import Thread
 
@@ -49,6 +50,7 @@ class JoinQuantFollower(BaseFollower):
 
         self.start_trader_thread(users, trade_cmd_expire_seconds)
 
+        workers = []
         for strategy_url in strategies:
             try:
                 strategy_id = self.extract_strategy_id(strategy_url)
@@ -59,7 +61,10 @@ class JoinQuantFollower(BaseFollower):
             strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
                                      kwargs={'interval': track_interval})
             strategy_worker.start()
+            workers.append(strategy_worker)
             log.info('开始跟踪策略: {}'.format(strategy_name))
+        for worker in workers:
+            worker.join()
 
     @staticmethod
     def extract_strategy_id(strategy_url):
