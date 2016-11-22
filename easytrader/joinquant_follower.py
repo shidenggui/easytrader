@@ -33,7 +33,7 @@ class JoinQuantFollower(BaseFollower):
             'cookie': set_cookie
         })
 
-    def follow(self, users, strategies, track_interval=10, trade_cmd_expire_seconds=120, cmd_cache=True):
+    def follow(self, users, strategies, track_interval=1, trade_cmd_expire_seconds=120, cmd_cache=True):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
