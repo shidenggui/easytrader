@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import division
 
+import math
 import os
 import random
 import re
@@ -45,7 +46,7 @@ class YHTrader(WebTrader):
         }
         if self.s is not None:
             self.s.get(self.config['logout_api'])
-        self.s = requests.session()
+        self.s = requests.Session()
         self.s.headers.update(headers)
         data = self.s.get(self.config['login_page'])
 
