@@ -6,17 +6,101 @@ import win32api
 import win32clipboard as cp
 import win32gui
 from io import StringIO
-
+import subprocess
+import tempfile
 import pandas as pd
+from . import helpers
 import win32com.client
+from PIL import ImageGrab
+import time
 import win32con
+import os
+from .log import log
 
 
 class YHClientTrader():
     def __init__(self):
         self.Title = '网上股票交易系统5.0'
-        self._get_handles()
+        
 
+    def login(self, user, password, exe_path='C:\中国银河证券双子星3.2\Binarystar.exe'):
+        if self._has_main_window():
+            self._get_handles()
+            log.info('检测到交易客户端已启动，连接完毕')
+            return
+        if not self._has_login_window():
+            if not os.path.exists(exe_path):
+                raise FileNotFoundError('在　{} 未找到应用程序，请用 exe_path 指定应用程序目录'.format(exe_path))
+            subprocess.Popen(exe_path)      
+        # 检测登陆窗口
+        for _ in range(30):
+            if self._has_login_window():
+                break
+            time.sleep(1)
+        else:
+            raise Exception('启动客户端失败，无法检测到登陆窗口')
+        log.info('成功检测到客户端登陆窗口')
+        self._set_trade_mode()
+        self._set_login_name(user)
+        self._set_login_password(password)
+        self._set_login_verify_code()
+        self._click_login_button()
+        
+        for _ in range(30):
+            if self._has_main_window():
+                self._get_handles()
+                break
+            time.sleep(1)
+        else:
+            raise Exception('启动交易客户端失败')
+        log.info('客户端登陆成功')
+    def _set_login_verify_code(self):
+        verify_code_image = self._get_verify_code()
+        image_path = tempfile.mktemp() + '.jpg'
+        verify_code_image.save(image_path)
+        result = helpers.recognize_verify_code(image_path, 'yh_client')
+        time.sleep(0.2)
+        self._input_login_verify_code(result)
+        time.sleep(0.4)
+        
+    def _set_trade_mode(self):
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x4f4d)
+        win32gui.SendMessage(input_hwnd, win32con.BM_CLICK, None, None)
+    def _set_login_name(self, user):
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x5523)
+        win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, user)
+        
+    def _set_login_password(self, password):
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x5534)
+        win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, password)
+    def _has_login_window(self):       
+        self.login_hwnd = win32gui.FindWindow(None, ' - 北京电信')
+        log.debug('检测到登陆窗口句柄：{}'.format(self.login_hwnd))
+        if self.login_hwnd != 0:
+            return True
+        return False
+        
+    def _input_login_verify_code(self, code):
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56b9)
+        win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, code)
+    
+    def _click_login_button(self):
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x1)
+        win32gui.SendMessage(input_hwnd, win32con.BM_CLICK, None, None)
+    def _has_main_window(self):
+        try:
+            self._get_handles()
+        except:
+            return False
+        return True
+    
+       
+    def _get_verify_code(self):
+        verify_code_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56ba)
+        self.set_foreground_window(self.login_hwnd)
+        time.sleep(0.2)
+        rect = win32gui.GetWindowRect(verify_code_hwnd)
+        return ImageGrab.grab(rect)
     def _get_handles(self):
         Main = win32gui.FindWindow(0, self.Title)  # 交易窗口
         Frame = win32gui.GetDlgItem(Main, 59648)  # 操作窗口框架
@@ -65,8 +149,8 @@ class YHClientTrader():
         :param amount: 买入股数
         :return: bool: 买入信号是否成功发出
         """
-        amount = amount // 100 * 100
-        price = float(price)
+        amount = str(amount // 100 * 100)
+        price = str(price)
 
         try:
             win32gui.SendMessage(self.E_Bsymbol, win32con.WM_SETTEXT, None, stock_code)  # 输入买入代码
@@ -95,6 +179,8 @@ class YHClientTrader():
         try:
             win32gui.SendMessage(self.E_Ssymbol, win32con.WM_SETTEXT, None, stock_code)  # 输入卖出代码
             win32gui.SendMessage(self.E_Sprice, win32con.WM_SETTEXT, None, price)  # 输入卖出价格
+            win32gui.SendMessage(self.E_Sprice, win32con.BM_CLICK, None, None)  # 输入卖出价格
+            print('add click')
             time.sleep(0.2)
             win32gui.SendMessage(self.E_Svol, win32con.WM_SETTEXT, None, amount)  # 输入卖出数量
             time.sleep(0.2)

@@ -88,10 +88,21 @@ def recognize_verify_code(image_path, broker='ht'):
         return detect_gf_result(image_path)
     elif broker == 'yh':
         return detect_yh_result(image_path)
+    elif broker == 'yh_client':
+        return detect_yh_client_result(image_path)
     # 调用 tesseract 识别
     return default_verify_code_detect(image_path)
 
-
+def detect_yh_client_result(image_path):
+    api = 'http://10.1.1.193:5000/yh_client'
+    with open(image_path, 'rb') as f:
+        rep = requests.post(api, files={
+                'image': f
+        })
+    if rep.status_code != 200:
+        raise Exception('request {} error'.format(api))
+    return rep.text
+    
 def input_verify_code_manual(image_path):
     from PIL import Image
     image = Image.open(image_path)
