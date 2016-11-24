@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import time
 import traceback
+import pyperclip
 import win32api
 import win32clipboard as cp
 import win32gui
@@ -48,7 +49,7 @@ class YHClientTrader():
         for _ in range(3):
             self._set_login_verify_code()
             self._click_login_button()
-            time.sleep(0.5)
+            time.sleep(3)
             if not self._has_login_window():
                 break
             self._click_login_verify_code()
@@ -98,9 +99,15 @@ class YHClientTrader():
         win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, code)
 
     def _click_login_verify_code(self):
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56b9)
-        win32gui.SendMessage(input_hwnd, win32con.BM_CLICK, None, None)
+        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56ba)
+        rect = win32gui.GetWindowRect(input_hwnd)
+        self.click(rect[0] + 5, rect[1] + 5)
 
+    def click(self, x,y):
+        win32api.SetCursorPos((x,y))
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN,x,y,0,0)
+        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP,x,y,0,0) 
+        
     def _click_login_button(self):
         time.sleep(1)
         input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x1)
@@ -253,17 +260,21 @@ class YHClientTrader():
         df = pd.read_csv(reader, delim_whitespace=True)
         return df.to_dict('records')
 
-    @staticmethod
-    def read_clipboard():
-        win32api.keybd_event(17, 0, 0, 0)
-        win32api.keybd_event(67, 0, 0, 0)
-        win32api.keybd_event(67, 0, win32con.KEYEVENTF_KEYUP, 0)
-        win32api.keybd_event(17, 0, win32con.KEYEVENTF_KEYUP, 0)
-        time.sleep(0.1)
-        cp.OpenClipboard()
-        raw_text = cp.GetClipboardData(win32con.CF_UNICODETEXT)
-        cp.CloseClipboard()
-        return raw_text
+    def read_clipboard(self):
+        for _ in range(10):
+            try:
+                #self.set_foreground_window(self.Main)
+                win32api.keybd_event(17, 0, 0, 0)
+                win32api.keybd_event(67, 0, 0, 0)
+                win32api.keybd_event(67, 0, win32con.KEYEVENTF_KEYUP, 0)
+                win32api.keybd_event(17, 0, win32con.KEYEVENTF_KEYUP, 0)
+                time.sleep(0.2)
+                return pyperclip.paste()
+            except Exception as e:
+                log.error('open clipboard failed: {}, retry...'.format(e))
+                time.sleep(1)
+        else:
+            raise Exception('read clipbord failed')
 
     @staticmethod
     def project_position_str(raw):
