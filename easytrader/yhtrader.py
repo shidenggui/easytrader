@@ -412,7 +412,7 @@ class YHTrader(WebTrader):
         need_info = self.__get_trade_need_info(stock_code)
         trade_params = dict(
             other,
-            stockCode=stock_code,
+            stockCode=stock_code[-6:],
             price=price,
             market=need_info['exchange_type'],
             secuid=need_info['stock_account']
