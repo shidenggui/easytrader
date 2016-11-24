@@ -88,8 +88,23 @@ def recognize_verify_code(image_path, broker='ht'):
         return detect_gf_result(image_path)
     elif broker == 'yh':
         return detect_yh_result(image_path)
+    elif broker == 'yh_client':
+        return detect_yh_client_result(image_path)
     # 调用 tesseract 识别
     return default_verify_code_detect(image_path)
+
+
+def detect_yh_client_result(image_path):
+    """封装了tesseract的识别，部署在阿里云上，服务端源码地址为： https://github.com/shidenggui/yh_verify_code_docker"""
+    api = 'http://123.56.157.162:5000/yh_client'
+    with open(image_path, 'rb') as f:
+        rep = requests.post(api, files={
+            'image': f
+        })
+    if rep.status_code != 201:
+        error = rep.json()['message']
+        raise Exception('request {} error: {]'.format(api, error))
+    return rep.json()['result']
 
 
 def input_verify_code_manual(image_path):
@@ -175,7 +190,7 @@ def detect_gf_result(image_path):
 
 
 def detect_yh_result(image_path):
-    """封装了tesseract的中文识别，部署在daocloud上，服务端源码地址为： https://github.com/shidenggui/yh_verify_code_docker"""
+    """封装了tesseract的中文识别，部署在阿里云上，服务端源码地址为： https://github.com/shidenggui/yh_verify_code_docker"""
     api = 'http://123.56.157.162:5000/yh'
     with open(image_path, 'rb') as f:
         try:

@@ -37,6 +37,9 @@ def use(broker, debug=True, **kwargs):
         return XueQiuTrader(**kwargs)
     if broker.lower() in ['gf', '广发']:
         return GFTrader()
+    if broker.lower() in ['yh_client', '银河客户端']:
+        from .yh_clienttrader import YHClientTrader
+        return YHClientTrader()
 
 
 def follower(platform, **kwargs):
