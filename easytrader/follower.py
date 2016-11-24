@@ -184,11 +184,19 @@ class BaseFollower(object):
         with open(self.CMD_CACHE_FILE, 'wb') as f:
             pickle.dump(self.expired_cmds, f)
 
+    @staticmethod
+    def _is_number(s):
+        try:
+            float(s)
+            return True
+        except ValueError:
+            return False
+
     def trade_worker(self, users, expire_seconds=120):
         while True:
             trade_cmd = self.trade_queue.get()
             for user in users:
-
+                # check expire
                 now = datetime.now()
                 expire = (now - trade_cmd['datetime']).total_seconds()
                 if expire > expire_seconds:
@@ -198,6 +206,18 @@ class BaseFollower(object):
                             trade_cmd['amount'],
                             trade_cmd['price'], trade_cmd['datetime'], now, expire_seconds))
                     break
+
+                # check price
+                price = trade_cmd['price']
+                if not self._is_number(price) or price <= 0:
+                    log.warning(
+                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 价格无效 , 被丢弃'.format(
+                            trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
+                            trade_cmd['amount'],
+                            trade_cmd['price'], trade_cmd['datetime'], now))
+                    break
+
+                # check amount
                 if trade_cmd['amount'] <= 0:
                     log.warning(
                         '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃'.format(
