@@ -1,5 +1,5 @@
 # coding: utf-8
-from __future__ import division
+from __future__ import division, unicode_literals
 
 import math
 import os
@@ -503,7 +503,6 @@ class YHTrader(WebTrader):
             ftype='bsn'
         )
         res = self.s.post(self.config['heart_beat'], params=heartbeat_params)
-        # log.debug( "Heart Beat Response: {}".format(res.text) )
 
     def unlockscreen(self):
         unlock_params = dict(
