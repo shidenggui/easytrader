@@ -66,9 +66,9 @@ class YHTrader(WebTrader):
         if len(accounts) < 2:
             raise Exception('无法获取沪深 A 股账户: %s' % accounts)
         for account in accounts:
-            if account['交易市场'] == '深A':
+            if account['交易市场'] == '深A' and account['股东代码'].startswith('0'):
                 self.exchange_stock_account['0'] = account['股东代码'][0:10]
-            else:
+            elif account['交易市场'] == '沪A' and account['股东代码'].startswith('A'):
                 self.exchange_stock_account['1'] = account['股东代码'][0:10]
         return login_status
 
@@ -475,7 +475,9 @@ class YHTrader(WebTrader):
         else:
             # 获取原始data的html源码并且解析得到一个可读json格式
             search_result_name = re.findall(r'<td nowrap=\"nowrap\" class=\"head(?:\w{0,5})\">(.*)</td>', data)
-            search_result_content = re.findall(r'<td nowrap=\"nowrap\">(.*)&nbsp;</td>', data)
+            search_result_content = re.findall(r'<td nowrap=\"nowrap\">([^～]*?);</td>', data)
+            search_result_content = list(map(lambda x: x.replace('&nbsp', ''), search_result_content))
+            search_result_content = list(map(lambda x: x.replace(';', ''), search_result_content))
 
         col_len = len(search_result_name)
         if col_len == 0 or len(search_result_content) % col_len != 0:
