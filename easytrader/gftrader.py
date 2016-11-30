@@ -393,7 +393,7 @@ class GFTrader(WebTrader):
             other,
             stock_account=need_info['stock_account'],
             exchange_type=need_info['exchange_type'],
-            stock_code=stock_code,
+            stock_code=stock_code[-6:],
             entrust_price=price,
             dse_sessionId=self.sessionid
         )
