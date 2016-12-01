@@ -7,7 +7,7 @@ done
 
 for file in easytrader/webtrader.py easytrader/xqtrader.py easytrader/yhtrader.py easytrader/api.py easytrader/helpers.py easytrader/log.py
 do
-    sed -e 's/config\///g; s/from \. import/import/g; s/from \./from /g ' ${file} > `basename ${file}`
+    sed -e 's/\/config\///g; s/from \. import/import/g; s/from \./from /g ' ${file} > `basename ${file}`
 done
 
 # delete api.py invalid lines
