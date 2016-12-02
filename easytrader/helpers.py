@@ -22,11 +22,6 @@ if six.PY2:
     from io import open
 
 
-class EntrustProp(object):
-    Limit = 'limit'
-    Market = 'market'
-
-
 class Ssl3HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
         self.poolmanager = PoolManager(num_pools=connections,

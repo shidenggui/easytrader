@@ -9,7 +9,6 @@ import re
 import requests
 
 from . import helpers
-from .helpers import EntrustProp
 from .log import log
 from .webtrader import WebTrader, NotLoginError
 
@@ -141,38 +140,38 @@ class YHTrader(WebTrader):
             # print(cancel_list)
         except Exception as e:
             return []
-        if parsed == True:
-            result = list()
+        result = list()
+        if parsed:
             for item in cancel_list:
                 if len(item) == 12:
                     item_dict = {
-                        "time": item[0]
-                        , "code": item[1]
-                        , "name": item[2]
-                        , "status": item[3]
-                        , "iotype": item[4]
-                        , "price": float(item[5])
-                        , "volume": int(item[6])
-                        , "entrust_num": item[7]
-                        , "trans_vol": int(item[8])
-                        , "canceled_vol": int(item[9])
-                        , "investor_code": item[10]
-                        , "account": item[11]
+                        "time": item[0],
+                        "code": item[1],
+                        "name": item[2],
+                        "status": item[3],
+                        "iotype": item[4],
+                        "price": float(item[5]),
+                        "volume": int(item[6]),
+                        "entrust_num": item[7],
+                        "trans_vol": int(item[8]),
+                        "canceled_vol": int(item[9]),
+                        "investor_code": item[10],
+                        "account": item[11]
                     }
                 elif len(item) == 11:
                     item_dict = {
-                        "time": item[0]
-                        , "code": item[1]
-                        , "name": item[2]
-                        , "status": item[3]
-                        , "iotype": ""
-                        , "price": float(item[4])
-                        , "volume": int(item[5])
-                        , "entrust_num": item[6]
-                        , "trans_vol": int(item[7])
-                        , "canceled_vol": int(item[8])
-                        , "investor_code": item[9]
-                        , "account": item[10]
+                        "time": item[0],
+                        "code": item[1],
+                        "name": item[2],
+                        "status": item[3],
+                        "iotype": "",
+                        "price": float(item[4]),
+                        "volume": int(item[5]),
+                        "entrust_num": item[6],
+                        "trans_vol": int(item[7]),
+                        "canceled_vol": int(item[8]),
+                        "investor_code": item[9],
+                        "account": item[10]
                     }
                 else:
                     continue
@@ -217,16 +216,16 @@ class YHTrader(WebTrader):
             else:
                 num = len(item)
             cancel_data = {
-                "ajaxFlag": "stock_batch_cancel"
-                , "num": num
-                , "orderSno": ",".join(item)
+                "ajaxFlag": "stock_batch_cancel",
+                "num": num,
+                "orderSno": ",".join(item)
             }
             while True:
                 try:
                     cancel_response = self.s.post(
-                        "https://www.chinastock.com.cn/trade/AjaxServlet"
-                        , data=cancel_data
-                        , timeout=1
+                        "https://www.chinastock.com.cn/trade/AjaxServlet",
+                        data=cancel_data,
+                        timeout=1,
                     )
                     if cancel_response.status_code == 200:
                         cancel_response_json = cancel_response.json()
@@ -281,21 +280,23 @@ class YHTrader(WebTrader):
             log.warning("撤单出错".format(e))
             return False
 
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
+    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop='limit'):
         """买入股票
         :param stock_code: 股票代码
         :param price: 买入价格
         :param amount: 买入股数
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
-        :param entrust_prop: 委托类型
+        :param entrust_prop: 委托类型 'limit' 限价单 , 'market'　市价单
         """
         market_type = helpers.get_stock_type(stock_code)
-        if entrust_prop == EntrustProp.Limit:
+        bsflag = None
+        if entrust_prop == 'limit':
             bsflag = '0B'
         elif market_type == 'sh':
             bsflag = '0q'
         elif market_type == 'sz':
             bsflag = '0a'
+        assert bsflag is not None
 
         params = dict(
             self.config['buy'],
@@ -304,21 +305,23 @@ class YHTrader(WebTrader):
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
-    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=EntrustProp.Limit):
+    def sell(self, stock_code, price, amount=0, volume=0, entrust_prop='limit'):
         """卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
         :param amount: 卖出股数
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 amount 则此参数无效
-        :param entrust_prop: 委托类型
+        :param entrust_prop: str 委托类型 'limit' 限价单 , 'market'　市价单
         """
         market_type = helpers.get_stock_type(stock_code)
-        if entrust_prop == EntrustProp.Limit:
+        bsflag = None
+        if entrust_prop == 'limit':
             bsflag = '0S'
         elif market_type == 'sh':
             bsflag = '0r'
         elif market_type == 'sz':
             bsflag = '0f'
+        assert bsflag is not None
 
         params = dict(
             self.config['sell'],
@@ -459,7 +462,7 @@ class YHTrader(WebTrader):
             return r.text
 
     def format_response_data(self, data):
-        if data == False:
+        if not data:
             return False
         # 需要对于银河持仓情况特殊处理
         if data.find('yhposition') != -1:
