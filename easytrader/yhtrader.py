@@ -8,8 +8,6 @@ import re
 
 import requests
 
-import pandas as pd
-from bs4 import BeautifulSoup
 from . import helpers
 from .helpers import EntrustProp
 from .log import log
@@ -518,7 +516,6 @@ class YHTrader(WebTrader):
         unlock_resp = self.s.post(self.config['unlock'], params=unlock_params)
         log.debug('unlock resp: %s' % unlock_resp.text)
 
-
     def get_ipo_info(self):
         """
         查询新股申购信息
@@ -534,6 +531,9 @@ class YHTrader(WebTrader):
         1	上海	xxxxxxx	xxxxx
 
         """
+        import pandas as pd
+        from bs4 import BeautifulSoup
+
         ipo_response = self.s.get(
             self.config['ipo_api'],
             params=dict(),
@@ -547,7 +547,7 @@ class YHTrader(WebTrader):
                 "User-Agent": "Mozilla/4.0(compatible;MSIE,7.0;Windows NT 10.0; WOW64;Trident / 7.0;.NET4.0C;.NET4.0E;.NET CLR2.0.50727;.NET CLR 3.0.30729;.NET CLR 3.5.30729;InfoPath.3)"
             })
         if ipo_response.status_code != 200:
-            return (None, None)
+            return None, None
         html = ipo_response.content
         soup = BeautifulSoup(html, 'lxml')
         tables = soup.findAll('table', attrs={'class': 'fee'})
@@ -555,8 +555,7 @@ class YHTrader(WebTrader):
         df_today_ipo = pd.read_html(str(tables[1]), flavor='lxml', header=0)[0]
 
         df_today_ipo[['代码']] = df_today_ipo[['代码']].applymap(lambda x: '{:0>6}'.format(x))
-        return (df_today_ipo, df_ipo_limit )
-
+        return df_today_ipo, df_ipo_limit
 
     def get_ipo_limit(self, stock_code):
         """
@@ -566,11 +565,11 @@ class YHTrader(WebTrader):
         :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
 
         """
-        (df1,df2) = self.get_ipo_info()
+        (df1, df2) = self.get_ipo_info()
         if df1 is None:
-            log.debug('查询错误: %s' )
+            log.debug('查询错误: %s')
             return None
-        df =df1[df1['代码'] == stock_code]
+        df = df1[df1['代码'] == stock_code]
         if len(df) == 0:
             return dict()
         ser = df.iloc[0]
