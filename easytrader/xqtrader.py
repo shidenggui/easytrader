@@ -89,7 +89,7 @@ class XueQiuTrader(WebTrader):
         login_post_data = {
             'username': self.account_config.get('username', ''),
             'areacode': '86',
-            'telephone': self.account_config['account'],
+            'telephone': self.account_config.get('account',''),
             'remember_me': '0',
             'password': self.account_config['password']
         }
