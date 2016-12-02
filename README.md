@@ -214,7 +214,7 @@ user.sell('162411', price=0.55, amount=100)
 ```
 #### 撤单
 
-##### 佣金宝
+##### 银河
 
 ```python
 user.cancel_entrust('委托单号', '股票代码')
@@ -227,6 +227,30 @@ user.cancel_entrust('委托单号', '股票代码')
 user.cancel_entrust('股票6位代码,不带前缀', "撤单方向，可使用 ['buy', 'sell']"
 ```
 
+
+####  ipo 打新
+
+#### 银河
+
+```python
+user.get_ipo_info()
+```
+
+**return**
+
+
+```python
+(df_taoday_ipo, df_ipo_limit), 分别是当日新股申购列表信息， 申购额度。
+        df_today_ipo
+            代码	名称	价格	账户额度	申购下限	申购上限	证券账号	交易所	发行日期
+        0	2830	名雕股份	16.53	17500	500	xxxxx	xxxxxxxx	深A	20161201
+        1	732098	森特申购	9.18	27000	1000	xxxxx	xxxxxxx	沪A	20161201
+
+        df_ipo_limit:
+            市场	证券账号	账户额度
+        0	深圳	xxxxxxx	xxxxx
+        1	上海	xxxxxxx	xxxxx
+``
 
 #### 查询交割单
 
