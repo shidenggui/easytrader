@@ -8,6 +8,8 @@ import re
 
 import requests
 
+import pandas as pd
+from bs4 import BeautifulSoup
 from . import helpers
 from .helpers import EntrustProp
 from .log import log
@@ -515,3 +517,62 @@ class YHTrader(WebTrader):
         log.debug('unlock params: %s' % unlock_params)
         unlock_resp = self.s.post(self.config['unlock'], params=unlock_params)
         log.debug('unlock resp: %s' % unlock_resp.text)
+
+
+    def get_ipo_info(self):
+        """
+        查询新股申购信息
+        :return: (df_taoday_ipo, df_ipo_limit), 分别是当日新股申购列表信息， 申购额度。
+        df_today_ipo
+            代码	名称	价格	账户额度	申购下限	申购上限	证券账号	交易所	发行日期
+        0	2830	名雕股份	16.53	17500	500	xxxxx	xxxxxxxx	深A	20161201
+        1	732098	森特申购	9.18	27000	1000	xxxxx	xxxxxxx	沪A	20161201
+
+        df_ipo_limit:
+            市场	证券账号	账户额度
+        0	深圳	xxxxxxx	xxxxx
+        1	上海	xxxxxxx	xxxxx
+
+        """
+        ipo_response = self.s.get(
+            self.config['ipo_api'],
+            params=dict(),
+            headers={
+                "Accept": "*/*",
+                "Accept-Encoding": "gzip, deflate",
+                "Accept-Language": "zh-CN",
+                "Connection": "Keep-Alive",
+                "Host": "www.chinastock.com.cn",
+                "Referer": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
+                "User-Agent": "Mozilla/4.0(compatible;MSIE,7.0;Windows NT 10.0; WOW64;Trident / 7.0;.NET4.0C;.NET4.0E;.NET CLR2.0.50727;.NET CLR 3.0.30729;.NET CLR 3.5.30729;InfoPath.3)"
+            })
+        if ipo_response.status_code != 200:
+            return (None, None)
+        html = ipo_response.content
+        soup = BeautifulSoup(html, 'lxml')
+        tables = soup.findAll('table', attrs={'class': 'fee'})
+        df_ipo_limit = pd.read_html(str(tables[0]), flavor='lxml', header=0)[0]
+        df_today_ipo = pd.read_html(str(tables[1]), flavor='lxml', header=0)[0]
+
+        df_today_ipo[['代码']] = df_today_ipo[['代码']].applymap(lambda x: '{:0>6}'.format(x))
+        return (df_today_ipo, df_ipo_limit )
+
+
+    def get_ipo_limit(self, stock_code):
+        """
+        查询当日某只新股申购额度、申购上限、价格。
+        仅为了兼容佣金宝同名方法。 不需要兼容，最好使用get_ipo_info()[0]
+        :param stock_code: 申购代码!!!
+        :return: high_amount(最高申购股数) enable_amount(申购额度) last_price(发行价)
+
+        """
+        (df1,df2) = self.get_ipo_info()
+        if df1 is None:
+            log.debug('查询错误: %s' )
+            return None
+        df =df1[df1['代码'] == stock_code]
+        if len(df) == 0:
+            return dict()
+        ser = df.iloc[0]
+        return dict(high_amount=int(ser['申购上限']), enable_amount=int(ser['账户额度']),
+                    last_price=float(ser['价格']))

@@ -8,6 +8,7 @@
   "verify_code_api": "https://www.chinastock.com.cn/trade/webtrade/verifyCodeImage.jsp",
   "prefix": "https://www.chinastock.com.cn",
   "logout_api": "https://www.chinastock.com.cn/trade/webtrade/commons/keepalive.jsp?type=go",
+  "ipo_api": "https://www.chinastock.com.cn/trade/webtrade/stock/newStockList.jsp",
   "login": {
     "logintype_rzrq": 0,
     "orgid": "",
