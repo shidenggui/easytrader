@@ -78,7 +78,7 @@ class JoinQuantFollower(BaseFollower):
         today_str = datetime.today().strftime('%Y-%m-%d')
         params = {
             'backtestId': strategy,
-            'data': today_str,
+            'date': today_str,
             'ajax': 1
         }
         return params
