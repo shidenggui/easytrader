@@ -107,13 +107,6 @@ class YHTrader(WebTrader):
         return False, login_response.text
 
     def _prepare_account(self, user, password, **kwargs):
-        """
-
-        :param user:
-        :param password:
-        :param kwargs:
-        :return:
-        """
         self.account_config = {
             'inputaccount': user,
             'trdpwd': password
@@ -137,7 +130,6 @@ class YHTrader(WebTrader):
             pattern = r'<td\s(?:[a-zA-Z0-9=_\"\:]*)>([\S]+)</td>'
             parsed_data = re.findall(pattern, result1)
             cancel_list = slice_list(step=12, data_list=parsed_data)
-            # print(cancel_list)
         except Exception as e:
             return []
         result = list()
