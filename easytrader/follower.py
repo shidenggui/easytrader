@@ -140,7 +140,7 @@ class BaseFollower(object):
         """跟踪下单worker
         :param strategy: 策略id
         :param name: 策略名字
-        :param interval: 轮训策略的时间间隔，单位为秒"""
+        :param interval: 轮询策略的时间间隔，单位为秒"""
         while True:
             transactions = self.query_strategy_transaction(strategy, **kwargs)
             for t in transactions:
