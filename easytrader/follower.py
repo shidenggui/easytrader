@@ -142,7 +142,11 @@ class BaseFollower(object):
         :param name: 策略名字
         :param interval: 轮询策略的时间间隔，单位为秒"""
         while True:
-            transactions = self.query_strategy_transaction(strategy, **kwargs)
+            try:
+                transactions = self.query_strategy_transaction(strategy, **kwargs)
+            except Exception as e:
+                log.warning('无法获取策略 {} 调仓信息, 错误: {}, 跳过此次调仓查询'.format(name, e))
+                continue
             for t in transactions:
                 trade_cmd = {
                     'strategy': strategy,
