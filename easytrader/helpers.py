@@ -43,7 +43,8 @@ def get_stock_type(stock_code):
     ['5', '6', '9'] 开头的为 sh， 其余为 sz
     :param stock_code:股票ID, 若以 'sz', 'sh' 开头直接返回对应类型，否则使用内置规则判断
     :return 'sh' or 'sz'"""
-    assert type(stock_code) is str, 'stock code need str type'
+    if type(stock_code) is not str and type(stock_code) is not unicode:
+        raise Exception('stock code not string. curr type is: {}'.format(type(stock_code)))
     if stock_code.startswith(('sh', 'sz')):
         return stock_code[:2]
     if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204', '78')):
