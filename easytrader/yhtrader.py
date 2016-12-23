@@ -545,9 +545,8 @@ class YHTrader(WebTrader):
         html = ipo_response.content
         soup = BeautifulSoup(html, 'lxml')
         tables = soup.findAll('table', attrs={'class': 'fee'})
-        df_ipo_limit = pd.read_html(str(tables[0]), flavor='lxml', header=0)[0]
-        df_today_ipo = pd.read_html(str(tables[1]), flavor='lxml', header=0)[0]
-
+        df_ipo_limit = pd.read_html(str(tables[0]), flavor='lxml', header=0, encoding='utf-8')[0]
+        df_today_ipo = pd.read_html(str(tables[1]), flavor='lxml', header=0, encoding='utf-8')[0]
         df_today_ipo[['代码']] = df_today_ipo[['代码']].applymap(lambda x: '{:0>6}'.format(x))
         return df_today_ipo, df_ipo_limit
 
