@@ -116,7 +116,7 @@ user.prepare(user='用户名', password='券商加密后的密码, 雪球、银�
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 * 银河客户端直接使用明文的账号和密码即可
 
-[如何获取配置所需信息, 可参考此文章](http://www.celuetan.com/topic/5731e9ee705ee8f61eb681fd)
+[如何获取配置所需信息, 可参考此文章](https://www.jisilu.cn/question/42707)
 
 ### 交易相关
 以下用法以佣金宝为例
