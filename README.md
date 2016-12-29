@@ -405,7 +405,9 @@ xq_user.prepare('xq.json')
 #### 初始化跟踪 joinquant / ricequant 的 follower
 
 ```
-follower = easytrader.follower('jq')
+target = 'jq'  # joinquant
+target = 'rq'  # ricequant
+follower = easytrader.follower(target)
 follower.login(user='rq/jq用户名', password='rq/jq密码')
 ```
 
