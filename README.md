@@ -2,7 +2,7 @@
 
 * 进行自动的程序化股票交易
 * 实现自动登录
-* 支持跟踪 `joinquant` 的模拟交易
+* 支持跟踪 `joinquant`, `ricequant` 的模拟交易
 * 支持跟踪 雪球组合 调仓
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3 / Python2, Linux / Win, 推荐使用 `Python3`
@@ -14,7 +14,7 @@
 
 ### 相关
 
-[量化交流论坛](http://www.celuetan.com) 
+[量化交流论坛](http://www.celuetan.com)
 
 [获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
 
@@ -164,7 +164,7 @@ user.position
 user.entrust
 ```
 
-**return** 
+**return**
 
 ```python
 [{'business_amount': '成交数量',
@@ -187,7 +187,7 @@ user.entrust
 user.buy('162411', price=0.55, amount=100)
 ```
 
-**return** 
+**return**
 
 ```python
 [{'entrust_no': '委托编号',
@@ -391,7 +391,7 @@ user.adjust_weight('000001', 10)
 ```
 
 
-### 跟踪 joinquant 的模拟交易
+### 跟踪 joinquant / ricequant  的模拟交易
 
 #### 初始化跟踪的 trader
 
@@ -402,31 +402,38 @@ xq_user = easytrader.use('xq')
 xq_user.prepare('xq.json')
 ```
 
-#### 初始化跟踪 joinquant 的 follower
+#### 初始化跟踪 joinquant / ricequant 的 follower
 
 ```
-jq_follower = easytrader.follower('jq')
-jq_follower.login(user='jq用户名', password='jq密码')
+target = 'jq'  # joinquant
+target = 'rq'  # ricequant
+follower = easytrader.follower(target)
+follower.login(user='rq/jq用户名', password='rq/jq密码')
 ```
 
 #### 连接 follower 和 trader
 
+##### joinquant
 ```
-jq_follower.follow(xq_user, 'jq的模拟交易url')
-
+follower.follow(xq_user, 'jq的模拟交易url')
 ```
 
 注: jq的模拟交易url指的是对应模拟交易对应的可以查看持仓, 交易记录的页面, 类似 `https://www.joinquant.com/algorithm/live/index?backtestId=xxx`
 
-正常会输出 
+##### ricequant
 
+```
+follower.follow(xq_user, run_id)
+```
+注：ricequant的run_id即PT列表中的ID。
+
+正常会输出
 
 ![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/joinquant.jpg)
 
+enjoy it
 
-enjoy it 
-
-### 跟踪 雪球的组合 
+### 跟踪 雪球的组合
 
 #### 初始化跟踪的 trader
 
@@ -443,7 +450,6 @@ xq_follower.login(user='xq用户名', password='xq密码')
 
 ```
 xq_follower.follow(xq_user, 'xq组合ID，类似ZH123456', total_assets=100000)
-
 ```
 
 
@@ -456,19 +462,19 @@ xq_follower.follow(xq_user, 'xq组合ID，类似ZH123456', total_assets=100000)
 #### 多用户跟踪多策略
 
 ```
-jq_follower.follow(users=[xq_user, yh_user], strategies=['组合1', '组合2'], total_assets=[10000, 10000])
+follower.follow(users=[xq_user, yh_user], strategies=['组合1', '组合2'], total_assets=[10000, 10000])
 ```
 
 #### 目录下产生的 cmd_cache.pk
 
-这是用来存储历史执行过的交易指令，防止在重启程序时重复执行交易过的指令，可以通过 `jq_follower.follow(xxx, cmd_cache=False)` 来关闭
+这是用来存储历史执行过的交易指令，防止在重启程序时重复执行交易过的指令，可以通过 `follower.follow(xxx, cmd_cache=False)` 来关闭
 
 ### 命令行模式
 
 #### 登录
 
 ```
- python cli.py --use ht --prepare ht.json 
+ python cli.py --use ht --prepare ht.json
 ```
 
 注: 此时会生成 `account.session` 文件保存生成的 `user` 对象
@@ -484,7 +490,7 @@ jq_follower.follow(users=[xq_user, yh_user], strategies=['组合1', '组合2'], 
 ```
  python cli.py --do buy 162411 0.450 100
 ```
-#### 查看帮助 
+#### 查看帮助
 
 ```
  python cli.py --help
@@ -527,4 +533,3 @@ JSONDecodeError: Expecting value
 ### 其他
 
 [软件实现原理](http://www.jisilu.cn/question/42707)
-
