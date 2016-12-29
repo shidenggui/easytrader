@@ -20,6 +20,7 @@ class BaseFollower(object):
     TRANSACTION_API = ''
     CMD_CACHE_FILE = 'cmd_cache.pk'
     WEB_REFERER = ''
+    WEB_ORIGIN = ''
 
     def __init__(self):
         self.trade_queue = Queue()
@@ -36,7 +37,7 @@ class BaseFollower(object):
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36',
             'Referer': self.WEB_REFERER,
             'X-Requested-With': 'XMLHttpRequest',
-            'Origin': 'https://www.joinquant.com',
+            'Origin': self.WEB_ORIGIN,
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
         }
         self.s.headers.update(headers)
@@ -67,7 +68,7 @@ class BaseFollower(object):
 
     def follow(self, users, strategies, track_interval=1,
                trade_cmd_expire_seconds=120, cmd_cache=True, **kwargs):
-        """跟踪joinquant对应的模拟交易，支持多用户多策略
+        """跟踪平台对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: 雪球组合名, 类似 ZH123450
         :param total_assets: 雪球组合对应的总资产， 格式 [ 组合1对应资金, 组合2对应资金 ]

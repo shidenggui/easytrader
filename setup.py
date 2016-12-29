@@ -91,7 +91,8 @@ setup(
             'demjson',
             'requests',
             'anyjson',
-            'six'
+            'six',
+            'rqopen-client',
         ],
         classifiers=['Development Status :: 4 - Beta',
                      'Programming Language :: Python :: 2.6',
@@ -104,4 +105,3 @@ setup(
         packages=['easytrader', 'easytrader.config', 'easytrader.thirdlibrary'],
         package_data={'': ['*.jar', '*.json'], 'config': ['config/*.json'], 'thirdlibrary': ['thirdlibrary/*.jar']},
 )
-

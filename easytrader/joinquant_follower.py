@@ -16,6 +16,7 @@ class JoinQuantFollower(BaseFollower):
     LOGIN_API = 'https://www.joinquant.com/user/login/doLogin?ajax=1'
     TRANSACTION_API = 'https://www.joinquant.com/algorithm/live/transactionDetail'
     WEB_REFERER = 'https://www.joinquant.com/user/login/index'
+    WEB_ORIGIN = 'https://www.joinquant.com'
 
     def create_login_params(self, user, password):
         params = {
