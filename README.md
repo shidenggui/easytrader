@@ -418,17 +418,16 @@ follower.follow(xq_user, 'jq的模拟交易url')
 
 注: jq的模拟交易url指的是对应模拟交易对应的可以查看持仓, 交易记录的页面, 类似 `https://www.joinquant.com/algorithm/live/index?backtestId=xxx`
 
-正常会输出
-
-
-![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/joinquant.jpg)
-
 ##### ricequant
 
 ```
 follower.follow(xq_user, run_id)
 ```
 注：ricequant的run_id即PT列表中的ID。
+
+正常会输出
+
+![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/joinquant.jpg)
 
 enjoy it
 
