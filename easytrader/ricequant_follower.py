@@ -1,27 +1,23 @@
 # coding:utf8
 from __future__ import unicode_literals
 
-import re
-import time
 from datetime import datetime
 from threading import Thread
 
-from rqopen_client import RQOpenClient
-
 from .follower import BaseFollower
 from .log import log
-from .webtrader import NotLoginError
 
 
 class RiceQuantFollower(BaseFollower):
     def login(self, user, password, **kwargs):
+        from rqopen_client import RQOpenClient
         self.client = RQOpenClient(user, password, logger=log)
 
     def follow(self, users, run_id, track_interval=1,
                trade_cmd_expire_seconds=120, cmd_cache=True, **kwargs):
         """跟踪ricequant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
-        :param strategies: ricequant 的模拟交易ID，支持使用 [] 指定多个模拟交易
+        :param run_id: ricequant 的模拟交易ID，支持使用 [] 指定多个模拟交易
         :param track_interval: 轮训模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
@@ -74,7 +70,7 @@ class RiceQuantFollower(BaseFollower):
             return 'sz' + code
         raise TypeError('not valid stock code: {}'.format(code))
 
-    def project_transactions(self, transactions):
+    def project_transactions(self, transactions, **kwargs):
         new_transactions = []
         for t in transactions:
             trans = {}
