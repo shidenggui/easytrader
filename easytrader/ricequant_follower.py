@@ -75,7 +75,7 @@ class RiceQuantFollower(BaseFollower):
         for t in transactions:
             trans = {}
             trans["price"] = t["price"]
-            trans["amount"] = abs(t["quantity"])
+            trans["amount"] = int(abs(t["quantity"]))
             trans["datetime"] = datetime.strptime(t["time"], '%Y-%m-%d %H:%M:%S')
             trans["stock_code"] = self.stock_shuffle_to_prefix(t["order_book_id"])
             trans["action"] = 'buy' if t["quantity"] > 0 else 'sell'
