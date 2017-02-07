@@ -9,6 +9,7 @@ from datetime import datetime
 from threading import Thread
 
 import requests
+# noinspection PyUnresolvedReferences
 from six.moves.queue import Queue
 
 from .log import log
@@ -80,37 +81,16 @@ class BaseFollower(object):
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         """
-        users = self.warp_list(users)
-        strategies = self.warp_list(strategies)
-        total_assets = self.warp_list(kwargs.get('total_assets'))
-        initial_assets = self.warp_list(kwargs.get('initial_assets'))
-
-        if cmd_cache:
-            self.load_expired_cmd_cache()
-
-        self.start_trader_thread(users, trade_cmd_expire_seconds)
-
-        for strategy_url, strategy_total_assets, strategy_initial_assets in zip(strategies, total_assets,
-                                                                                initial_assets):
-            assets = self.calculate_assets(strategy_url, strategy_total_assets, strategy_initial_assets)
-            try:
-                strategy_id = self.extract_strategy_id(strategy_url)
-                strategy_name = self.extract_strategy_name(strategy_url)
-            except:
-                log.error('抽取交易id和策略名失败, 无效的模拟交易url: {}'.format(strategy_url))
-                raise
-            strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
-                                     kwargs={'interval': track_interval, 'assets': assets})
-            strategy_worker.start()
-            log.info('开始跟踪策略: {}'.format(strategy_name))
+        raise NotImplementedError
 
     def load_expired_cmd_cache(self):
         if os.path.exists(self.CMD_CACHE_FILE):
             with open(self.CMD_CACHE_FILE, 'rb') as f:
                 self.expired_cmds = pickle.load(f)
 
-    def start_trader_thread(self, users, trade_cmd_expire_seconds):
-        trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds})
+    def start_trader_thread(self, users, trade_cmd_expire_seconds, entrust_prop='limit'):
+        trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds,
+                                                                        'entrust_prop': entrust_prop})
         trader.setDaemon(True)
         trader.start()
 
@@ -197,7 +177,7 @@ class BaseFollower(object):
         except ValueError:
             return False
 
-    def trade_worker(self, users, expire_seconds=120):
+    def trade_worker(self, users, expire_seconds=120, entrust_prop='limit'):
         while True:
             trade_cmd = self.trade_queue.get()
             for user in users:
@@ -234,7 +214,8 @@ class BaseFollower(object):
                 args = {
                     'stock_code': trade_cmd['stock_code'],
                     'price': trade_cmd['price'],
-                    'amount': trade_cmd['amount']
+                    'amount': trade_cmd['amount'],
+                    'entrust_prop': entrust_prop
                 }
                 try:
                     response = getattr(user, trade_cmd['action'])(**args)

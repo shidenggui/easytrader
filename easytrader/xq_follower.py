@@ -1,6 +1,7 @@
 # coding:utf8
 from __future__ import unicode_literals, print_function, division
 
+import json
 import re
 from datetime import datetime
 from numbers import Number
@@ -112,6 +113,7 @@ class XueQiuFollower(BaseFollower):
         }
         return params
 
+    # noinspection PyMethodOverriding
     def project_transactions(self, transactions, assets):
         for t in transactions:
             weight_diff = t['weight'] - t['prev_weight']

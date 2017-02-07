@@ -89,7 +89,7 @@ class GFTrader(WebTrader):
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.info('login response: {}'.format(login_response.text))
-        if login_response.json()['success'] == True:
+        if login_response.json()['success'] is True:
             v = login_response.headers
             self.sessionid = v['Set-Cookie'][-SESSIONIDPOS:]
             self.__set_trade_need_info()
@@ -175,7 +175,7 @@ class GFTrader(WebTrader):
         params = dict(
             self.config['buy'],
             entrust_amount=amount if amount else volume // price // 100 * 100,
-            entrust_prop=entrust_prop
+            entrust_prop=0
         )
         return self.__trade(stock_code, price, other=params)
 

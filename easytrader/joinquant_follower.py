@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import re
-import time
 from datetime import datetime
 from threading import Thread
 
@@ -18,7 +17,7 @@ class JoinQuantFollower(BaseFollower):
     WEB_REFERER = 'https://www.joinquant.com/user/login/index'
     WEB_ORIGIN = 'https://www.joinquant.com'
 
-    def create_login_params(self, user, password):
+    def create_login_params(self, user, password, **kwargs):
         params = {
             'CyLoginForm[username]': user,
             'CyLoginForm[pwd]': password,
@@ -34,7 +33,8 @@ class JoinQuantFollower(BaseFollower):
             'cookie': set_cookie
         })
 
-    def follow(self, users, strategies, track_interval=1, trade_cmd_expire_seconds=120, cmd_cache=True):
+    def follow(self, users, strategies, track_interval=1, trade_cmd_expire_seconds=120, cmd_cache=True,
+               entrust_prop='limit'):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
@@ -42,6 +42,7 @@ class JoinQuantFollower(BaseFollower):
         :param track_interval: 轮训模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
+        :param entrust_prop: 委托方式, 'limit' 为限价，'market' 为市价, 仅在银河实现
         """
         users = self.warp_list(users)
         strategies = self.warp_list(strategies)
@@ -49,7 +50,7 @@ class JoinQuantFollower(BaseFollower):
         if cmd_cache:
             self.load_expired_cmd_cache()
 
-        self.start_trader_thread(users, trade_cmd_expire_seconds)
+        self.start_trader_thread(users, trade_cmd_expire_seconds, entrust_prop)
 
         workers = []
         for strategy_url in strategies:
@@ -98,7 +99,7 @@ class JoinQuantFollower(BaseFollower):
             return 'sz' + code
         raise TypeError('not valid stock code: {}'.format(code))
 
-    def project_transactions(self, transactions):
+    def project_transactions(self, transactions, **kwargs):
         for t in transactions:
             t['amount'] = self.re_find('\d+', t['amount'], dtype=int)
 

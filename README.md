@@ -469,6 +469,13 @@ follower.follow(users=[xq_user, yh_user], strategies=['组合1', '组合2'], tot
 
 这是用来存储历史执行过的交易指令，防止在重启程序时重复执行交易过的指令，可以通过 `follower.follow(xxx, cmd_cache=False)` 来关闭
 
+#### 使用市价单跟踪模式，目前仅支持银河
+
+```
+follower.follow(***, entrust_prop='market')
+```
+
+
 ### 命令行模式
 
 #### 登录
