@@ -187,7 +187,7 @@ class YHClientTrader():
         chexin_sub_hwnd = win32gui.GetDlgItem(chexin_hwnd, 200)
         self.entrust_list_hwnd = win32gui.GetDlgItem(chexin_sub_hwnd, 1047)  # 委托列表
 
-    def buy(self, stock_code, price, amount):
+    def buy(self, stock_code, price, amount, **kwargs):
         """
         买入股票
         :param stock_code: 股票代码
@@ -211,7 +211,7 @@ class YHClientTrader():
             return False
         return True
 
-    def sell(self, stock_code, price, amount):
+    def sell(self, stock_code, price, amount, **kwargs):
         """
         买出股票
         :param stock_code: 股票代码
