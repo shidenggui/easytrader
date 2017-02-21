@@ -491,8 +491,10 @@ class YHTrader(WebTrader):
         return self.format_response_data_type(res)
 
     def check_account_live(self, response):
-        if hasattr(response, 'get') and response.get('error_no') == '-1':
-            self.heart_active = False
+        if hasattr(response, 'get'):
+            if response.get('error_no') == '-1' or response.get('result_type') == 'error':
+                self.heart_active = False
+                raise NotLoginError(response.get('result_msg'))
 
     def heartbeat(self):
         heartbeat_params = dict(

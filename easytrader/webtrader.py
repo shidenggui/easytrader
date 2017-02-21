@@ -20,12 +20,14 @@ if six.PY2:
 
 
 class NotLoginError(Exception):
+
     def __init__(self, result=None):
         super(NotLoginError, self).__init__()
         self.result = result
 
 
 class TradeError(Exception):
+
     def __init__(self, message=None):
         super(TradeError, self).__init__()
         self.message = message
@@ -96,16 +98,17 @@ class WebTrader(object):
         """每隔10秒查询指定接口保持 token 的有效性"""
         while True:
             if self.heart_active:
+                log_level = log.level
+                log.setLevel(logging.ERROR)
                 try:
-                    log_level = log.level
-
-                    log.setLevel(logging.ERROR)
                     response = self.heartbeat()
                     self.check_account_live(response)
-
+                except Exception as e:
                     log.setLevel(log_level)
-                except:
+                    log.error('心跳线程发现账户出现错误: {}, 尝试重新登陆'.format(e))
                     self.autologin()
+                finally:
+                    log.setLevel(log_level)
                 time.sleep(30)
             else:
                 time.sleep(1)
