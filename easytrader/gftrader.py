@@ -25,8 +25,8 @@ SZ = 1
 class GFTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/gf.json'
 
-    def __init__(self):
-        super(GFTrader, self).__init__()
+    def __init__(self, debug=True):
+        super(GFTrader, self).__init__(debug=debug)
         self.cookie = None
         self.account_config = None
         self.s = None

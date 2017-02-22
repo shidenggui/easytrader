@@ -33,11 +33,11 @@ def use(broker, debug=True, **kwargs):
     if broker.lower() in ['yjb', '佣金宝']:
         return YJBTrader()
     if broker.lower() in ['yh', '银河']:
-        return YHTrader()
+        return YHTrader(debug=debug)
     if broker.lower() in ['xq', '雪球']:
         return XueQiuTrader(**kwargs)
     if broker.lower() in ['gf', '广发']:
-        return GFTrader()
+        return GFTrader(debug=debug)
     if broker.lower() in ['yh_client', '银河客户端']:
         from .yh_clienttrader import YHClientTrader
         return YHClientTrader()

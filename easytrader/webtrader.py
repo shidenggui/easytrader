@@ -37,13 +37,15 @@ class WebTrader(object):
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
     config_path = ''
 
-    def __init__(self):
+    def __init__(self, debug=True):
         self.__read_config()
         self.trade_prefix = self.config['prefix']
         self.account_config = ''
         self.heart_active = True
         self.heart_thread = Thread(target=self.send_heartbeat)
         self.heart_thread.setDaemon(True)
+
+        self.log_level = logging.DEBUG if debug else logging.INFO
 
     def read_config(self, path):
         try:
@@ -98,17 +100,16 @@ class WebTrader(object):
         """每隔10秒查询指定接口保持 token 的有效性"""
         while True:
             if self.heart_active:
-                log_level = log.level
                 log.setLevel(logging.ERROR)
                 try:
                     response = self.heartbeat()
                     self.check_account_live(response)
                 except Exception as e:
-                    log.setLevel(log_level)
+                    log.setLevel(self.log_level)
                     log.error('心跳线程发现账户出现错误: {}, 尝试重新登陆'.format(e))
                     self.autologin()
                 finally:
-                    log.setLevel(log_level)
+                    log.setLevel(self.log_level)
                 time.sleep(30)
             else:
                 time.sleep(1)
