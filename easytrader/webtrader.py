@@ -100,19 +100,22 @@ class WebTrader(object):
         """每隔10秒查询指定接口保持 token 的有效性"""
         while True:
             if self.heart_active:
-                log.setLevel(logging.ERROR)
-                try:
-                    response = self.heartbeat()
-                    self.check_account_live(response)
-                except Exception as e:
-                    log.setLevel(self.log_level)
-                    log.error('心跳线程发现账户出现错误: {}, 尝试重新登陆'.format(e))
-                    self.autologin()
-                finally:
-                    log.setLevel(self.log_level)
-                time.sleep(30)
+                self.check_login()
             else:
                 time.sleep(1)
+
+    def check_login(self, sleepy=30):
+        log.setLevel(logging.ERROR)
+        try:
+            response = self.heartbeat()
+            self.check_account_live(response)
+        except Exception as e:
+            log.setLevel(self.log_level)
+            log.error('心跳线程发现账户出现错误: {}, 尝试重新登陆'.format(e))
+            self.autologin()
+        finally:
+            log.setLevel(self.log_level)
+        time.sleep(sleepy)
 
     def heartbeat(self):
         return self.balance
