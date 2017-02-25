@@ -2,6 +2,7 @@
 
 import unittest
 from datetime import datetime
+import time
 
 import easytrader
 from easytrader import JoinQuantFollower
@@ -107,10 +108,12 @@ class TestEasytrader(unittest.TestCase):
 
         test_data = None
         user.check_account_live(test_data)
+        time.sleep(35)
         self.assertTrue(user.heart_active)
 
         test_data = {'success': False, 'data': [{}], 'total': 1}
         user.check_account_live(test_data)
+        time.sleep(35)
         self.assertTrue(user.heart_active)
 
 
