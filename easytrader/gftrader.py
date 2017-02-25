@@ -122,7 +122,7 @@ class GFTrader(WebTrader):
             return_data = json.loads(str(data, 'utf-8'))
         return return_data
 
-    def check_login_status(self, return_data):
+    def check_login_status(self, response):
         if response is None or (not response.get('success') == True):
             self.heart_active = False
             raise NotLoginError
