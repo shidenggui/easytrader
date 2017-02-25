@@ -12,6 +12,7 @@ import six
 
 from . import helpers
 from .log import log
+from .webtrader import NotLoginError
 from .webtrader import WebTrader
 
 VERIFY_CODE_POS = 0
@@ -121,7 +122,15 @@ class GFTrader(WebTrader):
             return_data = json.loads(str(data, 'utf-8'))
         return return_data
 
+    def check_login_status(self, return_data):
+        if response is None or (not response.get('success') == True):
+            self.heart_active = False
+            raise NotLoginError
+
     def check_account_live(self, response):
+        if response is None or (not response.get('success') == True):
+            self.heart_active = False
+            raise NotLoginError
         if hasattr(response, 'data') and response.get('error_no') == '-1':
             self.heart_active = False
 
@@ -388,6 +397,8 @@ class GFTrader(WebTrader):
         return self.do(params)
 
     def __trade(self, stock_code, price, other):
+        # 检查是否已经掉线
+        self.check_login(1)
         need_info = self.__get_trade_need_info(stock_code)
         trade_param = dict(
             other,

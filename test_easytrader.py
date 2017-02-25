@@ -102,6 +102,17 @@ class TestEasytrader(unittest.TestCase):
         result = helpers.str2num(test_data, 'float')
         self.assertAlmostEqual(result, normal_data)
 
+    def test_gf_check_account_live(self):
+        user = easytrader.use('gf')
+
+        test_data = None
+        user.check_account_live(test_data)
+        self.assertTrue(user.heart_active)
+
+        test_data = {'success': False, 'data': [{}], 'total': 1}
+        user.check_account_live(test_data)
+        self.assertTrue(user.heart_active)
+
 
 class TestXueQiuTrader(unittest.TestCase):
     def test_set_initial_assets(self):
