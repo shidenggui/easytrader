@@ -102,7 +102,7 @@ user.prepare('/path/to/your/ht.json') // 或者 yh.json 或者 yh_client.json �
 
 ##### 参数登录
 ```
-user.prepare(user='用户名', password='券商加密后的密码, 雪球、银河客户端为明文密码')
+user.prepare(user='用户名', password='银河，广发web端需要券商加密后的密码, 雪球、银河客户端为明文密码')
 ```
 
 **注**:
@@ -113,6 +113,7 @@ user.prepare(user='用户名', password='券商加密后的密码, 雪球、银�
 格式可以参照 `Github` 目录下对应的 `json` 文件
 
 * 银河类似下面文章中所说的方法。 通过在 `web` 手动登陆后等待一段时间出现锁屏, 然后需要输入密码解锁，银河的加密密码可以通过这个解锁锁屏的请求抓取到
+* [银河web获取加密密码的图文教程](https://shimo.im/doc/kvazIHNTRvYr7iqe)(需要安装 fildder 软件)
 * 雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 * 银河客户端直接使用明文的账号和密码即可
 
