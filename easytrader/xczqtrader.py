@@ -16,9 +16,12 @@ from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
 
+# debug
+import pdb
+SESSIONIDPOS = 32
 
 class XCZQTrader(WebTrader):
-    config_path = os.path.dirname(__file__) + '/config/yjb.json'
+    config_path = os.path.dirname(__file__) + '/config/xczq.json'
 
     def __init__(self):
         super(XCZQTrader, self).__init__()
@@ -53,6 +56,7 @@ class XCZQTrader(WebTrader):
             f.write(verify_code_response.content)
 
         verify_code = helpers.recognize_verify_code(image_path, 'yjb')
+        verify_code = helpers.input_verify_code_manual(image_path)
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
@@ -60,6 +64,14 @@ class XCZQTrader(WebTrader):
         if len(verify_code) != ht_verify_code_length:
             return False
         return verify_code
+
+    def get_CSRF_Token(self, login_response):
+        data = login_response.json()['returnJson']
+        start_pos = data.find('CSRF_Token')
+        end_pos = data.find('Func20054')
+        token = data[start_pos + 13: end_pos - 3]
+        print('Token:', token)
+        return token
 
     def post_login_data(self, verify_code):
         if six.PY2:
@@ -74,9 +86,12 @@ class XCZQTrader(WebTrader):
             validateCode=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
+        # pdb.set_trace()
         log.debug('login response: %s' % login_response.text)
 
-        if login_response.text.find('上次登陆') != -1:
+        if login_response.text.find('CSRF_Token') != -1:
+            v = login_response.headers
+            self.sessionid = v['Set-Cookie'][11:43]
             return True, None
         return False, login_response.text
 
@@ -209,13 +224,16 @@ class XCZQTrader(WebTrader):
 
     def create_basic_params(self):
         basic_params = dict(
-            CSRF_Token='undefined',
+            JSESSIONID=self.sessionid,
             timestamp=random.random(),
         )
+        print(basic_params)
         return basic_params
 
     def request(self, params):
-        r = self.s.get(self.trade_prefix, params=params)
+        print('Request Params:', params)
+        cookie = dict(JSESSIONID=params['JSESSIONID'])
+        r = self.s.get(self.trade_prefix, params=params, cookies=cookie)
         return r.text
 
     def format_response_data(self, data):
