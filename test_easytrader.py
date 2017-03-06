@@ -192,16 +192,17 @@ class TestFollower(unittest.TestCase):
             test = BaseFollower._is_number(string)
             self.assertEqual(test, result)
 
-    @mock.patch.object(JoinQuantFollower, 'trade_worker', autospec=True)
+    @mock.patch.object(BaseFollower, 'trade_worker', autospec=True)
     def test_send_interval(self, mock_trade_worker):
         cases = [(1, 1), (2, 2)]
-        for follower in [JoinQuantFollower(), RiceQuantFollower()]:
-            follower = JoinQuantFollower()
+        for follower_cls in [JoinQuantFollower, RiceQuantFollower]:
             for test_data, truth in cases:
+                follower = follower_cls()
                 try:
                     follower.follow(None, None, send_interval=test_data)
                 except:
                     pass
+                print(test_data, truth)
                 self.assertEqual(mock_trade_worker.call_args[1]['send_interval'], truth)
 
 
