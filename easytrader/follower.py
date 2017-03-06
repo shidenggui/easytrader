@@ -88,9 +88,10 @@ class BaseFollower(object):
             with open(self.CMD_CACHE_FILE, 'rb') as f:
                 self.expired_cmds = pickle.load(f)
 
-    def start_trader_thread(self, users, trade_cmd_expire_seconds, entrust_prop='limit'):
+    def start_trader_thread(self, users, trade_cmd_expire_seconds, entrust_prop='limit', send_interval=0):
         trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds,
-                                                                        'entrust_prop': entrust_prop})
+                                                                        'entrust_prop': entrust_prop,
+                                                                        'send_interval': send_interval})
         trader.setDaemon(True)
         trader.start()
 
@@ -177,7 +178,10 @@ class BaseFollower(object):
         except ValueError:
             return False
 
-    def trade_worker(self, users, expire_seconds=120, entrust_prop='limit'):
+    def trade_worker(self, users, expire_seconds=120, entrust_prop='limit', send_interval=0):
+        """
+        :param send_interval: 交易发送间隔， 默认为0s。调大可防止卖出买入时买出单没有及时成交导致的买入金额不足
+        """
         while True:
             trade_cmd = self.trade_queue.get()
             for user in users:
@@ -233,6 +237,7 @@ class BaseFollower(object):
                         trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
                         trade_cmd['amount'],
                         trade_cmd['price'], trade_cmd['datetime'], response))
+                time.sleep(send_interval)
 
     def query_strategy_transaction(self, strategy, **kwargs):
         params = self.create_query_transaction_params(strategy)

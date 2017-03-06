@@ -6,6 +6,7 @@ from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
 from .gftrader import GFTrader
 from .joinquant_follower import JoinQuantFollower
+from .ricequant_follower import RiceQuantFollower
 
-__version__ = '0.11.3'
+__version__ = '0.11.4'
 __author__ = 'shidenggui'
