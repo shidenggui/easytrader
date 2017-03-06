@@ -18,7 +18,7 @@ from .webtrader import WebTrader
 
 # debug
 import pdb
-SESSIONIDPOS = 32
+
 
 class XCZQTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/xczq.json'
@@ -64,14 +64,6 @@ class XCZQTrader(WebTrader):
         if len(verify_code) != ht_verify_code_length:
             return False
         return verify_code
-
-    def get_CSRF_Token(self, login_response):
-        data = login_response.json()['returnJson']
-        start_pos = data.find('CSRF_Token')
-        end_pos = data.find('Func20054')
-        token = data[start_pos + 13: end_pos - 3]
-        print('Token:', token)
-        return token
 
     def post_login_data(self, verify_code):
         if six.PY2:
@@ -227,11 +219,9 @@ class XCZQTrader(WebTrader):
             JSESSIONID=self.sessionid,
             timestamp=random.random(),
         )
-        print(basic_params)
         return basic_params
 
     def request(self, params):
-        print('Request Params:', params)
         cookie = dict(JSESSIONID=params['JSESSIONID'])
         r = self.s.get(self.trade_prefix, params=params, cookies=cookie)
         return r.text
