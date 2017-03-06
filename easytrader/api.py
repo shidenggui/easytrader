@@ -10,6 +10,7 @@ from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
 from .yhtrader import YHTrader
 from .yjbtrader import YJBTrader
+from .xczqtrader import XCZQTrader
 
 
 def use(broker, debug=True, **kwargs):
@@ -41,7 +42,8 @@ def use(broker, debug=True, **kwargs):
     if broker.lower() in ['yh_client', '银河客户端']:
         from .yh_clienttrader import YHClientTrader
         return YHClientTrader()
-
+    if broker.lower() in ['xczq', '湘财证券']:
+        return XCZQTrader()
 
 def follower(platform, **kwargs):
     """用于生成特定的券商对象
