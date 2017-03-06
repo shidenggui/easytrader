@@ -55,8 +55,8 @@ class XCZQTrader(WebTrader):
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
-        verify_code = helpers.recognize_verify_code(image_path, 'yjb')
-        verify_code = helpers.input_verify_code_manual(image_path)
+        verify_code = helpers.recognize_verify_code(image_path, 'xczq')
+        # verify_code = helpers.input_verify_code_manual(image_path)
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
@@ -78,12 +78,11 @@ class XCZQTrader(WebTrader):
             validateCode=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
-        # pdb.set_trace()
         log.debug('login response: %s' % login_response.text)
 
-        if login_response.text.find('CSRF_Token') != -1:
-            v = login_response.headers
-            self.sessionid = v['Set-Cookie'][11:43]
+        if login_response.text.find('正常运行') != -1:
+            # v = login_response.headers
+            # self.sessionid = v['Set-Cookie'][11:43]
             return True, None
         return False, login_response.text
 
@@ -216,14 +215,12 @@ class XCZQTrader(WebTrader):
 
     def create_basic_params(self):
         basic_params = dict(
-            JSESSIONID=self.sessionid,
             timestamp=random.random(),
         )
         return basic_params
 
     def request(self, params):
-        cookie = dict(JSESSIONID=params['JSESSIONID'])
-        r = self.s.get(self.trade_prefix, params=params, cookies=cookie)
+        r = self.s.get(self.trade_prefix, params=params)
         return r.text
 
     def format_response_data(self, data):
