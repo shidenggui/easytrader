@@ -67,3 +67,5 @@ target/
 
 # cache
 tmp/
+
+secrets/
