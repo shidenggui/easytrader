@@ -112,7 +112,7 @@ class WebTrader(object):
         except Exception as e:
             log.setLevel(self.log_level)
             log.error('心跳线程发现账户出现错误: {}, 尝试重新登陆'.format(e))
-            # self.autologin()
+            self.autologin()
         finally:
             log.setLevel(self.log_level)
         time.sleep(sleepy)

@@ -16,10 +16,6 @@ from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
 
-# debug
-import pdb
-
-
 class XCZQTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/xczq.json'
 
