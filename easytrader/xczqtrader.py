@@ -156,7 +156,6 @@ class XCZQTrader(WebTrader):
         need_info = self.__get_trade_need_info(stock_code)
         params = dict(
             self.config['ipo_enable_amount'],
-            CSRF_Token='undefined',
             timestamp=random.random(),
             stock_account=need_info['stock_account'],  # '沪深帐号'
             exchange_type=need_info['exchange_type'],  # '沪市1 深市2'

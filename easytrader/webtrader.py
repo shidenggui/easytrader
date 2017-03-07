@@ -199,6 +199,8 @@ class WebTrader(object):
         request_params = self.create_basic_params()
         request_params.update(params)
         response_data = self.request(request_params)
+        # print('Params', request_params)
+        # print('Response Data:', response_data)
         try:
             format_json_data = self.format_response_data(response_data)
         except:
