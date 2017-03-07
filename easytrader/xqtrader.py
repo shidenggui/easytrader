@@ -297,8 +297,8 @@ class XueQiuTrader(WebTrader):
         stock = self.__search_stock_info(stock_code)
         if stock is None:
             raise TradeError(u"没有查询要操作的股票信息")
-        if stock['flag'] != 1:
-            raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+        # if stock['flag'] != 1:
+        #     raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
 
         # 仓位比例向下取两位数
         weight = round(weight, 2)
@@ -378,8 +378,8 @@ class XueQiuTrader(WebTrader):
             volume = int(float(price) * amount)  # 可能要取整数
         if balance['current_balance'] < volume and entrust_bs == 'buy':
             raise TradeError(u"没有足够的现金进行操作")
-        if stock['flag'] != 1:
-            raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+        # if stock['flag'] != 1:
+        #     raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
         if volume == 0:
             raise TradeError(u"操作金额不能为零")
 
