@@ -476,6 +476,12 @@ follower.follow(users=[xq_user, yh_user], strategies=['组合1', '组合2'], tot
 follower.follow(***, entrust_prop='market')
 ```
 
+#### 调整下单间隔, 默认为0s。调大可防止卖出买入时卖出单没有及时成交导致的买入金额不足
+
+```
+follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
+```
+
 
 ### 命令行模式
 

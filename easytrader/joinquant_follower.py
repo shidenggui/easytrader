@@ -34,7 +34,7 @@ class JoinQuantFollower(BaseFollower):
         })
 
     def follow(self, users, strategies, track_interval=1, trade_cmd_expire_seconds=120, cmd_cache=True,
-               entrust_prop='limit'):
+               entrust_prop='limit', send_interval=0):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
@@ -43,6 +43,7 @@ class JoinQuantFollower(BaseFollower):
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         :param entrust_prop: 委托方式, 'limit' 为限价，'market' 为市价, 仅在银河实现
+        :param send_interval: 交易发送间隔， 默认为0s。调大可防止卖出买入时卖出单没有及时成交导致的买入金额不足
         """
         users = self.warp_list(users)
         strategies = self.warp_list(strategies)
@@ -50,7 +51,7 @@ class JoinQuantFollower(BaseFollower):
         if cmd_cache:
             self.load_expired_cmd_cache()
 
-        self.start_trader_thread(users, trade_cmd_expire_seconds, entrust_prop)
+        self.start_trader_thread(users, trade_cmd_expire_seconds, entrust_prop, send_interval)
 
         workers = []
         for strategy_url in strategies:
