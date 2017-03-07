@@ -26,6 +26,7 @@
 * 银河
 * 广发
 * 银河客户端(支持自动登陆), 须在 `windows` 平台下载 `银河双子星` 客户端
+* 湘财证券
 * 佣金宝(web已经关闭)
 
 ### 模拟交易
@@ -90,6 +91,13 @@ user = easytrader.use('yh_client') # 银河客户端支持 ['yh_client', 'YH_CLI
 ```python
 user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
 ```
+
+##### 湘财证券
+
+```python
+user = easytrader.use('xczq') # 湘财证券支持 ['xczq', '湘财证券']
+```
+
 
 
 #### 登录帐号
