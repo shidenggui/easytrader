@@ -76,7 +76,7 @@ class XCZQTrader(WebTrader):
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
 
-        if login_response.text.find('正常运行') != -1:
+        if login_response.text.find('湘财证券股份有限公司') != -1:
             # v = login_response.headers
             # self.sessionid = v['Set-Cookie'][11:43]
             return True, None
