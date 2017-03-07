@@ -16,6 +16,11 @@ from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
 
+# handle error: SSLError: [SSL: SSL_NEGATIVE_LENGTH] dh key too small (_ssl.c:720)
+requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
+
+
 class XCZQTrader(WebTrader):
     config_path = os.path.dirname(__file__) + '/config/xczq.json'
 
@@ -31,7 +36,7 @@ class XCZQTrader(WebTrader):
         }
         self.s.headers.update(headers)
 
-        self.s.get(self.config['login_page'])
+        self.s.get(self.config['login_page'], verify=False)
 
         verify_code = self.handle_recognize_code()
         if not verify_code:
@@ -51,8 +56,8 @@ class XCZQTrader(WebTrader):
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
-        verify_code = helpers.recognize_verify_code(image_path, 'xczq')
-        # verify_code = helpers.input_verify_code_manual(image_path)
+        # verify_code = helpers.recognize_verify_code(image_path, 'xczq')
+        verify_code = helpers.input_verify_code_manual(image_path)
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
