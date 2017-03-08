@@ -56,10 +56,10 @@ class XCZQTrader(WebTrader):
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
-        # 手动输入验证码， 如果自动识别验证码无法使用，可以切换成手动识别。
-        # verify_code = helpers.recognize_verify_code(image_path, 'xczq')
-        # 自动识别验证码
-        verify_code = helpers.input_verify_code_manual(image_path)
+        # 自动识别验证码, 如果自动识别验证码无法使用，可以切换成手动识别。
+        verify_code = helpers.recognize_verify_code(image_path, 'xczq')
+        # 手动输入验证码
+        # verify_code = helpers.input_verify_code_manual(image_path)
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
