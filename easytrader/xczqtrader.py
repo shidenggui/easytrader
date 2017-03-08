@@ -56,7 +56,9 @@ class XCZQTrader(WebTrader):
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
+        # 手动输入验证码， 如果自动识别验证码无法使用，可以切换成手动识别。
         # verify_code = helpers.recognize_verify_code(image_path, 'xczq')
+        # 自动识别验证码
         verify_code = helpers.input_verify_code_manual(image_path)
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
@@ -122,19 +124,31 @@ class XCZQTrader(WebTrader):
         return self.do(self.config['current_deal'])
 
     # TODO: 实现买入卖出的各种委托类型
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
+    def buy(self, stock_code, price, amount=0, volume=0, order_type='limit'):
         """买入卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
         :param amount: 卖出股数
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
-        :param entrust_prop: 委托类型，暂未实现，默认为限价委托
+        :param order_type: 委托类型，默认为limit - 限价委托,  也可以为makret - 最优五档即时成交剩余转限价。
         """
-        params = dict(
-            self.config['buy'],
-            entrust_bs=1,  # 买入1 卖出2
-            entrust_amount=amount if amount else volume // price // 100 * 100
-        )
+        if order_type == 'limit':
+            entrust_prop = 0
+            params = dict(
+                self.config['buy'],
+                entrust_bs=1,  # 买入1 卖出2
+                entrust_amount=amount if amount else volume // price // 100 * 100
+            )
+        elif order_type == 'market':
+            entrust_prop = 'R'
+            params = dict(
+                self.config['buymarket'],
+                entrust_bs=1,  # 买入1 卖出2
+                entrust_amount=amount if amount else volume // price // 100 * 100
+            )
+        else:
+            log.debug('订单类型不支持: %s' % (order_type))
+            return None
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
     def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
