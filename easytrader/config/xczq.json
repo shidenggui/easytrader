@@ -62,5 +62,11 @@
     "service_type": "stock",
     "function_id": "407",
     "window_id": "StockMarketTrade"
+  },
+  "exchangebill": {
+    "request_id": "prompt_308",
+    "sort_direction": 0,
+    "service_type": "stock",
+    "deliver_type":1
   }
 }
