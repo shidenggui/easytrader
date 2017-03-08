@@ -101,6 +101,28 @@ class XCZQTrader(WebTrader):
         return self.do(cancel_params)
 
     @property
+    def can_cancel(self):
+        return self.get_can_cancel()
+
+    def get_can_cancel(self):
+        """获取可撤单的股票"""
+        """
+        [{
+        'bs_name' : '买入',
+        'business_amount': '0',
+        'entrust_amount': '委托数量',
+        'entrust_price': '价格',
+        'entrust_prop_name': '买卖',
+        'entrust_time': '时间'
+        'position_str': '定位串',
+        'status_name': '已报',
+        'stock_code': '证券代码',
+        'stock_name': '证券名称'}]
+        """
+
+        return self.do(self.config['can_cancel'])
+
+    @property
     def current_deal(self):
         return self.get_current_deal()
 
