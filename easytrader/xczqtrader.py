@@ -38,6 +38,7 @@ class XCZQTrader(WebTrader):
 
         self.s.get(self.config['login_page'], verify=False)
 
+
         verify_code = self.handle_recognize_code()
         if not verify_code:
             return False
@@ -298,3 +299,4 @@ class XCZQTrader(WebTrader):
             "end_date": end_date,
         })
         return self.do(params)
+
