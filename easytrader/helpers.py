@@ -16,7 +16,6 @@ from requests.packages.urllib3.poolmanager import PoolManager
 from six.moves import input
 
 from .log import log
-from .thirdlibrary.yjb_captcha import YJBCaptcha
 
 if six.PY2:
     from io import open
@@ -109,23 +108,6 @@ def input_verify_code_manual(image_path):
     image = Image.open(image_path)
     image.show()
     code = input('image path: {}, input verify code answer:'.format(image_path))
-    return code
-
-
-def detect_ht_result(image_path):
-    code = detect_verify_code_by_java(image_path, 'ht')
-    if not code:
-        return default_verify_code_detect(image_path)
-    return code
-
-
-def detect_yjb_result(image_path):
-    captcha = YJBCaptcha(imagePath=image_path)
-    code = captcha.string()
-    if not code:
-        code = detect_verify_code_by_java(image_path, 'yjb')
-    elif not code:
-        return default_verify_code_detect(image_path)
     return code
 
 

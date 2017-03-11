@@ -128,7 +128,7 @@ user.prepare(user='用户名', password='银河，广发web端需要券商加密
 [如何获取配置所需信息, 可参考此文章](https://www.jisilu.cn/question/42707)
 
 ### 交易相关
-以下用法以佣金宝为例
+以下用法以银河为例
 
 #### 获取资金状况:
 
@@ -138,13 +138,13 @@ user.balance
 
 **return**
 ```python
-[{ 'asset_balance': '资产总值',
-   'current_balance': '当前余额',
-   'enable_balance': '可用金额',
-   'market_value': '证券市值',
-   'money_type': '币种',
-   'pre_interest': '预计利息' ]}
-
+[{'参考市值': 21642.0,
+  '可用资金': 28494.21,
+  '币种': '0',
+  '总资产': 50136.21,
+  '股份参考盈亏': -90.21,
+  '资金余额': 28494.21,
+  '资金帐号': 'xxx'}]
 ```
 
 #### 获取持仓:
@@ -155,17 +155,20 @@ user.position
 
 **return**
 ```python
-[{'cost_price': '摊薄成本价',
-   'current_amount': '当前数量',
-   'enable_amount': '可卖数量',
-   'income_balance': '摊薄浮动盈亏',
-   'keep_cost_price': '保本价',
-   'last_price': '最新价',
-   'market_value': '证券市值',
-   'position_str': '定位串',
-   'stock_code': '证券代码',
-   'stock_name': '证券名称'}]
-
+[{'买入冻结': 0,
+  '交易市场': '沪A',
+  '卖出冻结': '0',
+  '参考市价': 4.71,
+  '参考市值': 10362.0,
+  '参考成本价': 4.672,
+  '参考盈亏': 82.79,
+  '当前持仓': 2200,
+  '盈亏比例(%)': '0.81%',
+  '股东代码': 'xxx',
+  '股份余额': 2200,
+  '股份可用': 2200,
+  '证券代码': '601398',
+  '证券名称': '工商银行'}]
 ```
 
 #### 获取今日委托单
@@ -199,21 +202,7 @@ user.buy('162411', price=0.55, amount=100)
 **return**
 
 ```python
-[{'entrust_no': '委托编号',
-  'init_date': '发生日期',
-  'batch_no': '委托批号',
-  'report_no': '申报号',
-  'seat_no': '席位编号',
-  'entrust_time': '委托时间',
-  'entrust_price': '委托价格',
-  'entrust_amount': '委托数量',
-  'stock_code': '证券代码',
-  'entrust_bs': '买卖方向',
-  'entrust_type': '委托类别',
-  'entrust_status': '委托状态',
-  'fund_account': '资金帐号',
-  'error_no': '错误号',
-  'error_info': '错误原因'}]
+{'orderid': 'xxxxxxxx', 'ordersno': '1111'}
 ```
 
 #### 卖出:
@@ -221,12 +210,25 @@ user.buy('162411', price=0.55, amount=100)
 ```python
 user.sell('162411', price=0.55, amount=100)
 ```
+
+**return**
+
+```python
+{'orderid': 'xxxxxxxx', 'ordersno': '1111'}
+```
+
 #### 撤单
 
 ##### 银河
 
 ```python
 user.cancel_entrust('委托单号', '股票代码')
+```
+
+**return**
+
+```
+{'msgok': '撤单申报成功'}
 ```
 
 ##### 银河客户端
@@ -337,44 +339,6 @@ user.fundmerge(stock_code, amount):
 
 
 #### 查询当日成交
-
-##### 佣金宝
-
-```python
-user.current_deal
-```
-
-**return**
-
-```python
-[{'business_amount': '成交数量',
-'business_price': '成交价格',
-'entrust_amount': '委托数量',
-'entrust_bs': '买卖方向',
-'stock_account': '证券帐号',
-'fund_account': '资金帐号',
-'position_str': '定位串',
-'business_status': '成交状态',
-'date': '发生日期',
-'business_type': '成交类别',
-'business_time': '成交时间',
-'stock_code': '证券代码',
-'stock_name': '证券名称'}]
-```
-
-##### 佣金宝
-
-```python
-user.get_ipo_limit('申购代码')
-```
-
-**return**
-
-```python
-{'high_amount': '最高申购股数',
-'enable_amount': '申购额度',
-'last_price': '发行价',}
-```
 
 #### 查询今天可以申购的新股信息
 
@@ -496,7 +460,7 @@ follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
 #### 登录
 
 ```
- python cli.py --use ht --prepare ht.json
+ python cli.py --use ht --prepare yh.json
 ```
 
 注: 此时会生成 `account.session` 文件保存生成的 `user` 对象
@@ -522,7 +486,7 @@ follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
 
 ##### Question
 
-哪里可以找到对应的 `ht.json` , `xq.json` 的说明
+哪里可以找到对应的 `yh.json` , `xq.json` 的说明
 
 ##### Answer
 
