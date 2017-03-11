@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import anyjson as json
+import json
 import click
 import dill
 
@@ -33,7 +33,7 @@ def main(prepare, use, do, get, params, debug):
         else:
             result = getattr(user, do)
 
-        json_result = json.dumps(result)
+        json_result = json.dumps(result, indent=4, ensure_ascii=False, sort_keys=True)
         click.echo(json_result)
 
 
