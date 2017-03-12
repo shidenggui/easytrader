@@ -1,7 +1,6 @@
 bs4
 requests
 demjson
-anyjson
 dill
 click
 six
