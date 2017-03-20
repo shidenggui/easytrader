@@ -279,12 +279,14 @@ class YHTrader(WebTrader):
         :param price: 买入价格
         :param amount: 买入股数
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
-        :param entrust_prop: 委托类型 'limit' 限价单 , 'market'　市价单
+        :param entrust_prop: 委托类型 'limit' 限价单 , 'market'　市价单, 'market_cancel' 五档即时成交剩余转限制
         """
         market_type = helpers.get_stock_type(stock_code)
         bsflag = None
         if entrust_prop == 'limit':
             bsflag = '0B'
+        elif entrust_prop == 'market_cancel':
+            bsflag = '0d'
         elif market_type == 'sh':
             bsflag = '0q'
         elif market_type == 'sz':
@@ -304,12 +306,14 @@ class YHTrader(WebTrader):
         :param price: 卖出价格
         :param amount: 卖出股数
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 amount 则此参数无效
-        :param entrust_prop: str 委托类型 'limit' 限价单 , 'market'　市价单
+        :param entrust_prop: str 委托类型 'limit' 限价单 , 'market'　市价单, 'market_cancel' 五档即时成交剩余转限制
         """
         market_type = helpers.get_stock_type(stock_code)
         bsflag = None
         if entrust_prop == 'limit':
             bsflag = '0S'
+        elif entrust_prop == 'market_cancel':
+            bsflag = '0i'
         elif market_type == 'sh':
             bsflag = '0r'
         elif market_type == 'sz':
