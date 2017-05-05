@@ -244,6 +244,32 @@ class YHTrader(WebTrader):
         """
         return self.do(self.config['current_deal'])
 
+    
+    def get_his_deal(self, bgd, edd):
+        """
+         <905266420@qq.com>
+        获取历史时间段内的全部成交列表
+            e.g.: get_deal( bgd="2016-07-14", edd="2016-08-14" )
+            遇到提示“系统超时请重新登录”或者https返回状态码非200或者其他异常情况会返回False
+        ""
+        data = {
+            "sdate": bgd,
+            "edate": edd
+        
+        try:
+            response = self.s.post("https://www.chinastock.com.cn/trade/webtrade/stock/stock_cj_query.jsp", data=data,
+                                   cookies=self.cookie)
+            if response.status_code != 200:
+                return False
+            if response.text.find("重新登录") != -1:
+                return False
+            res = self.format_response_data(response.text)
+            return res
+        except Exception as e:
+            log.warning("撤单出错".format(e))
+            return False
+    
+
     def get_deal(self, date=None):
         """
         @Contact: Emptyset <21324784@qq.com>
