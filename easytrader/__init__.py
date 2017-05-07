@@ -6,5 +6,5 @@ from .gftrader import GFTrader
 from .joinquant_follower import JoinQuantFollower
 from .ricequant_follower import RiceQuantFollower
 
-__version__ = '0.11.10'
+__version__ = '0.11.16'
 __author__ = 'shidenggui'

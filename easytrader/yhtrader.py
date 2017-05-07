@@ -6,6 +6,7 @@ import logging
 import os
 import random
 import re
+import time
 
 import requests
 
@@ -421,6 +422,7 @@ class YHTrader(WebTrader):
         log.debug("{}".format(self.config['trade_api']))
         log.debug("{}".format(trade_params))
         log.debug('trade response: %s' % trade_response.text)
+        time.sleep(0.5)  # 避免银河 '请求频繁，请稍后再试' 的错误
         return trade_response.json()
 
     def __get_trade_need_info(self, stock_code):
@@ -575,3 +577,23 @@ class YHTrader(WebTrader):
         ser = df.iloc[0]
         return dict(high_amount=int(ser['申购上限']), enable_amount=int(ser['账户额度']),
                     last_price=float(ser['价格']))
+
+    def auto_ipo(self):
+        """
+        自动打新
+        :return: list(dict) dict 格式为 {'申购股票': 申购返回结果}
+        """
+        ipo_info, _ = self.get_ipo_info()
+        ipo_info.fillna(0, inplace=True)
+
+        res = []
+        for _, row in ipo_info.iterrows():
+            if row['账户额度'] <= 0:
+                continue
+
+            ipo_amount = min(row['账户额度'], row['申购上限'])
+            response = self.buy(row['代码'], row['价格'], ipo_amount)
+            res.append({
+                row['名称']: response
+            })
+        return res

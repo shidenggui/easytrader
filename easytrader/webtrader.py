@@ -6,6 +6,7 @@ import time
 from threading import Thread
 
 import six
+import requests
 
 from . import helpers
 from .log import log
@@ -109,9 +110,11 @@ class WebTrader(object):
         try:
             response = self.heartbeat()
             self.check_account_live(response)
+        except requests.exceptions.ConnectionError:
+            pass
         except Exception as e:
             log.setLevel(self.log_level)
-            log.error('心跳线程发现账户出现错误: {}, 尝试重新登陆'.format(e))
+            log.error('心跳线程发现账户出现错误: {} {}, 尝试重新登陆'.format(e.__class__, e))
             self.autologin()
         finally:
             log.setLevel(self.log_level)

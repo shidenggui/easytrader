@@ -212,6 +212,14 @@ user.sell('162411', price=0.55, amount=100)
 {'orderid': 'xxxxxxxx', 'ordersno': '1111'}
 ```
 
+#### 一键打新
+
+##### 银河
+
+```python
+user.auto_ipo()
+```
+
 #### 撤单
 
 ##### 银河

@@ -9,6 +9,12 @@
 * 有兴趣的可以加群 `556050652` 、`549879767`(已满) 、`429011814`(已满) 一起讨论
 * 捐助: [支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png)  [微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png) 或者 银河开户可以加群找我
 
+## 公众号
+
+请扫码关注“易量化”的微信公众号，不定时更新`easytrader`的最新动态及量化方面的相关文章
+
+![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/easy_quant_qrcode.jpg)
+
 
 **开发环境** : `Ubuntu 16.04` / `Python 3.5`
 

@@ -87,8 +87,6 @@ class XueQiuFollower(BaseFollower):
 
     @staticmethod
     def extract_strategy_id(strategy_url):
-        if len(strategy_url) != 8:
-            raise ValueError('雪球组合名格式不对, 类似 ZH123456, 设置值: {}'.format(strategy_url))
         return strategy_url
 
     def extract_strategy_name(self, strategy_url):
