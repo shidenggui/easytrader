@@ -30,6 +30,13 @@
     "start": 0,
     "limit": 10
   },
+  "entrust_pos":{
+  "classname": "com.gf.etrade.control.StockUF2Control",
+  "method": "queryDRWT",
+  "request_num": 100,
+  "query_direction": 0,
+  "query_mode": 0
+  },
   "cancel_entrust": {
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "cancel",
