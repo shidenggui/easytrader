@@ -558,7 +558,7 @@ class GFTrader(WebTrader):
         log.debug(self.do(params))
         self.heart_active = False
 
-    def get_entrust(self, action_in=0):
+    def get_entrust_without_pos(self, action_in=0):
         '''
 
         :param action_in: 当值为0，返回全部委托；当值为1时，返回可撤委托
@@ -569,3 +569,50 @@ class GFTrader(WebTrader):
             "action_in": action_in,
         })
         return self.do(params)
+
+    def get_entrust(self, action_in):
+        '''
+
+        :param action_in: 当值为0，返回全部委托；当值为1时，返回可撤委托
+        :return: 字典形式的返回值
+        '''
+        data, total = self.get_value(action_in)
+        return {u'data': data, u'total': total, u'success': True}
+
+    def get_entrust_with_pos(self, postion_str):
+        '''
+
+        :param position_str: 用于标记查询委托单号的起点
+        :return: 字典形式的返回值
+        '''
+        params = self.config['entrust_pos'].copy()
+        params.update({
+            "postion_str": postion_str,
+        })
+        return self.do(params)
+
+    def get_value(self, action_in):
+        '''
+        1.委托数量在100单以下，直接返回值
+        2.查询委托的数量等于100单，调用带position_str参数的委托查询方法
+        3.直到最后一次的查询返回值小于100单，结束循环，构造返回值
+
+        :param action_in: 当值为0，返回全部委托；当值为1时，返回可撤委托
+        :return:（数据列表，数据总数）构成的元组
+        '''
+        data = []
+        total = 0
+
+        result = self.get_entrust_without_pos(action_in)
+
+        while True:
+            data += result[u'data']
+            total += result[u'total']
+
+            if result[u'total'] < 100:
+                break
+            result = self.get_entrust_with_pos(
+                action_in, result[u'data'][-1]['position_str']
+            )
+
+        return data, total
