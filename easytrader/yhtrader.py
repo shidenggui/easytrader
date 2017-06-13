@@ -100,6 +100,12 @@ class YHTrader(WebTrader):
             trdpwd=self.account_config['trdpwd'],
             checkword=verify_code
         )
+
+        if self.account_config.get('orgid'):
+            login_params['orgid'] = self.account_config.get('orgid')
+        if self.account_config.get('inputtype'):
+            login_params['inputtype'] = self.account_config.get('inputtype')
+
         log.debug('login params: %s' % login_params)
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
