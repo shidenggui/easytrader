@@ -119,6 +119,7 @@ class YHTrader(WebTrader):
             'inputaccount': user,
             'trdpwd': password
         }
+        self.account_config.update(**kwargs)
 
     def check_available_cancels(self, parsed=True):
         """
