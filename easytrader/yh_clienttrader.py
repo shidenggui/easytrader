@@ -302,6 +302,8 @@ class YHClientTrader():
 
     @staticmethod
     def _set_foreground_window(hwnd):
+        import pythoncom
+        pythoncom.CoInitialize()
         shell = win32com.client.Dispatch('WScript.Shell')
         shell.SendKeys('%')
         win32gui.SetForegroundWindow(hwnd)
