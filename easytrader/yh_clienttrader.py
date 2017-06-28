@@ -297,7 +297,7 @@ class YHClientTrader():
     @staticmethod
     def _project_position_str(raw):
         reader = StringIO(raw)
-        df = pd.read_csv(reader, delim_whitespace=True)
+        df = pd.read_csv(reader, sep = '\t')
         return df
 
     @staticmethod
