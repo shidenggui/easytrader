@@ -276,7 +276,7 @@ class YHClientTrader():
     @staticmethod
     def project_copy_data(copy_data):
         reader = StringIO(copy_data)
-        df = pd.read_csv(reader, delim_whitespace=True)
+        df = pd.read_csv(reader, sep = '\t')
         return df.to_dict('records')
 
     def _read_clipboard(self):
