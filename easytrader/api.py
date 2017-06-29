@@ -35,6 +35,9 @@ def use(broker, debug=True, **kwargs):
     elif broker.lower() in ['yh_client', '银河客户端']:
         from .yh_clienttrader import YHClientTrader
         return YHClientTrader()
+    elif broker.lower() in ['ht_client', '华泰客户端']:
+        from .ht_clienttrader import HTClientTrader
+        return HTClientTrader()
     elif broker.lower() in ['xczq', '湘财证券']:
         return XCZQTrader()
 

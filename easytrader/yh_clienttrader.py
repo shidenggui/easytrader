@@ -102,7 +102,7 @@ class YHClientTrader():
         win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, password)
 
     def _has_login_window(self):
-        for title in [' - 北京电信', ' - 北京电信 - 北京电信']:
+        for title in [' - 北京电信', ' - 北京电信 - 北京电信', ' - 北京联通1']:
             self.login_hwnd = win32gui.FindWindow(None, title)
             if self.login_hwnd != 0:
                 return True
@@ -302,6 +302,8 @@ class YHClientTrader():
 
     @staticmethod
     def _set_foreground_window(hwnd):
+        import pythoncom
+        pythoncom.CoInitialize()
         shell = win32com.client.Dispatch('WScript.Shell')
         shell.SendKeys('%')
         win32gui.SetForegroundWindow(hwnd)
