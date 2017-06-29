@@ -187,6 +187,20 @@ class YHClientTrader():
         chexin_sub_hwnd = win32gui.GetDlgItem(chexin_hwnd, 200)
         self.entrust_list_hwnd = win32gui.GetDlgItem(chexin_sub_hwnd, 1047)  # 委托列表
 
+        # 资金股票
+        win32api.PostMessage(tree_view_hwnd, win32con.WM_KEYDOWN, win32con.VK_F4, 0)
+        time.sleep(0.5)
+        self.capital_window_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 0xE901)  # 资金股票窗口框架
+
+    def balance(self):
+        return self.get_balance()
+
+    def get_balance(self):
+        self._set_foreground_window(self.capital_window_hwnd)
+        time.sleep(0.3)
+        data = self._read_clipboard()
+        return self.project_copy_data(data)[0]
+
     def buy(self, stock_code, price, amount, **kwargs):
         """
         买入股票
