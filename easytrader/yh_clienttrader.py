@@ -19,6 +19,8 @@ from PIL import ImageGrab
 from . import helpers
 from .log import log
 
+from pywinauto import Desktop
+
 
 class YHClientTrader():
     def __init__(self):
@@ -192,6 +194,9 @@ class YHClientTrader():
         time.sleep(0.5)
         self.capital_window_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 0xE901)  # 资金股票窗口框架
 
+        # 用pywinauto获取当前窗口
+        self.w = Desktop()[self.Title]
+
     def balance(self):
         return self.get_balance()
 
@@ -290,7 +295,7 @@ class YHClientTrader():
     @staticmethod
     def project_copy_data(copy_data):
         reader = StringIO(copy_data)
-        df = pd.read_csv(reader, sep = '\t')
+        df = pd.read_csv(reader, sep='\t')
         return df.to_dict('records')
 
     def _read_clipboard(self):
@@ -311,7 +316,7 @@ class YHClientTrader():
     @staticmethod
     def _project_position_str(raw):
         reader = StringIO(raw)
-        df = pd.read_csv(reader, sep = '\t')
+        df = pd.read_csv(reader, sep='\t')
         return df
 
     @staticmethod
@@ -330,6 +335,17 @@ class YHClientTrader():
         win32gui.SendMessage(self.refresh_entrust_hwnd, win32con.BM_CLICK, None, None)  # 刷新持仓
         time.sleep(0.2)
         self._set_foreground_window(self.entrust_list_hwnd)
+        time.sleep(0.2)
+        data = self._read_clipboard()
+        return self.project_copy_data(data)
+
+    @property
+    def current_deal(self):
+        return self.get_current_deal()
+
+    def get_current_deal(self):
+        self.w['TreeView'].GetItem(['查询[F4]', '当日成交']).Click()
+        self.w['CVirtualGridCtrl'].set_focus()
         time.sleep(0.2)
         data = self._read_clipboard()
         return self.project_copy_data(data)
