@@ -24,11 +24,18 @@
   "entrust":{
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "queryDRWT",
-    "action_in": 1,
+    "action_in": 0,
     "request_num": 100,
     "query_direction": 0,
     "start": 0,
     "limit": 10
+  },
+  "entrust_pos":{
+  "classname": "com.gf.etrade.control.StockUF2Control",
+  "method": "queryDRWT",
+  "request_num": 100,
+  "query_direction": 0,
+  "query_mode": 0
   },
   "cancel_entrust": {
     "classname": "com.gf.etrade.control.StockUF2Control",
@@ -129,5 +136,63 @@
   "queryStockInfo": {
     "classname": "com.gf.etrade.control.StockUF2Control",
     "method": "getStockHQ"
+  },
+  "today_ipo_list": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryNewStkcode",
+    "request_num": 50,
+    "query_direction": 1
+  },
+  "entrust_his": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryLSWT",
+    "request_num": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
+  },
+  "today_ipo_limit": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "querySecuSubequity",
+    "limit": 50
+  },
+  "rzrq": {
+    "classname": "com.gf.etrade.control.RZRQUF2Control",
+    "method": "ValidataLogin"
+  },
+  "rzrq_exchangebill": {
+    "classname": "com.gf.etrade.control.RZRQUF2Control",
+    "method": "queryDeliver",
+    "request_num": 50,
+    "query_direction": 1,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1
+  },
+  "rzrq_entrust_his": {
+    "classname": "com.gf.etrade.control.RZRQUF2Control",
+    "method": "queryLSWT",
+    "request_num": 50,
+    "query_direction": 1,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
+  },
+  "capitalflow": {
+    "classname": "com.gf.etrade.control.StockUF2Control",
+    "method": "queryFundjour",
+    "limit": 50,
+    "query_direction": 0,
+    "start_date": "",
+    "end_date": "",
+    "deliver_type": 1,
+    "query_mode": 0
+  },
+  "exit": {
+    "classname": "com.gf.etrade.control.AuthenticateControl",
+    "method": "logout"
   }
 }

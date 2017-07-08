@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import anyjson as json
+import json
+import better_exceptions
 import click
 import dill
 
@@ -28,12 +29,12 @@ def main(prepare, use, do, get, params, debug):
         with open(ACCOUNT_OBJECT_FILE, 'rb') as f:
             user = dill.load(f)
 
-        if len(params) > 0:
-            result = getattr(user, do)(*params)
-        else:
+        if get is not None:
             result = getattr(user, do)
+        else:
+            result = getattr(user, do)(*params)
 
-        json_result = json.dumps(result)
+        json_result = json.dumps(result, indent=4, ensure_ascii=False, sort_keys=True)
         click.echo(json_result)
 
 

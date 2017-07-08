@@ -1,9 +1,9 @@
 {
-  "login_page": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/",
-  "login_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/exchange.action",
-  "verify_code_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/user/extraCode.jsp",
-  "prefix": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/stock/exchange.action",
-  "logout_api": "https://jy.yongjinbao.com.cn/winner_gj/gjzq/stock/exchange.action?function_id=20&login_type=stock",
+  "login_page": "https://webtrade.xcsc.com/winner/xcsc/",
+  "login_api": "https://webtrade.xcsc.com/winner/xcsc/user/exchange.action",
+  "verify_code_api": "https://webtrade.xcsc.com/winner/xcsc/user/extraCode.jsp",
+  "prefix": "https://webtrade.xcsc.com/winner/xcsc/user/exchange.action",
+  "logout_api": "https://webtrade.xcsc.com/winner/xcsc/exchange.action?function_id=20&login_type=stock",
   "login": {
     "function_id": 200,
     "login_type": "stock",
@@ -11,15 +11,15 @@
     "identity_type": "",
     "remember_me": "",
     "input_content": 1,
-    "content_type": 0,
-    "loginPasswordType": "B64",
-    "disk_serial_id": "ST3250820AS",
-    "cpuid": "-41315-FA76141D",
-    "machinecode": "-41315-FA76141D"
+    "content_type": 0
   },
   "buy": {
     "service_type": "stock",
     "request_id": "buystock_302"
+  },
+  "buymarket" :{
+    "service_type": "stock",
+    "request_id": "buystockbymaketvalue_302"
   },
   "sell": {
     "service_type": "stock",
@@ -40,13 +40,19 @@
   "cancel_entrust": {
     "request_id": "chedan_304"
   },
+  "can_cancel": {
+    "request_id": "chedan_401",
+    "sort_direction": 1,
+    "service_type": "stock",
+    "action_in":1
+  },
   "current_deal": {
     "request_id": "bargain_402",
     "sort_direction": 1,
     "service_type": "stock"
   },
   "ipo_enable_amount": {
-    "request_id": "buystock_300"
+    "request_id": "buystock_301"
   },
   "exchangetype4stock": {
     "service_type": "stock",
@@ -56,5 +62,11 @@
     "service_type": "stock",
     "function_id": "407",
     "window_id": "StockMarketTrade"
+  },
+  "exchangebill": {
+    "request_id": "prompt_308",
+    "sort_direction": 0,
+    "service_type": "stock",
+    "deliver_type":1
   }
 }

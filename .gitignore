@@ -1,4 +1,7 @@
 yjb_account.json
+htt.json
+gft.json
+test.py
 ht_account.json
 .idea
 .ipynb_checkpoints
@@ -64,3 +67,5 @@ target/
 
 # cache
 tmp/
+
+secrets/

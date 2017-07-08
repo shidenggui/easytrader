@@ -12,16 +12,20 @@ import requests
 import six
 
 from . import helpers
+from .log import log
 from .webtrader import NotLoginError
 from .webtrader import WebTrader
-from .log import log
+
+# handle error: SSLError: [SSL: SSL_NEGATIVE_LENGTH] dh key too small (_ssl.c:720)
+requests.packages.urllib3.disable_warnings()
+requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS += 'HIGH:!DH:!aNULL'
 
 
-class YJBTrader(WebTrader):
-    config_path = os.path.dirname(__file__) + '/config/yjb.json'
+class XCZQTrader(WebTrader):
+    config_path = os.path.dirname(__file__) + '/config/xczq.json'
 
     def __init__(self):
-        super(YJBTrader, self).__init__()
+        super(XCZQTrader, self).__init__()
         self.account_config = None
         self.s = requests.session()
         self.s.mount('https://', helpers.Ssl3HttpAdapter())
@@ -32,7 +36,8 @@ class YJBTrader(WebTrader):
         }
         self.s.headers.update(headers)
 
-        self.s.get(self.config['login_page'])
+        self.s.get(self.config['login_page'], verify=False)
+
 
         verify_code = self.handle_recognize_code()
         if not verify_code:
@@ -48,11 +53,14 @@ class YJBTrader(WebTrader):
         # 获取验证码
         verify_code_response = self.s.get(self.config['verify_code_api'], params=dict(randomStamp=random.random()))
         # 保存验证码
-        image_path = os.path.join(tempfile.gettempdir(), 'vcode')
+        image_path = os.path.join(tempfile.gettempdir(), 'vcode_%d' % os.getpid())
         with open(image_path, 'wb') as f:
             f.write(verify_code_response.content)
 
-        verify_code = helpers.recognize_verify_code(image_path, 'yjb')
+        # 自动识别验证码, 如果自动识别验证码无法使用，可以切换成手动识别。
+        verify_code = helpers.recognize_verify_code(image_path, 'xczq')
+        # 手动输入验证码
+        # verify_code = helpers.input_verify_code_manual(image_path)
         log.debug('verify code detect result: %s' % verify_code)
         os.remove(image_path)
 
@@ -67,16 +75,18 @@ class YJBTrader(WebTrader):
         else:
             password = urllib.parse.unquote(self.account_config['password'])
         login_params = dict(
-                self.config['login'],
-                mac_addr=helpers.get_mac(),
-                account_content=self.account_config['account'],
-                password=password,
-                validateCode=verify_code
+            self.config['login'],
+            mac_addr=helpers.get_mac(),
+            account_content=self.account_config['account'],
+            password=password,
+            validateCode=verify_code
         )
         login_response = self.s.post(self.config['login_api'], params=login_params)
         log.debug('login response: %s' % login_response.text)
 
-        if login_response.text.find('上次登陆') != -1:
+        if login_response.text.find('湘财证券股份有限公司') != -1:
+            # v = login_response.headers
+            # self.sessionid = v['Set-Cookie'][11:43]
             return True, None
         return False, login_response.text
 
@@ -85,11 +95,33 @@ class YJBTrader(WebTrader):
         :param entrust_no: 委托单号
         :param stock_code: 股票代码"""
         cancel_params = dict(
-                self.config['cancel_entrust'],
-                entrust_no=entrust_no,
-                stock_code=stock_code
+            self.config['cancel_entrust'],
+            entrust_no=entrust_no,
+            stock_code=stock_code
         )
         return self.do(cancel_params)
+
+    @property
+    def can_cancel(self):
+        return self.get_can_cancel()
+
+    def get_can_cancel(self):
+        """获取可撤单的股票"""
+        """
+        [{
+        'bs_name' : '买入',
+        'business_amount': '0',
+        'entrust_amount': '委托数量',
+        'entrust_price': '价格',
+        'entrust_prop_name': '买卖',
+        'entrust_time': '时间'
+        'position_str': '定位串',
+        'status_name': '已报',
+        'stock_code': '证券代码',
+        'stock_name': '证券名称'}]
+        """
+
+        return self.do(self.config['can_cancel'])
 
     @property
     def current_deal(self):
@@ -115,19 +147,31 @@ class YJBTrader(WebTrader):
         return self.do(self.config['current_deal'])
 
     # TODO: 实现买入卖出的各种委托类型
-    def buy(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
+    def buy(self, stock_code, price, amount=0, volume=0, order_type='limit'):
         """买入卖出股票
         :param stock_code: 股票代码
         :param price: 卖出价格
         :param amount: 卖出股数
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
-        :param entrust_prop: 委托类型，暂未实现，默认为限价委托
+        :param order_type: 委托类型，默认为limit - 限价委托,  也可以为makret - 最优五档即时成交剩余转限价。
         """
-        params = dict(
+        if order_type == 'limit':
+            entrust_prop = 0
+            params = dict(
                 self.config['buy'],
                 entrust_bs=1,  # 买入1 卖出2
                 entrust_amount=amount if amount else volume // price // 100 * 100
-        )
+            )
+        elif order_type == 'market':
+            entrust_prop = 'R'
+            params = dict(
+                self.config['buymarket'],
+                entrust_bs=1,  # 买入1 卖出2
+                entrust_amount=amount if amount else volume // price // 100 * 100
+            )
+        else:
+            log.debug('订单类型不支持: %s' % (order_type))
+            return None
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
     def sell(self, stock_code, price, amount=0, volume=0, entrust_prop=0):
@@ -139,9 +183,9 @@ class YJBTrader(WebTrader):
         :param entrust_prop: 委托类型，暂未实现，默认为限价委托
         """
         params = dict(
-                self.config['sell'],
-                entrust_bs=2,  # 买入1 卖出2
-                entrust_amount=amount if amount else volume // price
+            self.config['sell'],
+            entrust_bs=2,  # 买入1 卖出2
+            entrust_amount=amount if amount else volume // price
         )
         return self.__trade(stock_code, price, entrust_prop=entrust_prop, other=params)
 
@@ -153,19 +197,19 @@ class YJBTrader(WebTrader):
         """
         need_info = self.__get_trade_need_info(stock_code)
         params = dict(
-                self.config['ipo_enable_amount'],
-                CSRF_Token='undefined',
-                timestamp=random.random(),
-                stock_account=need_info['stock_account'],  # '沪深帐号'
-                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
-                entrust_prop=0,
-                stock_code=stock_code
+            self.config['ipo_enable_amount'],
+            timestamp=random.random(),
+            stock_account=need_info['stock_account'],  # '沪深帐号'
+            exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+            entrust_prop=0,
+            stock_code=stock_code
         )
         data = self.do(params)
         if 'error_no' in data.keys() and data['error_no'] != "0":
             log.debug('查询错误: %s' % (data['error_info']))
             return None
-        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'], last_price=float(data['last_price']))
+        return dict(high_amount=float(data['high_amount']), enable_amount=data['enable_amount'],
+                    last_price=float(data['last_price']))
 
     def __trade(self, stock_code, price, entrust_prop, other):
         # 检查是否已经掉线
@@ -175,13 +219,13 @@ class YJBTrader(WebTrader):
                 return check_data
         need_info = self.__get_trade_need_info(stock_code)
         return self.do(dict(
-                other,
-                stock_account=need_info['stock_account'],  # '沪深帐号'
-                exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
-                entrust_prop=entrust_prop,  # 委托方式
-                stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
-                elig_riskmatch_flag=1,  # 用户风险等级
-                entrust_price=price,
+            other,
+            stock_account=need_info['stock_account'],  # '沪深帐号'
+            exchange_type=need_info['exchange_type'],  # '沪市1 深市2'
+            entrust_prop=entrust_prop,  # 委托方式
+            stock_code='{:0>6}'.format(stock_code),  # 股票代码, 右对齐宽为6左侧填充0
+            elig_riskmatch_flag=1,  # 用户风险等级
+            entrust_price=price,
         ))
 
     def __get_trade_need_info(self, stock_code):
@@ -196,20 +240,19 @@ class YJBTrader(WebTrader):
         if exchange_type not in self.exchange_stock_account:
             stock_account_index = 0
             response_data = self.do(dict(
-                    self.config['account4stock'],
-                    exchange_type=exchange_type,
-                    stock_code=stock_code
+                self.config['account4stock'],
+                exchange_type=exchange_type,
+                stock_code=stock_code
             ))[stock_account_index]
             self.exchange_stock_account[exchange_type] = response_data['stock_account']
         return dict(
-                exchange_type=exchange_type,
-                stock_account=self.exchange_stock_account[exchange_type]
+            exchange_type=exchange_type,
+            stock_account=self.exchange_stock_account[exchange_type]
         )
 
     def create_basic_params(self):
         basic_params = dict(
-                CSRF_Token='undefined',
-                timestamp=random.random(),
+            timestamp=random.random(),
         )
         return basic_params
 
@@ -237,3 +280,23 @@ class YJBTrader(WebTrader):
     def check_account_live(self, response):
         if hasattr(response, 'get') and response.get('error_no') == '-1':
             self.heart_active = False
+
+    @property
+    def exchangebill(self):
+        start_date, end_date = helpers.get_30_date()
+        return self.get_exchangebill(start_date, end_date)
+
+    def get_exchangebill(self, start_date, end_date):
+        """
+        查询指定日期内的交割单
+        :param start_date: 20160211
+        :param end_date: 20160211
+        :return:
+        """
+        params = self.config['exchangebill'].copy()
+        params.update({
+            "start_date": start_date,
+            "end_date": end_date,
+        })
+        return self.do(params)
+
