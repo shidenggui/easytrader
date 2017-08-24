@@ -7,7 +7,6 @@ from .ricequant_follower import RiceQuantFollower
 from .log import log
 from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
-from .yhtrader import YHTrader
 from .xczqtrader import XCZQTrader
 
 
@@ -26,8 +25,6 @@ def use(broker, debug=True, **kwargs):
     """
     if not debug:
         log.setLevel(logging.INFO)
-    if broker.lower() in ['yh', '银河']:
-        return YHTrader(debug=debug)
     elif broker.lower() in ['xq', '雪球']:
         return XueQiuTrader(**kwargs)
     elif broker.lower() in ['gf', '广发']:

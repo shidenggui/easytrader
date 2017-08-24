@@ -1,9 +1,8 @@
 # coding: utf-8
 
 import unittest
-from unittest import mock
 from datetime import datetime
-import time
+from unittest import mock
 
 import easytrader
 from easytrader import JoinQuantFollower, RiceQuantFollower
@@ -12,7 +11,6 @@ from easytrader.follower import BaseFollower
 
 
 class TestEasytrader(unittest.TestCase):
-
     def test_helpers(self):
         result = helpers.get_stock_type('162411')
         self.assertEqual(result, 'sz')
@@ -22,56 +20,6 @@ class TestEasytrader(unittest.TestCase):
 
         result = helpers.get_stock_type('sz162411')
         self.assertEqual(result, 'sz')
-
-    def test_format_response_data_type(self):
-        user = easytrader.use('ht')
-
-        test_data = [{
-            'current_amount': '187.00',
-            'current_balance': '200.03',
-            'stock_code': '000001'
-        }]
-        result = user.format_response_data_type(test_data)
-
-        self.assertIs(type(result[0]['current_amount']), int)
-        self.assertIs(type(result[0]['current_balance']), float)
-        self.assertIs(type(result[0]['stock_code']), str)
-
-        test_data = [{'position_str': '',
-                      'date': '',
-                      'fund_account': '',
-                      'stock_account': '',
-                      'stock_code': '',
-                      'entrust_bs': '',
-                      'business_price': '',
-                      'business_amount': '',
-                      'business_time': '',
-                      'stock_name': '',
-                      'business_status': '',
-                      'business_type': ''}]
-        result = user.format_response_data_type(test_data)
-
-    def test_ht_fix_error_data(self):
-        user = easytrader.use('ht')
-        test_data = {
-            'cssweb_code': 'error',
-            'cssweb_type': 'GET_STOCK_POSITON'
-        }
-
-        return_data = user.fix_error_data(test_data)
-        self.assertEqual(test_data, return_data)
-
-        test_data = [{
-            'stock_code': '162411',
-            'entrust_bs': '2'},
-            {'no_use_index': 'hello'}]
-
-        normal_return_data = [{
-            'stock_code': '162411',
-            'entrust_bs': '2'}]
-
-        return_data = user.fix_error_data(test_data)
-        self.assertEqual(return_data, normal_return_data)
 
     def test_helpers_grep_comma(self):
         test_data = '123'
@@ -120,7 +68,6 @@ class TestEasytrader(unittest.TestCase):
 
 
 class TestXueQiuTrader(unittest.TestCase):
-
     def test_set_initial_assets(self):
         # default set to 1e6
         xq_user = easytrader.use('xq')
@@ -141,7 +88,6 @@ class TestXueQiuTrader(unittest.TestCase):
 
 
 class TestJoinQuantFollower(unittest.TestCase):
-
     def test_extract_strategy_id(self):
         cases = [('https://www.joinquant.com/algorithm/live/index?backtestId=aaaabbbbcccc',
                   'aaaabbbbcccc')]
@@ -184,7 +130,6 @@ class TestJoinQuantFollower(unittest.TestCase):
 
 
 class TestFollower(unittest.TestCase):
-
     def test_is_number(self):
         cases = [('1', True),
                  ('--', False)]
