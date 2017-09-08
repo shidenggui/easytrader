@@ -104,13 +104,13 @@ class YHClientTrader():
 
     @property
     def today_entrusts(self):
-        self._switch_left_menus(['查询[F4]', '单日委托'])
+        self._switch_left_menus(['查询[F4]', '当日委托'])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
     def today_trades(self):
-        self._switch_left_menus(['查询[F4]', '单日成交'])
+        self._switch_left_menus(['查询[F4]', '当日成交'])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
