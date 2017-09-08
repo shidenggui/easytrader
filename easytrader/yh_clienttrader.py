@@ -44,7 +44,7 @@ class YHClientTrader():
     def login(self, user, password, exe_path):
         try:
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
-        except RuntimeError:
+        except Exception:
             self._app = pywinauto.Application().start(exe_path)
             self._wait(1)
 
