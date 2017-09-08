@@ -212,13 +212,15 @@ class YHClientTrader():
         ).window_text()
 
     def _set_trade_params(self, security, price, amount):
+        code = security[-6:]
+
         self._type_keys(
             self._config.TRADE_SECURITY_CONTROL_ID,
-            security
+            code
         )
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
-            easyutils.round_price_by_code(price, security)
+            easyutils.round_price_by_code(price, code)
         )
         self._type_keys(
             self._config.TRADE_AMOUNT_CONTROL_ID,
