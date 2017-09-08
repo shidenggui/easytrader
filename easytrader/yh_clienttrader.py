@@ -133,7 +133,6 @@ class YHClientTrader():
 
     def cancel_entrust(self, entrust_no):
         self._refresh()
-        self._switch_left_menus(['买入[F1]'])
         for i, entrust in enumerate(self.cancel_entrusts):
             if entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD] == entrust_no:
                 self._cancel_entrust_by_double_click(i)
@@ -194,7 +193,7 @@ class YHClientTrader():
                     raise exceptions.TradeError(content)
             else:
                 self._app.top_window().close()
-            self._wait(0.1)  # wait next dialog display
+            self._wait(0.2)  # wait next dialog display
 
     def _extract_entrust_id(self, content):
         return re.search(r'\d+', content).group()
