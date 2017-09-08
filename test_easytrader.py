@@ -42,7 +42,7 @@ class TestYhClientTrader(unittest.TestCase):
 
     def test_invalid_sell(self):
         with self.assertRaises(easytrader.exceptions.TradeError):
-            result = self._user.buy('162411', 200, 1e10)
+            result = self._user.sell('162411', 200, 1e10)
 
     def test_auto_ipo(self):
         self._user.auto_ipo()
