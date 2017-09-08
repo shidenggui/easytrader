@@ -185,9 +185,9 @@ class YHClientTrader():
             elif pop_title == '提示':
                 content = self._app.top_window().Static.window_text()
                 if '成功' in content:
-                    entrust_id = self._extract_entrust_id(content)
+                    entrust_no = self._extract_entrust_id(content)
                     self._app.top_window()['确定'].click()
-                    return {'entrust_id': entrust_id}
+                    return {'entrust_no': entrust_no}
                 else:
                     self._app.top_window()['确定'].click()
                     self._wait(0.05)
