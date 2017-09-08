@@ -271,10 +271,17 @@ class YHClientTrader():
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
-        return self._app.top_window().window(
-            control_id=129,
-            class_name='SysTreeView32'
-        )
+        while True:
+            try:
+                handle = self._app.top_window().window(
+                    control_id=129,
+                    class_name='SysTreeView32'
+                )
+                # sometime can't find handle ready, must retry
+                handle.wait('ready', 2)
+                return handle
+            except:
+                pass
 
     def _format_grid_data(self, data):
         df = pd.read_csv(io.StringIO(data),
