@@ -46,7 +46,14 @@ class YHClientTrader():
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
-            self._wait(1)
+
+            # wait login window ready
+            while True:
+                try:
+                    self._app.top_window().Edit1.wait('ready')
+                    break
+                except RuntimeError:
+                    pass
 
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
@@ -57,7 +64,12 @@ class YHClientTrader():
                 )
 
                 self._app.top_window()['登录'].click()
-                self._wait(2)
+
+                # detect login is success or not
+                try:
+                    self._app.top_window().wait_not('exists', 2)
+                except:
+                    pass
 
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
         self._close_prompt_windows()
