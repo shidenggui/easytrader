@@ -58,7 +58,7 @@ class YHClientTrader():
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
 
-            while self._app.is_process_running():
+            while True:
                 self._app.top_window().Edit3.type_keys(
                     self._handle_verify_code()
                 )
@@ -68,6 +68,7 @@ class YHClientTrader():
                 # detect login is success or not
                 try:
                     self._app.top_window().wait_not('exists', 2)
+                    break
                 except:
                     pass
 
