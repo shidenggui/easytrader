@@ -15,33 +15,24 @@ import pywinauto.clipboard
 
 from . import exceptions
 from . import helpers
-from .config import client
+from .clienttrader import ClientTrader
 from .log import log
 
 
-class YHClientTrader():
-    BROKER = 'yh'
+class YHClientTrader(ClientTrader):
+    @property
+    def broker_type(self):
+        return 'yh'
 
-    def __init__(self):
-        self._config = client.create(self.BROKER)
-
-    def prepare(self, config_path=None, user=None, password=None, exe_path=r'C:\中国银河证券双子星3.2\Binarystar.exe'):
+    def login(self, user, password, exe_path, comm_password=None, **kwargs):
         """
-        登陆银河客户端
-        :param config_path: 银河登陆配置文件，跟参数登陆方式二选一
-        :param user: 银河账号
-        :param password: 银河明文密码
-        :param exe_path: 银河客户端路径
+        登陆客户端
+        :param user: 账号
+        :param password: 明文密码
+        :param exe_path: 客户端路径类似 r'C:\中国银河证券双子星3.2\Binarystar.exe', 默认 r'C:\中国银河证券双子星3.2\Binarystar.exe'
+        :param comm_password: 通讯密码, 华泰需要，可不设
         :return:
         """
-
-        if config_path is not None:
-            account = helpers.file2dict(config_path)
-            user = account['user']
-            password = account['password']
-        self.login(user, password, exe_path)
-
-    def login(self, user, password, exe_path):
         try:
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
         except Exception:

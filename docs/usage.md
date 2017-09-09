@@ -9,33 +9,12 @@ import easytrader
 ** 银河客户端**
 
 ```python
-user = easytrader.use('yh_client') # 银河客户端支持 ['yh_client', 'YH_CLIENT', '银河客户端']
+user = easytrader.use('yh_client') # 银河客户端支持 ['yh_client', '银河客户端']
 ```
 ** 华泰客户端**
 ```python
-user = easytrader.use('ht_client') # 华泰客户端支持 ['ht_client', 'HT_CLIENT', '华泰客户端']
+user = easytrader.use('ht_client') # 华泰客户端支持 ['ht_client', '华泰客户端']
 ```
-
-** 广发**
-
-```python
-user = easytrader.use('gf') # 广发支持 ['gf', 'GF', '广发']
-```
-
-**湘财证券**
-
-```python
-user = easytrader.use('xczq') # 湘财证券支持 ['xczq', '湘财证券']
-```
-
-
-# 抓取登陆所需的密码
-
-使用 `easytrader` 的广发，银河 `web` 版本时，需要抓取对应券商的加密密码
-
-**广发**
-
-参考此文档 [INSTALL4Windows.md](other/INSTALL4Windows.md)
 
 **雪球**
 
@@ -56,11 +35,7 @@ user = easytrader.use('xczq') # 湘财证券支持 ['xczq', '湘财证券']
 ** 参数登录(推荐)**
 
 ```
-user.prepare(user='用户名', password='广发web端需要券商加密后的密码, 雪球、银河客户端为明文密码')
-```
-
-```
-user.prepare(user='用户名', password='华泰交易密码',commpasswd='华泰通讯密码')
+user.prepare(user='用户名', password='雪球、银河客户端为明文密码', comm_password='华泰通讯密码，其他券商不用')
 ```
 
 **注:**雪球额外有个 account 参数，见上文介绍
@@ -91,27 +66,9 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 {
   "user": "华泰用户名",
   "password": "华泰明文密码"
-  "commpasswd": "华泰通讯密码"
+  "comm_password": "华泰通讯密码"
 }
 
-```
-
-广发
-
-```
-{
-  "username": "加密的客户号",
-  "password": "加密的密码"
-}
-```
-
-湘菜证券
-
-```
-{
-  "account": "客户号",
-  "password": "密码"
-}
 ```
 
 ### 交易相关
@@ -159,28 +116,6 @@ user.position
   '证券名称': '工商银行'}]
 ```
 
-#### 获取今日委托单
-```python
-user.entrust
-```
-
-**return**
-
-```python
-[{'business_amount': '成交数量',
-  'business_price': '成交价格',
-  'entrust_amount': '委托数量',
-  'entrust_bs': '买卖方向',
-  'entrust_no': '委托编号',
-  'entrust_price': '委托价格',
-  'entrust_status': '委托状态',  # 废单 / 已报
-  'report_time': '申报时间',
-  'stock_code': '证券代码',
-  'stock_name': '证券名称'}]
-
-```
-
-
 #### 买入:
 
 ```python
@@ -190,7 +125,7 @@ user.buy('162411', price=0.55, amount=100)
 **return**
 
 ```python
-{'orderid': 'xxxxxxxx', 'ordersno': '1111'}
+{'entrust_no': 'xxxxxxxx'}
 ```
 
 #### 卖出:
@@ -202,12 +137,10 @@ user.sell('162411', price=0.55, amount=100)
 **return**
 
 ```python
-{'orderid': 'xxxxxxxx', 'ordersno': '1111'}
+{'entrust_no': 'xxxxxxxx'}
 ```
 
 #### 一键打新
-
-##### 银河
 
 ```python
 user.auto_ipo()
@@ -215,29 +148,21 @@ user.auto_ipo()
 
 #### 撤单
 
-##### 银河
-
 ```python
-user.cancel_entrust('委托单号', '股票代码')
+user.cancel_entrust('buy/sell 获取的 entrust_no')
 ```
 
 **return**
 
 ```
-{'msgok': '撤单申报成功'}
+{'message': '撤单申报成功'}
 ```
 
-##### 银河客户端
 
-
-```python
-user.cancel_entrust('股票6位代码,不带前缀', "撤单方向，可使用 ['buy', 'sell']"
-```
-
-#### 查询当日成交
+#### 当日成交
 
 ```python
-user.current_deal
+user.today_trades
 ```
 
 **return**
@@ -256,10 +181,10 @@ user.current_deal
   '证券名称': '华宝油气'}]
 ```
 
-#### 今日委托
+#### 当日委托
 
 ```python
-user.entrust
+user.today_entrusts
 ```
 
 **return**
@@ -293,38 +218,6 @@ user.entrust
   '证券名称': '华宝油气'}]
 ```
 
-#### 查询交割单
-
-需要注意通常券商只会返回有限天数最新的交割单，如查询2015年整年数据
-
-```python
-user.exchangebill   # 查询最近30天的交割单
-
-user.get_exchangebill('开始日期', '截止日期')   # 指定查询时间段, 日期格式为 "20160214"
-```
-**return**
-```python
-{["entrust_bs": "操作", # "1":"买入", "2":"卖出", " ":"其他"
-  "business_balance": "成交金额",
-  "stock_name": "证券名称",
-  "fare1": "印花税",
-  "occur_balance": "发生金额",
-  "stock_account": "股东帐户",
-  "business_name": "摘要", # "证券买入", "证券卖出", "基金拆分", "基金合并", "交收证券冻结", "交收证券冻结取消", "开放基金赎回", "开放基金赎回返款", "基金资金拨入", "基金资金拨出", "交收资金冻结取消", "开放基金申购"
-  "farex": "",
-  "fare0": "手续费",
-  "stock_code": "证券代码",
-  "occur_amount": "成交数量",
-  "date": "成交日期",
-  "post_balance": "本次余额",
-  "fare2": "其他杂费",
-  "fare3": "",
-  "entrust_no": "合同编号",
-  "business_price": "成交均价",
-]}
-
-```
-
 
 #### 查询今天可以申购的新股信息
 
@@ -341,6 +234,12 @@ print(ipo_data)
   'stock_name': '股票名称',
   'price': 发行价,
   'apply_code': '申购代码'}]
+```
+
+#### 退出客户端软件
+
+```
+user.exit()
 ```
 
 #### 雪球组合调仓
