@@ -118,12 +118,12 @@ class YHClientTrader(ClientTrader):
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
-    def buy(self, security, price, amount):
+    def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(['买入[F1]'])
 
         return self.trade(security, price, amount)
 
-    def sell(self, security, price, amount):
+    def sell(self, security, price, amount, **kwargs):
         self._switch_left_menus(['卖出[F2]'])
 
         return self.trade(security, price, amount)

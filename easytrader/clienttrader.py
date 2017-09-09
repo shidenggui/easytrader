@@ -68,11 +68,11 @@ class ClientTrader:
         pass
 
     @abstractmethod
-    def buy(self, security, price, amount):
+    def buy(self, security, price, amount, **kwargs):
         pass
 
     @abstractmethod
-    def sell(self, security, price, amount):
+    def sell(self, security, price, amount, **kwargs):
         pass
 
     def auto_ipo(self):
