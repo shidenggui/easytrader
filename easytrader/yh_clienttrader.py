@@ -204,7 +204,7 @@ class YHClientTrader(ClientTrader):
 
     def _submit_trade(self):
         time.sleep(0.05)
-        self._app.top_window().window(
+        self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name='Button'
         ).click()
@@ -231,7 +231,7 @@ class YHClientTrader(ClientTrader):
         )
 
     def _get_grid_data(self, control_id):
-        grid = self._app.top_window().window(
+        grid = self._main.window(
             control_id=control_id,
             class_name='CVirtualGridCtrl'
         )

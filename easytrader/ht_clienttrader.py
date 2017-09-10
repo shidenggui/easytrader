@@ -225,7 +225,7 @@ class HTClientTrader(ClientTrader):
         )
 
     def _get_grid_data(self, control_id):
-        grid = self._app.top_window().window(
+        grid = self._main.window(
             control_id=control_id,
             class_name='CVirtualGridCtrl'
         )
