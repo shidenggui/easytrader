@@ -1,3 +1,4 @@
+pywinauto
 bs4
 requests
 demjson

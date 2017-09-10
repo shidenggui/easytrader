@@ -1,352 +1,304 @@
 # coding:utf8
 from __future__ import division
 
+import functools
+import io
 import os
-import subprocess
-import tempfile
+import re
 import time
-import traceback
-import win32api
-import win32gui
-from io import StringIO
 
+import easyutils
 import pandas as pd
-import pyperclip
-import win32com.client
-import win32con
-from PIL import ImageGrab
+import pywinauto
+import pywinauto.clipboard
 
-from . import helpers
+from . import exceptions
+from .clienttrader import ClientTrader
 from .log import log
 
 
-class HTClientTrader():
-    def __init__(self):
-        self.Title = '网上股票交易系统5.0'
+class HTClientTrader(ClientTrader):
+    @property
+    def broker_type(self):
+        return 'ht'
 
-    def prepare(self, config_path=None, user=None, password=None, commpasswd=None, exe_path='C:\htwt\Xiadan.exe'):
+    def login(self, user, password, exe_path, comm_password=None, **kwargs):
         """
-        登陆银河客户端
-        :param config_path: 华泰登陆配置文件，跟参数登陆方式二选一
-        :param user: 华泰账号
-        :param password: 华泰明文密码
-		:param commpasswd: 华泰通讯密码
-        :param exe_path: 华泰客户端路径
+        :param user: 用户名
+        :param password: 密码
+        :param exe_path: 客户端路径, 类似
+        :param comm_password:
+        :param kwargs:
         :return:
         """
-        if config_path is not None:
-            account = helpers.file2dict(config_path)
-            user = account['user']
-            password = account['password']
-            commpasswd = account['commpasswd']
-        self.login(user, password, commpasswd, exe_path)
-
-    def login(self, user, password, commpasswd, exe_path):
-        if self._has_main_window():
-            self._get_handles()
-            log.info('检测到交易客户端已启动，连接完毕')
-            return
-        if not self._has_login_window():
-            if not os.path.exists(exe_path):
-                raise FileNotFoundError('在　{} 未找到应用程序，请用 exe_path 指定应用程序目录'.format(exe_path))
-            subprocess.Popen(exe_path)
-        # 检测登陆窗口
-        for _ in range(30):
-            if self._has_login_window():
-                break
-            time.sleep(1)
-        else:
-            raise Exception('启动客户端失败，无法检测到登陆窗口')
-        log.info('成功检测到客户端登陆窗口')
-
-        # 登陆
-        # self._set_trade_mode()
-        self._set_login_name(user)
-        self._set_login_password(password)
-        self._set_login_commpassword(commpasswd)
-        for _ in range(10):
-            # self._set_login_verify_code()
-            self._click_login_button()
-            time.sleep(3)
-            if not self._has_login_window():
-                break
-            # self._click_login_verify_code()
-
-        for _ in range(60):
-            if self._has_main_window():
-                # self._get_handles()
-                break
-            time.sleep(1)
-        else:
-            raise Exception('启动交易客户端失败')
-        log.info('客户端登陆成功')
-
-    # def _set_login_verify_code(self):
-    #     verify_code_image = self._grab_verify_code()
-    #     image_path = tempfile.mktemp() + '.jpg'
-    #     verify_code_image.save(image_path)
-    #     result = helpers.recognize_verify_code(image_path, 'yh_client')
-    #     time.sleep(0.2)
-    #     self._input_login_verify_code(result)
-    #     time.sleep(0.4)
-
-    # def _set_trade_mode(self):
-    #     input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x4f4d)
-    #     win32gui.SendMessage(input_hwnd, win32con.BM_CLICK, None, None)
-
-    def _set_login_name(self, user):
-        time.sleep(0.5)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3F3)
-        win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, user)
-
-    def _set_login_password(self, password):
-        time.sleep(0.5)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3F4)
-        win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, password)
-
-    def _set_login_commpassword(self, commpasswd):
-        time.sleep(0.5)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3E9)
-        win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, commpasswd)
-    def _has_login_window(self):
-        for title in ['用户登录']:
-            self.login_hwnd = win32gui.FindWindow(None, title)
-            if self.login_hwnd != 0:
-                return True
-        return False
-
-    # def _input_login_verify_code(self, code):
-    #     input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56b9)
-    #     win32gui.SendMessage(input_hwnd, win32con.WM_SETTEXT, None, code)
-
-    # def _click_login_verify_code(self):
-    #     input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56ba)
-    #     rect = win32gui.GetWindowRect(input_hwnd)
-    #     self._mouse_click(rect[0] + 5, rect[1] + 5)
-
-    @staticmethod
-    def _mouse_click(x, y):
-        win32api.SetCursorPos((x, y))
-        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, x, y, 0, 0)
-        win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, x, y, 0, 0)
-
-    def _click_login_button(self):
-        time.sleep(1)
-        input_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x3EE)
-        win32gui.SendMessage(input_hwnd, win32con.BM_CLICK, None, None)
-
-    def _has_main_window(self):
-        try:
-            self._get_handles()
-        except:
-            return False
-        return True
-
-    # def _grab_verify_code(self):
-    #     verify_code_hwnd = win32gui.GetDlgItem(self.login_hwnd, 0x56ba)
-    #     self._set_foreground_window(self.login_hwnd)
-    #     time.sleep(1)
-    #     rect = win32gui.GetWindowRect(verify_code_hwnd)
-    #     return ImageGrab.grab(rect)
-
-    def _get_handles(self):
-        trade_main_hwnd = win32gui.FindWindow(0, self.Title)  # 交易窗口
-        operate_frame_hwnd = win32gui.GetDlgItem(trade_main_hwnd, 59648)  # 操作窗口框架
-        operate_frame_afx_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 59648)  # 操作窗口框架
-        hexin_hwnd = win32gui.GetDlgItem(operate_frame_afx_hwnd, 129)
-        scroll_hwnd = win32gui.GetDlgItem(hexin_hwnd, 200)  # 左部折叠菜单控件
-        tree_view_hwnd = win32gui.GetDlgItem(scroll_hwnd, 129)  # 左部折叠菜单控件
-
-        # 获取委托窗口所有控件句柄
-        win32api.PostMessage(tree_view_hwnd, win32con.WM_KEYDOWN, win32con.VK_F1, 0)
-        time.sleep(0.5)
-
-        # 买入相关
-        entrust_window_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 0xE901)  # 委托窗口框架
-        self.buy_stock_code_hwnd = win32gui.GetDlgItem(entrust_window_hwnd, 0x408)  # 买入代码输入框
-        self.buy_price_hwnd = win32gui.GetDlgItem(entrust_window_hwnd, 0x409)  # 买入价格输入框
-        self.buy_amount_hwnd = win32gui.GetDlgItem(entrust_window_hwnd, 0x40A)  # 买入数量输入框
-        self.buy_btn_hwnd = win32gui.GetDlgItem(entrust_window_hwnd, 0x3EE)  # 买入确认按钮
-        self.refresh_entrust_hwnd = win32gui.GetDlgItem(entrust_window_hwnd, 0x8016)  # 刷新持仓按钮
-        entrust_frame_hwnd = win32gui.GetDlgItem(entrust_window_hwnd, 0x417)  # 持仓显示框架
-        entrust_sub_frame_hwnd = win32gui.GetDlgItem(entrust_frame_hwnd, 200)  # 持仓显示框架 ??
-        self.position_list_hwnd = win32gui.GetDlgItem(entrust_sub_frame_hwnd, 1047)  # 持仓列表
-        win32api.PostMessage(tree_view_hwnd, win32con.WM_KEYDOWN, win32con.VK_F2, 0)
-        time.sleep(0.5)
-
-        # 卖出相关
-        sell_entrust_frame_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 59649)  # 委托窗口框架
-        self.sell_stock_code_hwnd = win32gui.GetDlgItem(sell_entrust_frame_hwnd, 1032)  # 卖出代码输入框
-        self.sell_price_hwnd = win32gui.GetDlgItem(sell_entrust_frame_hwnd, 1033)  # 卖出价格输入框
-        self.sell_amount_hwnd = win32gui.GetDlgItem(sell_entrust_frame_hwnd, 1034)  # 卖出数量输入框
-        self.sell_btn_hwnd = win32gui.GetDlgItem(sell_entrust_frame_hwnd, 1006)  # 卖出确认按钮
-
-        # 撤单窗口
-        win32api.PostMessage(tree_view_hwnd, win32con.WM_KEYDOWN, win32con.VK_F3, 0)
-        time.sleep(0.5)
-        cancel_entrust_window_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 0xE901)  # 撤单窗口框架
-        self.cancel_stock_code_hwnd = win32gui.GetDlgItem(cancel_entrust_window_hwnd, 0xD14)  # 卖出代码输入框
-        self.cancel_query_hwnd = win32gui.GetDlgItem(cancel_entrust_window_hwnd, 0xD15)  # 查询代码按钮
-        self.cancel_buy_hwnd = win32gui.GetDlgItem(cancel_entrust_window_hwnd, 0x7532)  # 撤买
-        self.cancel_sell_hwnd = win32gui.GetDlgItem(cancel_entrust_window_hwnd, 0x7533)  # 撤卖
-
-        chexin_hwnd = win32gui.GetDlgItem(cancel_entrust_window_hwnd, 0x417)
-        chexin_sub_hwnd = win32gui.GetDlgItem(chexin_hwnd, 200)
-        self.entrust_list_hwnd = win32gui.GetDlgItem(chexin_sub_hwnd, 1047)  # 委托列表
-
-
-        # 资金股票
-        win32api.PostMessage(tree_view_hwnd, win32con.WM_KEYDOWN, win32con.VK_F4, 0)
-        time.sleep(0.5)
-        capital_window_hwnd = win32gui.GetDlgItem(operate_frame_hwnd, 0xE901)  # 资金股票窗口框架
-        self.capital_balance_hwnd = win32gui.GetDlgItem(capital_window_hwnd, 0x3F4)  # 资金余额
-        self.capital_frozen_hwnd = win32gui.GetDlgItem(capital_window_hwnd, 0x3F5)  # 冻结资金
-        self.capital_available_hwnd = win32gui.GetDlgItem(capital_window_hwnd, 0x3F8)  # 可用金额
-        self.capital_withdrawable_hwnd = win32gui.GetDlgItem(capital_window_hwnd, 0x3F9)  # 可取金额
-        self.market_value_hwnd = win32gui.GetDlgItem(capital_window_hwnd, 0x3F6)  # 股票市值
-        self.total_assets_hwnd = win32gui.GetDlgItem(capital_window_hwnd, 0x3F7)  # 总资产
-        self.capital_window_hwnd = capital_window_hwnd
-
-
-    def buy(self, stock_code, price, amount, **kwargs):
-        """
-        买入股票
-        :param stock_code: 股票代码
-        :param price: 买入价格
-        :param amount: 买入股数
-        :return: bool: 买入信号是否成功发出
-        """
-        amount = str(amount // 100 * 100)
-        price = str(price)
+        if comm_password is None:
+            raise ValueError('华泰必须设置通讯密码')
 
         try:
-            win32gui.SendMessage(self.buy_stock_code_hwnd, win32con.WM_SETTEXT, None, stock_code)  # 输入买入代码
-            time.sleep(0.1)
-            win32gui.SendMessage(self.buy_price_hwnd, win32con.WM_SETTEXT, None, price)  # 输入买入价格
-            time.sleep(0.1)
-            win32gui.SendMessage(self.buy_amount_hwnd, win32con.WM_SETTEXT, None, amount)  # 输入买入数量
-            time.sleep(0.1)
-            win32gui.SendMessage(self.buy_btn_hwnd, win32con.BM_CLICK, None, None)  # 买入确定
-            time.sleep(0.2)
-        except:
-            traceback.print_exc()
-            return False
-        return True
+            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
+        except Exception:
+            self._app = pywinauto.Application().start(exe_path)
 
-    def sell(self, stock_code, price, amount, **kwargs):
-        """
-        买出股票
-        :param stock_code: 股票代码
-        :param price: 卖出价格
-        :param amount: 卖出股数
-        :return: bool 卖出操作是否成功
-        """
-        amount = str(amount // 100 * 100)
-        price = str(price)
+            # wait login window ready
+            while True:
+                try:
+                    self._app.top_window().Edit1.wait('ready')
+                    break
+                except RuntimeError:
+                    pass
 
-        try:
-            win32gui.SendMessage(self.sell_stock_code_hwnd, win32con.WM_SETTEXT, None, stock_code)  # 输入卖出代码
-            time.sleep(0.1)
-            win32gui.SendMessage(self.sell_price_hwnd, win32con.WM_SETTEXT, None, price)  # 输入卖出价格
-            time.sleep(0.1)
-            win32gui.SendMessage(self.sell_amount_hwnd, win32con.WM_SETTEXT, None, amount)  # 输入卖出数量
-            time.sleep(0.1)
-            win32gui.SendMessage(self.sell_btn_hwnd, win32con.BM_CLICK, None, None)  # 卖出确定
-            time.sleep(0.2)
-        except:
-            traceback.print_exc()
-            return False
-        return True
+            self._app.top_window().Edit1.type_keys(user)
+            self._app.top_window().Edit2.type_keys(password)
 
-    def cancel_entrust(self, stock_code, direction):
-        """
-        撤单
-        :param stock_code: str 股票代码
-        :param direction: str 'buy' 撤买， 'sell' 撤卖
-        :return: bool 撤单信号是否发出
-        """
-        direction = 0 if direction == 'buy' else 1
+            self._app.top_window().Edit3.type_keys(comm_password)
 
-        try:
-            win32gui.SendMessage(self.refresh_entrust_hwnd, win32con.BM_CLICK, None, None)  # 刷新持仓
-            time.sleep(0.2)
-            win32gui.SendMessage(self.cancel_stock_code_hwnd, win32con.WM_SETTEXT, None, stock_code)  # 输入撤单
-            win32gui.SendMessage(self.cancel_query_hwnd, win32con.BM_CLICK, None, None)  # 查询代码
-            time.sleep(0.2)
-            if direction == 0:
-                win32gui.SendMessage(self.cancel_buy_hwnd, win32con.BM_CLICK, None, None)  # 撤买
-            elif direction == 1:
-                win32gui.SendMessage(self.cancel_sell_hwnd, win32con.BM_CLICK, None, None)  # 撤卖
-        except:
-            traceback.print_exc()
-            return False
-        time.sleep(0.3)
-        return True
+            self._app.top_window().type_keys('%Y')
 
-    @property
-    def position(self):
-        return self.get_position()
+            # detect login is success or not
+            self._app.top_window().wait_not('exists', 2)
 
-    def get_position(self):
-        win32gui.SendMessage(self.refresh_entrust_hwnd, win32con.BM_CLICK, None, None)  # 刷新持仓
-        time.sleep(0.1)
-        self._set_foreground_window(self.position_list_hwnd)
-        time.sleep(0.1)
-        data = self._read_clipboard()
-        return self.project_copy_data(data)
+            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
+        self._close_prompt_windows()
+        self._main = self._app.top_window()
+
+    def _run_exe_path(self, exe_path):
+        return os.path.join(
+            os.path.dirname(exe_path), 'xiadan.exe'
+        )
+
+    def _wait(self, seconds):
+        time.sleep(seconds)
+
+    def exit(self):
+        self._app.kill()
+
+    def _close_prompt_windows(self):
+        self._wait(1)
+        for w in self._app.windows(class_name='#32770'):
+            if w.window_text() != self._config.TITLE:
+                w.close()
 
     @property
     def balance(self):
-        return self.get_balance()
+        self._switch_left_menus(['查询[F4]', '资金股票'])
 
-    def get_balance(self):
-        self._set_foreground_window(self.capital_window_hwnd)
-        time.sleep(0.3)
-        data = {}
-        data['资金余额'] = win32gui.GetWindowText(self.capital_balance_hwnd)
-        data['冻结余额'] = win32gui.GetWindowText(self.capital_frozen_hwnd)
-        data['可用金额'] = win32gui.GetWindowText(self.capital_available_hwnd)
-        data['可取余额'] = win32gui.GetWindowText(self.capital_withdrawable_hwnd)
-        data['股票市值'] = win32gui.GetWindowText(self.market_value_hwnd)
-        data['总资产'] = win32gui.GetWindowText(self.total_assets_hwnd)
-        return data
+        return self._get_balance_from_statics()
 
-
-    @staticmethod
-    def project_copy_data(copy_data):
-        reader = StringIO(copy_data)
-        df = pd.read_csv(reader, sep='\t')
-        return df.to_dict('records')
-
-    def _read_clipboard(self):
-        for _ in range(15):
-            try:
-                win32api.keybd_event(17, 0, 0, 0)
-                win32api.keybd_event(67, 0, 0, 0)
-                win32api.keybd_event(67, 0, win32con.KEYEVENTF_KEYUP, 0)
-                win32api.keybd_event(17, 0, win32con.KEYEVENTF_KEYUP, 0)
-                time.sleep(0.2)
-                return pyperclip.paste()
-            except Exception as e:
-                log.error('open clipboard failed: {}, retry...'.format(e))
-                time.sleep(1)
-        else:
-            raise Exception('read clipbord failed')
-
-    @staticmethod
-    def _set_foreground_window(hwnd):
-        shell = win32com.client.Dispatch('WScript.Shell')
-        shell.SendKeys('%')
-        win32gui.SetForegroundWindow(hwnd)
+    def _get_balance_from_statics(self):
+        result = {}
+        for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
+            result[key] = float(
+                self._app.top_window().window(
+                    control_id=control_id,
+                    class_name='Static',
+                ).window_text()
+            )
+        return result
 
     @property
-    def entrust(self):
-        return self.get_entrust()
+    def position(self):
+        self._switch_left_menus(['查询[F4]', '资金股票'])
 
-    def get_entrust(self):
-        win32gui.SendMessage(self.refresh_entrust_hwnd, win32con.BM_CLICK, None, None)  # 刷新持仓
-        time.sleep(0.2)
-        self._set_foreground_window(self.entrust_list_hwnd)
-        time.sleep(0.2)
-        data = self._read_clipboard()
-        return self.project_copy_data(data)
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    @property
+    def today_entrusts(self):
+        self._switch_left_menus(['查询[F4]', '当日委托'])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    @property
+    def today_trades(self):
+        self._switch_left_menus(['查询[F4]', '当日成交'])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    def buy(self, security, price, amount, **kwargs):
+        self._switch_left_menus(['买入[F1]'])
+
+        return self.trade(security, price, amount)
+
+    def sell(self, security, price, amount, **kwargs):
+        self._switch_left_menus(['卖出[F2]'])
+
+        return self.trade(security, price, amount)
+
+    @property
+    def cancel_entrusts(self):
+        self._refresh()
+        self._switch_left_menus(['撤单[F3]'])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    def cancel_entrust(self, entrust_no):
+        self._refresh()
+        for i, entrust in enumerate(self.cancel_entrusts):
+            if entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD] == entrust_no:
+                self._cancel_entrust_by_double_click(i)
+                return self._handle_cancel_entrust_pop_dialog()
+        else:
+            return {'message': '委托单状态错误不能撤单, 该委托单可能已经成交或者已撤'}
+
+    def auto_ipo(self):
+        self._switch_left_menus(['新股申购', '批量新股申购'])
+
+        self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
+        self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
+
+        return self._handle_auto_ipo_pop_dialog()
+
+    def _handle_auto_ipo_pop_dialog(self):
+        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+            title = self._get_pop_dialog_title()
+            if '提示信息' in title:
+                self._app.top_window().type_keys('%Y')
+            elif '提示' in title:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window()['确定'].click()
+                return {'message': data}
+            else:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window().close()
+                return {'message': 'unkown message: {}'.find(data)}
+            self._wait(0.1)
+
+    def _click(self, control_id):
+        self._app.top_window().window(
+            control_id=control_id,
+            class_name='Button'
+        ).click()
+
+    def trade(self, security, price, amount):
+        self._set_trade_params(security, price, amount)
+
+        self._submit_trade()
+
+        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+            pop_title = self._get_pop_dialog_title()
+            if pop_title == '委托确认':
+                self._app.top_window().type_keys('%Y')
+            elif pop_title == '提示信息':
+                if '超出涨跌停' in self._app.top_window().Static.window_text():
+                    self._app.top_window().type_keys('%Y')
+            elif pop_title == '提示':
+                content = self._app.top_window().Static.window_text()
+                if '成功' in content:
+                    entrust_no = self._extract_entrust_id(content)
+                    self._app.top_window()['确定'].click()
+                    return {'entrust_no': entrust_no}
+                else:
+                    self._app.top_window()['确定'].click()
+                    self._wait(0.05)
+                    raise exceptions.TradeError(content)
+            else:
+                self._app.top_window().close()
+            self._wait(0.2)  # wait next dialog display
+
+    def _extract_entrust_id(self, content):
+        return re.search(r'\d+', content).group()
+
+    def _submit_trade(self):
+        self._main.window(
+            control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
+            class_name='Button'
+        ).click()
+
+    def _get_pop_dialog_title(self):
+        return self._app.top_window().window(
+            control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID
+        ).window_text()
+
+    def _set_trade_params(self, security, price, amount):
+        code = security[-6:]
+
+        self._type_keys(
+            self._config.TRADE_SECURITY_CONTROL_ID,
+            code
+        )
+        self._type_keys(
+            self._config.TRADE_PRICE_CONTROL_ID,
+            easyutils.round_price_by_code(price, code)
+        )
+        self._type_keys(
+            self._config.TRADE_AMOUNT_CONTROL_ID,
+            str(int(amount))
+        )
+
+    def _get_grid_data(self, control_id):
+        grid = self._app.top_window().window(
+            control_id=control_id,
+            class_name='CVirtualGridCtrl'
+        )
+        grid.type_keys('^A^C')
+        return self._format_grid_data(
+            self._get_clipboard_data()
+        )
+
+    def _type_keys(self, control_id, text):
+        self._app.top_window().window(
+            control_id=control_id,
+            class_name='Edit'
+        ).type_keys(text)
+
+    def _get_clipboard_data(self):
+        while True:
+            try:
+                return pywinauto.clipboard.GetData()
+            except Exception as e:
+                log.warning('{}, retry ......'.format(e))
+
+    def _switch_left_menus(self, path, sleep=0.2):
+        self._get_left_menus_handle().get_item(path).click()
+        self._wait(sleep)
+
+    def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
+        self._app.top_window().type_keys(shortcut)
+        self._wait(sleep)
+
+    @functools.lru_cache()
+    def _get_left_menus_handle(self):
+        while True:
+            try:
+                handle = self._app.top_window().window(
+                    control_id=129,
+                    class_name='SysTreeView32'
+                )
+                # sometime can't find handle ready, must retry
+                handle.wait('ready', 2)
+                return handle
+            except:
+                pass
+
+    def _format_grid_data(self, data):
+        df = pd.read_csv(io.StringIO(data),
+                         delimiter='\t',
+                         dtype=self._config.GRID_DTYPE,
+                         na_filter=False,
+                         )
+        return df.to_dict('records')
+
+    def _handle_cancel_entrust_pop_dialog(self):
+        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+            title = self._get_pop_dialog_title()
+            if '提示信息' in title:
+                self._app.top_window().type_keys('%Y')
+            elif '提示' in title:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window()['确定'].click()
+                return {'message': data}
+            else:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window().close()
+                return {'message': 'unkown message: {}'.find(data)}
+            self._wait(0.2)
+
+    def _cancel_entrust_by_double_click(self, row):
+        x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
+        y = self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
+        self._app.top_window().window(
+            control_id=self._config.COMMON_GRID_CONTROL_ID,
+            class_name='CVirtualGridCtrl'
+        ).double_click(coords=(x, y))
+
+    def _refresh(self):
+        self._switch_left_menus(['买入[F1]'], sleep=0.05)
