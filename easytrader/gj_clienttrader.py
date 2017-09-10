@@ -35,8 +35,6 @@ class GJClientTrader(YHClientTrader):
         """
         try:
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
-            self._close_prompt_windows()
-            raise Exception("Have Started, restart client")
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
 
@@ -50,12 +48,12 @@ class GJClientTrader(YHClientTrader):
 
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
+            edit3 = self._app.top_window().window(control_id=0x3eb)
             while True:
                 try:
                     code = self._handle_verify_code()
-                    code = self._handle_verify_code()
                     print('verify code=',code)
-                    self._app.top_window().Edit3.type_keys(
+                    edit3.type_keys(
                         code
                     )
                     time.sleep(1)
@@ -70,7 +68,9 @@ class GJClientTrader(YHClientTrader):
                 except Exception as e:
                     print("Exception,",e)
                     pass
+            print('connect start')
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
+            print('connect end')
         self._main = self._app.top_window()
 
     def _handle_verify_code(self):
