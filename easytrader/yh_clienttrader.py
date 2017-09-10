@@ -93,6 +93,7 @@ class YHClientTrader(ClientTrader):
         for w in self._app.windows(class_name='#32770'):
             if w.window_text() != self._config.TITLE:
                 w.close()
+        self._wait(1)
 
     @property
     def balance(self):

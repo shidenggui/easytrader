@@ -99,7 +99,6 @@ class GJClientTrader(YHClientTrader):
         retv['total_balance'] = self._app.top_window().window(control_id=0x3f7).window_text()
         return [retv]
 
-
     def cancel_all_entrusts(self):
         self._refresh()
         self._switch_left_menus(['撤单[F3]'],1)
@@ -117,5 +116,3 @@ class GJClientTrader(YHClientTrader):
             print('No Entrusts to Cancel')
         return
 
-
-    

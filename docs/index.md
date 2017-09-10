@@ -21,6 +21,11 @@
 * 银河客户端(支持自动登陆), 须在 `windows` 平台下载 `银河双子星` 客户端
 * 华泰客户端(同花顺版本)
 
+
+### 实盘易
+
+如果有对其他券商或者通达信版本的需求，可以查看 [实盘易](http://6du.in/0s15Iru)
+
 ### 模拟交易
 
 * 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](other/xueqiu.md)）
@@ -28,8 +33,6 @@
 
 
 ### 相关
-
-[量化交流论坛](http://www.celuetan.com)
 
 [获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
 
