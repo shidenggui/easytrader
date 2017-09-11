@@ -56,13 +56,21 @@ class GJClientTrader(YHClientTrader):
                     edit3.type_keys(
                         code
                     )
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self._app.top_window()['确定(Y)'].click()
+                    print("Login...")
+                    time.sleep(5)
+                    print("Check Login...")
                     # detect login is success or not
                     try:
-                        self._app.top_window().wait_not('exists', 5)
+                        tmp = self._app.window(title_re='网上股票交易系统.*')
+                        # self._app=tmp
+                        print('Open',tmp.window_text())
+                        print("Login Success")
                         break
-                    except:
+                    except Exception as e:
+                        print("Login Fail")
+                        print(e)
                         self._app.top_window()['确定'].click()
                         pass
                 except Exception as e:
@@ -91,5 +99,20 @@ class GJClientTrader(YHClientTrader):
         retv['total_balance'] = self._app.top_window().window(control_id=0x3f7).window_text()
         return [retv]
 
+    def cancel_all_entrusts(self):
+        self._refresh()
+        self._switch_left_menus(['撤单[F3]'],1)
+        total_len = len(self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID))
+        if total_len==1:            
+            print('%d Entrusts to Cancel'%total_len)
+            self._app.top_window().window(control_id=0x7531).click()
+            self._wait(1)
+            self._handle_cancel_entrust_pop_dialog()
+        elif total_len>1:            
+            print('%d Entrusts to Cancel'%total_len)
+            self._app.top_window().window(control_id=0x7531).click()
+            self._wait(1)
+        else:
+            print('No Entrusts to Cancel')
+        return
 
-    

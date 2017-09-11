@@ -172,8 +172,13 @@ class YHClientTrader(ClientTrader):
 
         self._submit_trade()
 
+        while self._main.wrapper_object() == self._app.top_window().wrapper_object():
+            print("wait for trade pop dialog...")
+            self._wait(0.2)
+
         while self._main.wrapper_object() != self._app.top_window().wrapper_object():
             pop_title = self._get_pop_dialog_title()
+            print('Get Pop Dialog =%s='%pop_title)
             if pop_title == '委托确认':
                 self._app.top_window().type_keys('%Y')
             elif pop_title == '提示信息':
@@ -204,9 +209,15 @@ class YHClientTrader(ClientTrader):
         ).click()
 
     def _get_pop_dialog_title(self):
-        return self._app.top_window().window(
-            control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID
-        ).window_text()
+        while True:
+            try:
+                return self._app.top_window().window(
+                    control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID
+                ).window_text()
+            except Exception as e:
+                print("get pop dialog fail...")
+                print(e)
+
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
@@ -280,6 +291,7 @@ class YHClientTrader(ClientTrader):
     def _handle_cancel_entrust_pop_dialog(self):
         while self._main.wrapper_object() != self._app.top_window().wrapper_object():
             title = self._get_pop_dialog_title()
+            print('Get Pop Dialog ==%s=='%title)
             if '提示信息' in title:
                 self._app.top_window().type_keys('%Y')
             elif '提示' in title:
