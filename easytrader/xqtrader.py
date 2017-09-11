@@ -89,8 +89,8 @@ class XueQiuTrader(WebTrader):
         login_post_data = {
             'username': self.account_config.get('username', ''),
             'areacode': '86',
-            'telephone': self.account_config['account'],
-            'remember_me': '0',
+            # 'telephone': self.account_config['account'],
+            # 'remember_me': '0',
             'password': self.account_config['password']
         }
         login_response = self.session.post(self.config['login_api'], data=login_post_data)
@@ -219,7 +219,7 @@ class XueQiuTrader(WebTrader):
         """
         data = {
             "cube_symbol": str(self.account_config['portfolio_code']),
-            'count': 5,
+            'count': 20,
             'page': 1
         }
         r = self.session.get(self.config['history_url'], params=data)
@@ -232,33 +232,35 @@ class XueQiuTrader(WebTrader):
 
     def get_entrust(self):
         """
-        获取委托单(目前返回5次调仓的结果)
+        获取委托单(目前返回20次调仓的结果)
         操作数量都按1手模拟换算的
         :return:
         """
         xq_entrust_list = self.__get_xq_history()
         entrust_list = []
+        replace_none = lambda s: s or 0
         for xq_entrusts in xq_entrust_list:
             status = xq_entrusts['status']  # 调仓状态
             if status == 'pending':
                 status = "已报"
-            elif status == 'canceled':
+            elif status in ['canceled','failed']:
                 status = "废单"
             else:
                 status = "已成"
             for entrust in xq_entrusts['rebalancing_histories']:
-                volume = abs(entrust['target_weight'] - entrust['weight']) * self.multiple / 10000
+                volume = abs(entrust['target_weight'] - replace_none(entrust['prev_weight'])) * self.multiple / 10000
+                price = entrust['price']
                 entrust_list.append({
                     'entrust_no': entrust['id'],
-                    'entrust_bs': u"买入" if entrust['target_weight'] > entrust['weight'] else u"卖出",
+                    'entrust_bs': u"买入" if entrust['target_weight'] > replace_none(entrust['prev_weight']) else u"卖出",
                     'report_time': self.__time_strftime(entrust['updated_at']),
                     'entrust_status': status,
                     'stock_code': entrust['stock_symbol'],
                     'stock_name': entrust['stock_name'],
                     'business_amount': 100,
-                    'business_price': volume,
+                    'business_price': price,
                     'entrust_amount': 100,
-                    'entrust_price': volume,
+                    'entrust_price': price,
                 })
         return entrust_list
 
