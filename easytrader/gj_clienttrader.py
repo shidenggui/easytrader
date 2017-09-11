@@ -71,7 +71,7 @@ class GJClientTrader(YHClientTrader):
             print('connect start')
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
             print('connect end')
-        self._main = self._app.top_window()
+        self._main = self._app.window(title='网上股票交易系统5.0')
 
     def _handle_verify_code(self):
         control = self._app.top_window().window(control_id=0x5db)

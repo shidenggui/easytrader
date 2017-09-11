@@ -65,7 +65,7 @@ class YHClientTrader(ClientTrader):
 
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
         self._close_prompt_windows()
-        self._main = self._app.top_window()
+        self._main = self._app.window(title='网上股票交易系统5.0')
 
     def _run_exe_path(self, exe_path):
         return os.path.join(
@@ -87,13 +87,6 @@ class YHClientTrader(ClientTrader):
         control.capture_as_image().save(file_path, 'jpeg')
         vcode = helpers.recognize_verify_code(file_path, 'yh_client')
         return ''.join(re.findall('\d+', vcode))
-
-    def _close_prompt_windows(self):
-        self._wait(1)
-        for w in self._app.windows(class_name='#32770'):
-            if w.window_text() != self._config.TITLE:
-                w.close()
-        self._wait(1)
 
     @property
     def balance(self):
@@ -232,7 +225,7 @@ class YHClientTrader(ClientTrader):
         )
 
     def _get_grid_data(self, control_id):
-        grid = self._app.top_window().window(
+        grid = self._main.window(
             control_id=control_id,
             class_name='CVirtualGridCtrl'
         )
@@ -242,7 +235,7 @@ class YHClientTrader(ClientTrader):
         )
 
     def _type_keys(self, control_id, text):
-        self._app.top_window().window(
+        self._main.window(
             control_id=control_id,
             class_name='Edit'
         ).type_keys(text)

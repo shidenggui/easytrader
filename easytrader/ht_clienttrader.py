@@ -59,7 +59,7 @@ class HTClientTrader(ClientTrader):
 
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
         self._close_prompt_windows()
-        self._main = self._app.top_window()
+        self._main = self._app.window(title='网上股票交易系统5.0')
 
     def _run_exe_path(self, exe_path):
         return os.path.join(
@@ -72,13 +72,6 @@ class HTClientTrader(ClientTrader):
     def exit(self):
         self._app.kill()
 
-    def _close_prompt_windows(self):
-        self._wait(1)
-        for w in self._app.windows(class_name='#32770'):
-            if w.window_text() != self._config.TITLE:
-                w.close()
-        self._wait(1)
-
     @property
     def balance(self):
         self._switch_left_menus(['查询[F4]', '资金股票'])
@@ -89,7 +82,7 @@ class HTClientTrader(ClientTrader):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             result[key] = float(
-                self._app.top_window().window(
+                self._main.window(
                     control_id=control_id,
                     class_name='Static',
                 ).window_text()
