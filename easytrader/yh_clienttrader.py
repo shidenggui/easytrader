@@ -198,7 +198,7 @@ class YHClientTrader(ClientTrader):
 
     def _submit_trade(self):
         time.sleep(0.05)
-        self._app.top_window().window(
+        self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name='Button'
         ).click()
@@ -259,7 +259,7 @@ class YHClientTrader(ClientTrader):
     def _get_left_menus_handle(self):
         while True:
             try:
-                handle = self._app.top_window().window(
+                handle = self._main.window(
                     control_id=129,
                     class_name='SysTreeView32'
                 )

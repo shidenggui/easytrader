@@ -56,21 +56,29 @@ class GJClientTrader(YHClientTrader):
                     edit3.type_keys(
                         code
                     )
-                    time.sleep(1)
+                    time.sleep(0.5)
                     self._app.top_window()['确定(Y)'].click()
+                    print("Check Login...")
                     # detect login is success or not
                     try:
-                        self._app.top_window().wait_not('exists', 5)
+                        self._app.window(title_re='用户登录.*').wait_not('exists',timeout=5)
+                        print('Login window closed')
+                        tmp = self._app.window(title_re='网上股票交易系统.*').wait('exists',timeout=5)
+                        print('Open',tmp.window_text())
+                        print("ReCheck Login...")
+                        self._wait(2)
+                        self._app.window(title_re='用户登录.*').wait_not('exists',timeout=5)
+                        print('Login window closed -- Recheck Pass')                        
+                        print("Login Success")
                         break
-                    except:
+                    except Exception as e:
+                        print("Login Fail")
+                        print(e)
                         self._app.top_window()['确定'].click()
                         pass
                 except Exception as e:
                     print("Exception,",e)
                     pass
-            print('connect start')
-            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
-            print('connect end')
         self._main = self._app.window(title='网上股票交易系统5.0')
 
     def _handle_verify_code(self):
@@ -87,9 +95,24 @@ class GJClientTrader(YHClientTrader):
     def balance(self):
         self._switch_left_menus(['查询[F4]', '资金股票'])
         retv={}
-        retv['enable_balance'] = self._app.top_window().window(control_id=0x3f8).window_text()
-        retv['total_balance'] = self._app.top_window().window(control_id=0x3f7).window_text()
+        retv['enable_balance'] = self._main.window(control_id=0x3f8).window_text()
+        retv['total_balance'] = self._main.window(control_id=0x3f7).window_text()
         return [retv]
 
 
-    
+    def cancel_all_entrusts(self):
+        self._refresh()
+        self._switch_left_menus(['撤单[F3]'],1)
+        total_len = len(self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID))
+        if total_len==1:            
+            print('%d Entrusts to Cancel'%total_len)
+            self._main.window(control_id=0x7531).click()
+            self._wait(1)
+            self._handle_cancel_entrust_pop_dialog()
+        elif total_len>1:            
+            print('%d Entrusts to Cancel'%total_len)
+            self._main.window(control_id=0x7531).click()
+            self._wait(1)
+        else:
+            print('No Entrusts to Cancel')
+        return
