@@ -1,0 +1,70 @@
+{
+  "login_page": "https://www.chinastock.com.cn/trade/webtrade/login.jsp",
+  "login_api": "https://www.chinastock.com.cn/trade/LoginServlet?ajaxFlag=mainlogin",
+  "heart_beat": "https://www.chinastock.com.cn/trade/AjaxServlet?ajaxFlag=heartbeat",
+  "unlock": "https://www.chinastock.com.cn/trade/AjaxServlet?ajaxFlag=unlockscreen",
+  "trade_api": "https://www.chinastock.com.cn/trade/AjaxServlet",
+  "trade_info_page": "https://www.chinastock.com.cn/trade/webtrade/tradeindex.jsp",
+  "verify_code_api": "https://www.chinastock.com.cn/trade/webtrade/verifyCodeImage.jsp",
+  "prefix": "https://www.chinastock.com.cn",
+  "logout_api": "https://www.chinastock.com.cn/trade/webtrade/commons/keepalive.jsp?type=go",
+  "login": {
+    "logintype_rzrq": 0,
+    "orgid": "",
+    "inputtype": "C",
+    "identifytype": 0,
+    "isonlytrade": 1,
+    "trdpwdjtws": "",
+    "Authplain9320": "",
+    "Authsign9321": "",
+    "certdata9322": "",
+    "ftype": "bsn"
+  },
+  "position": {
+    "service_jsp": "/trade/webtrade/stock/stock_zjgf_query.jsp",
+    "service_type": 1
+  },
+  "balance": {
+    "service_jsp": "/trade/webtrade/stock/stock_zjgf_query.jsp",
+    "service_type": 2
+  },
+  "entrust": {
+    "service_jsp": "/trade/webtrade/stock/stock_wt_query.jsp"
+  },
+  "buy": {
+    "marktype": "",
+    "ajaxFlag": "wt"
+  },
+  "sell": {
+    "ajaxFlag": "wt"
+  },
+  "fundpurchase": {
+    "ajaxFlag": "wt",
+    "bsflag": 3
+  },
+  "fundredemption": {
+    "ajaxFlag": "wt",
+    "bsflag": 4
+  },
+  "fundsubscribe": {
+    "ajaxFlag": "wt",
+    "bsflag": 5
+  },
+  "fundsplit": {
+    "ajaxFlag": "wt",
+    "bsflag": 85
+  },
+  "fundmerge": {
+    "ajaxFlag": "wt",
+    "bsflag": 86
+  },
+  "cancel_entrust": {
+    "ajaxFlag": "stock_cancel"
+  },
+  "current_deal": {
+    "service_jsp": "/trade/webtrade/stock/stock_cj_query.jsp"
+  },
+  "account4stock": {
+    "service_jsp": "/trade/webtrade/zhgl/holderQuery.jsp"
+  }
+}
