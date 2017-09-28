@@ -141,7 +141,7 @@ class YHClientTrader(ClientTrader):
     def auto_ipo(self):
         self._switch_left_menus(['新股申购', '一键打新'])
 
-        self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
+        # self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
         self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
 
         return self._handle_auto_ipo_pop_dialog()
@@ -149,7 +149,7 @@ class YHClientTrader(ClientTrader):
     def _handle_auto_ipo_pop_dialog(self):
         while self._main.wrapper_object() != self._app.top_window().wrapper_object():
             title = self._get_pop_dialog_title()
-            if '提示信息' in title:
+            if '委托确认' in title:
                 self._app.top_window().type_keys('%Y')
             elif '提示' in title:
                 data = self._app.top_window().Static.window_text()
