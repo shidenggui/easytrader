@@ -259,7 +259,7 @@ class YHClientTrader(ClientTrader):
     def _get_left_menus_handle(self):
         while True:
             try:
-                handle = self._app.top_window().window(
+                handle = self._main.window(
                     control_id=129,
                     class_name='SysTreeView32'
                 )
