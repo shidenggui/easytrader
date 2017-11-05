@@ -11,7 +11,7 @@ def create(broker):
 
 
 class YH:
-    DEFAULT_EXE_PATH = r'C:\中国银河证券双子星3.2\Binarystar.exe'
+    DEFAULT_EXE_PATH = r'C:\中国银河证券双子星交易\xiadan.exe'
     TITLE = '网上股票交易系统5.0'
 
     TRADE_SECURITY_CONTROL_ID = 1032

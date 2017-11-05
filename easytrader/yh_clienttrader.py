@@ -12,6 +12,7 @@ import easyutils
 import pandas as pd
 import pywinauto
 import pywinauto.clipboard
+from pywinauto.win32structures import RECT
 
 from . import exceptions
 from . import helpers
@@ -54,7 +55,7 @@ class YHClientTrader(ClientTrader):
                     self._handle_verify_code()
                 )
 
-                self._app.top_window()['登录'].click()
+                self._app.top_window().Button1.click()
 
                 # detect login is success or not
                 try:
@@ -79,12 +80,13 @@ class YHClientTrader(ClientTrader):
         self._app.kill()
 
     def _handle_verify_code(self):
-        control = self._app.top_window().window(control_id=22202)
+        control = self._app.top_window().window(control_id=1499)
         control.click()
-        control.draw_outline()
 
         file_path = tempfile.mktemp()
-        control.capture_as_image().save(file_path, 'jpeg')
+        rect = RECT(control.rectangle())
+        rect.right += 10
+        control.capture_as_image(rect=rect).save(file_path, 'jpeg')
         vcode = helpers.recognize_verify_code(file_path, 'yh_client')
         return ''.join(re.findall('\d+', vcode))
 
