@@ -6,5 +6,7 @@ from .joinquant_follower import JoinQuantFollower
 from .ricequant_follower import RiceQuantFollower
 from . import exceptions
 
+tesseract_config = None
+
 __version__ = '0.12.3'
 __author__ = 'shidenggui'

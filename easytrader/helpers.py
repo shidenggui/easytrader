@@ -13,6 +13,8 @@ from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from six.moves import input
 
+import easytrader
+
 if six.PY2:
     from io import open
 
@@ -128,7 +130,7 @@ def detect_gf_result(image_path):
 def invoke_tesseract_to_recognize(img):
     import pytesseract
     try:
-        res = pytesseract.image_to_string(img)
+        res = pytesseract.image_to_string(img, config=easytrader.tesseract_config)
     except FileNotFoundError:
         raise Exception('tesseract 未安装，请至 https://github.com/tesseract-ocr/tesseract/wiki 查看安装教程')
     valid_chars = re.findall('[0-9a-z]', res, re.IGNORECASE)
