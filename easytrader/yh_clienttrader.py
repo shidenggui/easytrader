@@ -58,7 +58,7 @@ class YHClientTrader(ClientTrader):
 
                 # detect login is success or not
                 try:
-                    self._app.top_window().wait_not('exists', 2)
+                    self._app.top_window().wait_not('exists', 10)
                     break
                 except:
                     pass

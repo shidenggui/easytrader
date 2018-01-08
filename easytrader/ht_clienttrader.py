@@ -55,7 +55,7 @@ class HTClientTrader(ClientTrader):
             self._app.top_window().type_keys('%Y')
 
             # detect login is success or not
-            self._app.top_window().wait_not('exists', 2)
+            self._app.top_window().wait_not('exists', 10)
 
             self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
         self._close_prompt_windows()
