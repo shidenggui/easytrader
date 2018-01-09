@@ -6,5 +6,5 @@ from .joinquant_follower import JoinQuantFollower
 from .ricequant_follower import RiceQuantFollower
 from . import exceptions
 
-__version__ = '0.12.4'
+__version__ = '0.12.5'
 __author__ = 'shidenggui'

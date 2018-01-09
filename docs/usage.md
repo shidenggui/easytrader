@@ -339,6 +339,25 @@ follower.follow(***, entrust_prop='market')
 follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
 ```
 
+### 远端服务器模式
+
+#### 在服务器上启动服务
+
+```python
+from easytrader import server
+
+server.run(port=1430) # 默认端口为 1430
+```
+
+#### 远程客户端调用
+
+```python
+from easytrader import remoteclient
+
+user = remoteclient.use('使用客户端类型，可选 yh_client, ht_client 等', host='服务器ip', port='服务器端口，默认为1430')
+
+其他用法同上
+```
 
 ### 命令行模式
 
