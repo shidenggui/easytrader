@@ -60,6 +60,9 @@ class RemoteClient:
     def cancel_entrusts(self):
         return self.common_get('cancel_entrusts')
 
+    def exit(self):
+        return self.common_get('exit')
+
     def common_get(self, endpoint):
         response = self._s.get(self._api + '/' + endpoint)
         if response.status_code >= 300:
