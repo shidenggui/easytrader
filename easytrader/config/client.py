@@ -6,13 +6,27 @@ def create(broker):
     elif broker == 'ht':
         return HT
     elif broker == 'gj':
-        return GJ    
+        return GJ
     raise NotImplemented
+
 
 class CommonConfig:
     COMMON_GRID_LEFT_MARGIN = 10
     COMMON_GRID_FIRST_ROW_HEIGHT = 30
     COMMON_GRID_ROW_HEIGHT = 16
+
+    BALANCE_MENU_PATH = ['查询[F4]', '资金股票']
+    POSITION_MENU_PATH = ['查询[F4]', '资金股票']
+    TODAY_ENTRUSTS_MENU_PATH = ['查询[F4]', '当日委托']
+    TODAY_TRADES_MENU_PATH = ['查询[F4]', '当日成交']
+
+    BALANCE_CONTROL_ID_GROUP = {
+        '资金余额': 1012,
+        '可用金额': 1016,
+        '可取金额': 1017,
+        '股票市值': 1014,
+        '总资产': 1015
+    }
 
 
 class YH(CommonConfig):
@@ -96,7 +110,8 @@ class HT(CommonConfig):
     AUTO_IPO_BUTTON_CONTROL_ID = 1006
     AUTO_IPO_MENU_PATH = ['新股申购', '批量新股申购']
 
-class GJ:
+
+class GJ(CommonConfig):
     DEFAULT_EXE_PATH = 'C:\\全能行证券交易终端\\xiadan.exe'
     TITLE = '网上股票交易系统5.0'
 
@@ -133,4 +148,5 @@ class GJ:
 
     ENABLE_BALANCE_TEXT_ID = 0x3f8
     TOTAL_BALANCE_TEXT_ID = 0x3f7
-    
+
+    AUTO_IPO_MENU_PATH = ['新股申购', '新股批量申购']

@@ -1,17 +1,27 @@
 # coding:utf-8
 
+import easyutils
+import functools
+import io
 import os
+import pandas as pd
+import pywinauto
+import pywinauto.clipboard
+import re
 import time
 from abc import abstractmethod
 
 from . import exceptions
 from . import helpers
 from .config import client
+from .log import log
 
 
 class ClientTrader:
     def __init__(self):
         self._config = client.create(self.broker_type)
+        self._app = None
+        self._main = None
 
     def prepare(self, config_path=None, user=None, password=None, exe_path=None, comm_password=None,
                 **kwargs):
@@ -40,41 +50,65 @@ class ClientTrader:
         pass
 
     @property
-    @abstractmethod
     def balance(self):
-        pass
+        self._switch_left_menus(['查询[F4]', '资金股票'])
+
+        return self._get_balance_from_statics()
+
+    def _get_balance_from_statics(self):
+        result = {}
+        for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
+            result[key] = float(
+                self._main.window(
+                    control_id=control_id,
+                    class_name='Static',
+                ).window_text()
+            )
+        return result
 
     @property
-    @abstractmethod
     def position(self):
-        pass
+        self._switch_left_menus(['查询[F4]', '资金股票'])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
-    @abstractmethod
-    def cancel_entrusts(self):
-        pass
-
-    @property
-    @abstractmethod
     def today_entrusts(self):
-        pass
+        self._switch_left_menus(['查询[F4]', '当日委托'])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
-    @abstractmethod
     def today_trades(self):
-        pass
+        self._switch_left_menus(['查询[F4]', '当日成交'])
 
-    @abstractmethod
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    @property
+    def cancel_entrusts(self):
+        self._refresh()
+        self._switch_left_menus(['撤单[F3]'])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
     def cancel_entrust(self, entrust_no):
-        pass
+        self._refresh()
+        for i, entrust in enumerate(self.cancel_entrusts):
+            if entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD] == entrust_no:
+                self._cancel_entrust_by_double_click(i)
+                return self._handle_cancel_entrust_pop_dialog()
+        else:
+            return {'message': '委托单状态错误不能撤单, 该委托单可能已经成交或者已撤'}
 
-    @abstractmethod
     def buy(self, security, price, amount, **kwargs):
-        pass
+        self._switch_left_menus(['买入[F1]'])
 
-    @abstractmethod
+        return self.trade(security, price, amount)
+
     def sell(self, security, price, amount, **kwargs):
-        pass
+        self._switch_left_menus(['卖出[F2]'])
+
+        return self.trade(security, price, amount)
 
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
@@ -160,3 +194,119 @@ class ClientTrader:
             else:
                 self._app.top_window().close()
             self._wait(0.3)  # wait next dialog display
+
+    def _click(self, control_id):
+        self._app.top_window().window(
+            control_id=control_id,
+            class_name='Button'
+        ).click()
+
+    def _extract_entrust_id(self, content):
+        return re.search(r'\d+', content).group()
+
+    def _submit_trade(self):
+        time.sleep(0.05)
+        self._app.top_window().window(
+            control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
+            class_name='Button'
+        ).click()
+
+    def _get_pop_dialog_title(self):
+        return self._app.top_window().window(
+            control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID
+        ).window_text()
+
+    def _set_trade_params(self, security, price, amount):
+        code = security[-6:]
+
+        self._type_keys(
+            self._config.TRADE_SECURITY_CONTROL_ID,
+            code
+        )
+        self._type_keys(
+            self._config.TRADE_PRICE_CONTROL_ID,
+            easyutils.round_price_by_code(price, code)
+        )
+        self._type_keys(
+            self._config.TRADE_AMOUNT_CONTROL_ID,
+            str(int(amount))
+        )
+
+    def _get_grid_data(self, control_id):
+        grid = self._main.window(
+            control_id=control_id,
+            class_name='CVirtualGridCtrl'
+        )
+        grid.type_keys('^A^C')
+        return self._format_grid_data(
+            self._get_clipboard_data()
+        )
+
+    def _type_keys(self, control_id, text):
+        self._main.window(
+            control_id=control_id,
+            class_name='Edit'
+        ).type_keys(text)
+
+    def _get_clipboard_data(self):
+        while True:
+            try:
+                return pywinauto.clipboard.GetData()
+            except Exception as e:
+                log.warning('{}, retry ......'.format(e))
+
+    def _switch_left_menus(self, path, sleep=0.2):
+        self._get_left_menus_handle().get_item(path).click()
+        self._wait(sleep)
+
+    def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
+        self._app.top_window().type_keys(shortcut)
+        self._wait(sleep)
+
+    @functools.lru_cache()
+    def _get_left_menus_handle(self):
+        while True:
+            try:
+                handle = self._main.window(
+                    control_id=129,
+                    class_name='SysTreeView32'
+                )
+                # sometime can't find handle ready, must retry
+                handle.wait('ready', 2)
+                return handle
+            except:
+                pass
+
+    def _format_grid_data(self, data):
+        df = pd.read_csv(io.StringIO(data),
+                         delimiter='\t',
+                         dtype=self._config.GRID_DTYPE,
+                         na_filter=False,
+                         )
+        return df.to_dict('records')
+
+    def _handle_cancel_entrust_pop_dialog(self):
+        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+            title = self._get_pop_dialog_title()
+            if '提示信息' in title:
+                self._app.top_window().type_keys('%Y')
+            elif '提示' in title:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window()['确定'].click()
+                return {'message': data}
+            else:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window().close()
+                return {'message': 'unkown message: {}'.find(data)}
+            self._wait(0.2)
+
+    def _cancel_entrust_by_double_click(self, row):
+        x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
+        y = self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
+        self._app.top_window().window(
+            control_id=self._config.COMMON_GRID_CONTROL_ID,
+            class_name='CVirtualGridCtrl'
+        ).double_click(coords=(x, y))
+
+    def _refresh(self):
+        self._switch_left_menus(['买入[F1]'], sleep=0.05)

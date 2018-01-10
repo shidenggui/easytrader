@@ -9,20 +9,25 @@ import easytrader
 ** 银河客户端**
 
 ```python
-user = easytrader.use('yh_client') # 银河客户端支持 ['yh_client', '银河客户端']
+user = easytrader.use('yh_client')
 ```
 ** 华泰客户端**
 ```python
-user = easytrader.use('ht_client') # 华泰客户端支持 ['ht_client', '华泰客户端']
+user = easytrader.use('ht_client')
+```
+
+** 国金客户端**
+```python
+user = easytrader.use('gj_client') 
 ```
 
 **雪球**
 
  雪球配置中 `username` 为邮箱, `account` 为手机, 填两者之一即可，另一项改为 `""`, 密码直接填写登录的明文密码即可，不需要抓取 `POST` 的密码
 
-**银河客户端**
+**银河/国金客户端**
 
-银河客户端直接使用明文的账号和密码即可
+客户端直接使用明文的账号和密码即可
 
 **华泰客户端**
 
@@ -50,12 +55,12 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 
 **格式如下**
 
-银河客户端
+银河/国金客户端
 
 ```
 {
-  "user": "银河用户名",
-  "password": "银河明文密码"
+  "user": "用户名",
+  "password": "明文密码"
 }
 
 ```

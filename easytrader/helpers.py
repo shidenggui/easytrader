@@ -4,11 +4,10 @@ from __future__ import division
 import datetime
 import json
 import re
-import ssl
-import uuid
-
 import requests
 import six
+import ssl
+import uuid
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from six.moves import input
@@ -72,7 +71,7 @@ def recognize_verify_code(image_path, broker='ht'):
 
     if broker == 'gf':
         return detect_gf_result(image_path)
-    elif broker == 'yh_client':
+    elif broker in ['yh_client', 'gj_client']:
         return detect_yh_client_result(image_path)
     # 调用 tesseract 识别
     return default_verify_code_detect(image_path)
