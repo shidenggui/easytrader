@@ -152,29 +152,6 @@ class YHClientTrader(ClientTrader):
         else:
             return {'message': '委托单状态错误不能撤单, 该委托单可能已经成交或者已撤'}
 
-    def auto_ipo(self):
-        self._switch_left_menus(['新股申购', '一键打新'])
-
-        self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
-        self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
-
-        return self._handle_auto_ipo_pop_dialog()
-
-    def _handle_auto_ipo_pop_dialog(self):
-        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
-            title = self._get_pop_dialog_title()
-            if '提示信息' in title:
-                self._app.top_window().type_keys('%Y')
-            elif '提示' in title:
-                data = self._app.top_window().Static.window_text()
-                self._app.top_window()['确定'].click()
-                return {'message': data}
-            else:
-                data = self._app.top_window().Static.window_text()
-                self._app.top_window().close()
-                return {'message': 'unkown message: {}'.find(data)}
-            self._wait(0.1)
-
     def _click(self, control_id):
         self._app.top_window().window(
             control_id=control_id,

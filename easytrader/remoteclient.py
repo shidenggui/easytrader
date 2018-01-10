@@ -60,6 +60,9 @@ class RemoteClient:
     def cancel_entrusts(self):
         return self.common_get('cancel_entrusts')
 
+    def auto_ipo(self):
+        return self.common_get('auto_ipo')
+
     def exit(self):
         return self.common_get('exit')
 

@@ -9,8 +9,13 @@ def create(broker):
         return GJ    
     raise NotImplemented
 
+class CommonConfig:
+    COMMON_GRID_LEFT_MARGIN = 10
+    COMMON_GRID_FIRST_ROW_HEIGHT = 30
+    COMMON_GRID_ROW_HEIGHT = 16
 
-class YH:
+
+class YH(CommonConfig):
     DEFAULT_EXE_PATH = r'C:\中国银河证券双子星3.2\Binarystar.exe'
     TITLE = '网上股票交易系统5.0'
 
@@ -44,9 +49,10 @@ class YH:
 
     AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID = 1098
     AUTO_IPO_BUTTON_CONTROL_ID = 1006
+    AUTO_IPO_MENU_PATH = ['新股申购', '一键打新']
 
 
-class HT:
+class HT(CommonConfig):
     DEFAULT_EXE_PATH = r'C:\htzqzyb2\xiadan.exe'
     TITLE = '网上股票交易系统5.0'
 
@@ -88,6 +94,7 @@ class HT:
 
     AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID = 1098
     AUTO_IPO_BUTTON_CONTROL_ID = 1006
+    AUTO_IPO_MENU_PATH = ['新股申购', '批量新股申购']
 
 class GJ:
     DEFAULT_EXE_PATH = 'C:\\全能行证券交易终端\\xiadan.exe'

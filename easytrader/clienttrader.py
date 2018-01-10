@@ -76,7 +76,45 @@ class ClientTrader:
         pass
 
     def auto_ipo(self):
-        raise NotImplementedError
+        self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
+
+        stock_list = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+        valid_list_idx = [i for i, v in enumerate(stock_list) if v['申购数量'] <= 0]
+        self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
+        self._wait(0.1)
+
+        for row in valid_list_idx:
+            self._click_grid_by_row(row)
+        self._wait(0.1)
+
+        self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
+        self._wait(0.1)
+
+        return self._handle_auto_ipo_pop_dialog()
+
+    def _click_grid_by_row(self, row):
+        x = self._config.COMMON_GRID_LEFT_MARGIN
+        y = self._config.COMMON_GRID_FIRST_ROW_HEIGHT + self._config.COMMON_GRID_ROW_HEIGHT * row
+        self._app.top_window().window(
+            control_id=self._config.COMMON_GRID_CONTROL_ID,
+            class_name='CVirtualGridCtrl'
+        ).click(coords=(x, y))
+
+    def _handle_auto_ipo_pop_dialog(self):
+        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+            title = self._get_pop_dialog_title()
+            if '提示信息' in title or '委托确认' in title:
+                self._app.top_window().type_keys('%Y')
+            elif '提示' in title:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window()['确定'].click()
+                return {'message': data}
+            else:
+                data = self._app.top_window().Static.window_text()
+                self._app.top_window().close()
+                return {'message': 'unkown message: {}'.find(data)}
+            self._wait(0.1)
+        return {'message': 'success'}
 
     def _run_exe_path(self, exe_path):
         return os.path.join(
@@ -95,4 +133,3 @@ class ClientTrader:
             if w.window_text() != self._config.TITLE:
                 w.close()
         self._wait(1)
-

@@ -43,6 +43,17 @@ def get_position():
     return jsonify(position), 200
 
 
+@app.route('/auto_ipo', methods=['GET'])
+def get_auto_ipo():
+    try:
+        user = global_store['user']
+        res = user.auto_ipo()
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+    return jsonify(res), 200
+
+
 @app.route('/today_entrusts', methods=['GET'])
 def get_today_entrusts():
     try:
