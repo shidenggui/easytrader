@@ -1,14 +1,19 @@
 ### requirements
 
-银河可以直接自动登录, 其他券商如果登陆需要识别验证码的话需要安装 tesseract：
+### 客户端设置
 
-* `tesseract` : 非 `pytesseract`, 需要单独安装, [地址](https://github.com/tesseract-ocr/tesseract/wiki),保证在命令行下 `tesseract` 可用
-
-##### 客户端设置
+需要对客户端按以下设置，不然会导致下单时价格出错以及客户端超时锁定
 
 * 系统设置 > 界面设置: 界面不操作超时时间设为 0
 * 系统设置 > 交易设置: 默认买入价格/买入数量/卖出价格/卖出数量 都设置为 空
 
+### 登陆时的验证码识别
+
+银河可以直接自动登录, 其他券商如果登陆需要识别验证码的话需要安装 tesseract：
+
+* `tesseract` : 非 `pytesseract`, 需要单独安装, [地址](https://github.com/tesseract-ocr/tesseract/wiki),保证在命令行下 `tesseract` 可用
+
+或者你也可以手动登陆后在通过 `easytrader` 调用，此时 `easytrader` 在登陆过程中会直接识别到已登陆的窗口。
 
 ### 安装
 

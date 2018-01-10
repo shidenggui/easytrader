@@ -32,7 +32,7 @@ user = easytrader.use('ht_client') # 华泰客户端支持 ['ht_client', '华泰
 
 登陆账号有两种方式，`使用参数` 和 `使用配置文件`
 
-** 参数登录(推荐)**
+**参数登录(推荐)**
 
 ```
 user.prepare(user='用户名', password='雪球、银河客户端为明文密码', comm_password='华泰通讯密码，其他券商不用')
@@ -40,7 +40,7 @@ user.prepare(user='用户名', password='雪球、银河客户端为明文密码
 
 **注:**雪球额外有个 account 参数，见上文介绍
 
-** 使用配置文件**
+**使用配置文件**
 
 ```python
 user.prepare('/path/to/your/yh_client.json') // 配置文件路径
@@ -48,7 +48,7 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 
 **注**: 使用配置文件模式, 配置文件需要自己用编辑器编辑生成, 请勿使用记事本, 推荐使用 [notepad++](https://notepad-plus-plus.org/zh/) 或者 [sublime text](http://www.sublimetext.com/)
 
-*格式如下*
+**格式如下**
 
 银河客户端
 
@@ -242,6 +242,27 @@ print(ipo_data)
 user.exit()
 ```
 
+### 远端服务器模式
+
+#### 在服务器上启动服务
+
+```python
+from easytrader import server
+
+server.run(port=1430) # 默认端口为 1430
+```
+
+#### 远程客户端调用
+
+```python
+from easytrader import remoteclient
+
+user = remoteclient.use('使用客户端类型，可选 yh_client, ht_client 等', host='服务器ip', port='服务器端口，默认为1430')
+
+其他用法同上
+```
+
+
 #### 雪球组合调仓
 
 ```python
@@ -337,26 +358,6 @@ follower.follow(***, entrust_prop='market')
 
 ```
 follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
-```
-
-### 远端服务器模式
-
-#### 在服务器上启动服务
-
-```python
-from easytrader import server
-
-server.run(port=1430) # 默认端口为 1430
-```
-
-#### 远程客户端调用
-
-```python
-from easytrader import remoteclient
-
-user = remoteclient.use('使用客户端类型，可选 yh_client, ht_client 等', host='服务器ip', port='服务器端口，默认为1430')
-
-其他用法同上
 ```
 
 ### 命令行模式
