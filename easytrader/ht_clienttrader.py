@@ -12,7 +12,6 @@ import pandas as pd
 import pywinauto
 import pywinauto.clipboard
 
-from . import exceptions
 from .clienttrader import ClientTrader
 from .log import log
 
@@ -133,38 +132,11 @@ class HTClientTrader(ClientTrader):
         else:
             return {'message': '委托单状态错误不能撤单, 该委托单可能已经成交或者已撤'}
 
-
     def _click(self, control_id):
         self._app.top_window().window(
             control_id=control_id,
             class_name='Button'
         ).click()
-
-    def trade(self, security, price, amount):
-        self._set_trade_params(security, price, amount)
-
-        self._submit_trade()
-
-        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
-            pop_title = self._get_pop_dialog_title()
-            if pop_title == '委托确认':
-                self._app.top_window().type_keys('%Y')
-            elif pop_title == '提示信息':
-                if '超出涨跌停' in self._app.top_window().Static.window_text():
-                    self._app.top_window().type_keys('%Y')
-            elif pop_title == '提示':
-                content = self._app.top_window().Static.window_text()
-                if '成功' in content:
-                    entrust_no = self._extract_entrust_id(content)
-                    self._app.top_window()['确定'].click()
-                    return {'entrust_no': entrust_no}
-                else:
-                    self._app.top_window()['确定'].click()
-                    self._wait(0.05)
-                    raise exceptions.TradeError(content)
-            else:
-                self._app.top_window().close()
-            self._wait(0.2)  # wait next dialog display
 
     def _extract_entrust_id(self, content):
         return re.search(r'\d+', content).group()

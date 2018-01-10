@@ -4,6 +4,7 @@ import os
 import time
 from abc import abstractmethod
 
+from . import exceptions
 from . import helpers
 from .config import client
 
@@ -133,3 +134,29 @@ class ClientTrader:
             if w.window_text() != self._config.TITLE:
                 w.close()
         self._wait(1)
+
+    def trade(self, security, price, amount):
+        self._set_trade_params(security, price, amount)
+
+        self._submit_trade()
+
+        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+            pop_title = self._get_pop_dialog_title()
+            if pop_title == '委托确认':
+                self._app.top_window().type_keys('%Y')
+            elif pop_title == '提示信息':
+                if '超出涨跌停' in self._app.top_window().Static.window_text():
+                    self._app.top_window().type_keys('%Y')
+            elif pop_title == '提示':
+                content = self._app.top_window().Static.window_text()
+                if '成功' in content:
+                    entrust_no = self._extract_entrust_id(content)
+                    self._app.top_window()['确定'].click()
+                    return {'entrust_no': entrust_no}
+                else:
+                    self._app.top_window()['确定'].click()
+                    self._wait(0.05)
+                    raise exceptions.TradeError(content)
+            else:
+                self._app.top_window().close()
+            self._wait(0.3)  # wait next dialog display
