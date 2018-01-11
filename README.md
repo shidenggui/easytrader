@@ -1,9 +1,10 @@
 # easytrader
 
 * 进行自动的程序化股票交易
-* 实现自动登录
 * 支持跟踪 `joinquant`, `ricequant` 的模拟交易
 * 支持跟踪 雪球组合 调仓
+* 支持通用的同花顺客户端模拟操作
+* 实现自动登录
 * 支持通过 webserver 远程操作客户端
 * 支持命令行调用，方便其他语言适配
 * 支持 Python3, Linux / Win, 推荐使用 `Python3`

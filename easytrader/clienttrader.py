@@ -1,15 +1,16 @@
 # coding:utf-8
 
-import easyutils
 import functools
 import io
 import os
-import pandas as pd
-import pywinauto
-import pywinauto.clipboard
 import re
 import time
 from abc import abstractmethod
+
+import easyutils
+import pandas as pd
+import pywinauto
+import pywinauto.clipboard
 
 from . import exceptions
 from . import helpers
@@ -44,10 +45,20 @@ class ClientTrader:
     def login(self, user, password, exe_path, comm_password=None, **kwargs):
         pass
 
+    def connect(self, exe_path=None, **kwargs):
+        """
+        直接连接登陆后的客户端
+        :param exe_path: 客户端路径类似 r'C:\\htzqzyb2\\xiadan.exe', 默认 r'C:\\htzqzyb2\\xiadan.exe'
+        :return:
+        """
+        self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path or self._config.DEFAULT_EXE_PATH),
+                                                    timeout=10)
+        self._close_prompt_windows()
+        self._main = self._app.window(title=self._config.TITLE)
+
     @property
-    @abstractmethod
     def broker_type(self):
-        pass
+        return 'ths'
 
     @property
     def balance(self):
@@ -138,7 +149,7 @@ class ClientTrader:
     def _handle_auto_ipo_pop_dialog(self):
         while self._main.wrapper_object() != self._app.top_window().wrapper_object():
             title = self._get_pop_dialog_title()
-            if '提示信息' in title or '委托确认' in title:
+            if '提示信息' in title or '委托确认' in title or '网上交易用户协议' in title:
                 self._app.top_window().type_keys('%Y')
             elif '提示' in title:
                 data = self._app.top_window().Static.window_text()

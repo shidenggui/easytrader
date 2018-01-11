@@ -6,20 +6,29 @@ import easytrader
 
 **设置账户**:
 
-** 银河客户端**
+**银河客户端**
 
 ```python
 user = easytrader.use('yh_client')
 ```
-** 华泰客户端**
+**华泰客户端**
+
 ```python
 user = easytrader.use('ht_client')
 ```
 
-** 国金客户端**
+**国金客户端**
+
 ```python
 user = easytrader.use('gj_client') 
 ```
+
+**通用同花顺客户端**
+
+```python
+user = easytrader.use('ths') 
+```
+
 
 **雪球**
 
@@ -75,6 +84,15 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 }
 
 ```
+
+# 直接连接通用同花顺客户端
+
+需要先手动登陆客户端，然后运用下面的代码连接客户端
+
+```python
+user.connect('客户端exe路径')
+```
+
 
 ### 交易相关
 
