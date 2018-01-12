@@ -121,6 +121,70 @@ class ClientTrader:
 
         return self.trade(security, price, amount)
 
+    def market_buy(self, security, amount, ttype=None, **kwargs):
+        """
+        市价买入
+        :param security: 六位证券代码
+        :param amount: 交易数量
+        :param ttype: 市价委托类型，默认客户端默认选择，
+                     深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
+                     沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+
+        :return: {'entrust_no': '委托单号'}
+        """
+        self._switch_left_menus(['市价委托', '买入'])
+
+        return self.market_trade(security, amount, ttype)
+
+    def market_sell(self, security, amount, ttype=None, **kwargs):
+        """
+        市价卖出
+        :param security: 六位证券代码
+        :param amount: 交易数量
+        :param ttype: 市价委托类型，默认客户端默认选择，
+                     深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
+                     沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+
+        :return: {'entrust_no': '委托单号'}
+        """
+        self._switch_left_menus(['市价委托', '卖出'])
+
+        return self.market_trade(security, amount, ttype)
+
+    def market_trade(self, security, amount, ttype=None, **kwargs):
+        """
+        市价交易
+        :param security: 六位证券代码
+        :param amount: 交易数量
+        :param ttype: 市价委托类型，默认客户端默认选择，
+                     深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
+                     沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+
+        :return: {'entrust_no': '委托单号'}
+        """
+        self._set_market_trade_params(security, amount)
+        if ttype is not None:
+            self._set_market_trade_type(ttype)
+        self._submit_trade()
+
+        return self._handle_trade_pop_dialog()
+
+    def _set_market_trade_type(self, ttype):
+        """根据选择的市价交易类型选择对应的下拉选项"""
+        selects = self._main(
+            control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
+            class_name='ComboBox'
+        )
+        for i, text in selects.texts():
+            # skip 0 index, because 0 index is current select index
+            if i == 0:
+                continue
+            if ttype in text:
+                selects.select(i - 1)
+                break
+        else:
+            raise TypeError('不支持对应的市价类型: {}'.format(ttype))
+
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
 
@@ -185,6 +249,9 @@ class ClientTrader:
 
         self._submit_trade()
 
+        return self._handle_trade_pop_dialog()
+
+    def _handle_trade_pop_dialog(self):
         while self._main.wrapper_object() != self._app.top_window().wrapper_object():
             pop_title = self._get_pop_dialog_title()
             if pop_title == '委托确认':
@@ -237,6 +304,18 @@ class ClientTrader:
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code)
+        )
+        self._type_keys(
+            self._config.TRADE_AMOUNT_CONTROL_ID,
+            str(int(amount))
+        )
+
+    def _set_market_trade_params(self, security, amount):
+        code = security[-6:]
+
+        self._type_keys(
+            self._config.TRADE_SECURITY_CONTROL_ID,
+            code
         )
         self._type_keys(
             self._config.TRADE_AMOUNT_CONTROL_ID,
