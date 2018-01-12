@@ -252,6 +252,7 @@ class ClientTrader:
         return self._handle_trade_pop_dialog()
 
     def _handle_trade_pop_dialog(self):
+        self._wait(0.2)  # wait dialog display
         while self._main.wrapper_object() != self._app.top_window().wrapper_object():
             pop_title = self._get_pop_dialog_title()
             if pop_title == '委托确认':
@@ -301,6 +302,10 @@ class ClientTrader:
             self._config.TRADE_SECURITY_CONTROL_ID,
             code
         )
+
+        # wait security input finish
+        self._wait(0.1)
+
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code)
@@ -317,6 +322,10 @@ class ClientTrader:
             self._config.TRADE_SECURITY_CONTROL_ID,
             code
         )
+
+        # wait security input finish
+        self._wait(0.1)
+
         self._type_keys(
             self._config.TRADE_AMOUNT_CONTROL_ID,
             str(int(amount))
