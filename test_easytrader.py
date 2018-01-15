@@ -7,8 +7,6 @@ import unittest
 
 sys.path.append('.')
 
-import easytrader
-
 TEST_CLIENTS = os.environ.get('EZ_TEST_CLIENTS', 'yh')
 
 
@@ -16,6 +14,7 @@ TEST_CLIENTS = os.environ.get('EZ_TEST_CLIENTS', 'yh')
 class TestYhClientTrader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import easytrader
         if 'yh' not in TEST_CLIENTS:
             return
 
@@ -43,10 +42,12 @@ class TestYhClientTrader(unittest.TestCase):
         result = self._user.cancel_entrust('123456789')
 
     def test_invalid_buy(self):
+        import easytrader
         with self.assertRaises(easytrader.exceptions.TradeError):
             result = self._user.buy('511990', 1, 1e10)
 
     def test_invalid_sell(self):
+        import easytrader
         with self.assertRaises(easytrader.exceptions.TradeError):
             result = self._user.sell('162411', 200, 1e10)
 
@@ -58,6 +59,7 @@ class TestYhClientTrader(unittest.TestCase):
 class TestHTClientTrader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import easytrader
         if 'ht' not in TEST_CLIENTS:
             return
 
@@ -86,15 +88,26 @@ class TestHTClientTrader(unittest.TestCase):
         result = self._user.cancel_entrust('123456789')
 
     def test_invalid_buy(self):
+        import easytrader
         with self.assertRaises(easytrader.exceptions.TradeError):
             result = self._user.buy('511990', 1, 1e10)
 
     def test_invalid_sell(self):
+        import easytrader
         with self.assertRaises(easytrader.exceptions.TradeError):
             result = self._user.sell('162411', 200, 1e10)
 
     def test_auto_ipo(self):
         self._user.auto_ipo()
+
+
+class TestClientTrader(unittest.TestCase):
+    def test_connect(self):
+        from easytrader.clienttrader import ClientTrader
+        c = ClientTrader()
+
+        with self.assertRaises(ValueError):
+            c.connect()
 
 
 if __name__ == '__main__':

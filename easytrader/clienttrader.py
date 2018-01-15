@@ -4,18 +4,21 @@ import functools
 import io
 import os
 import re
+import sys
 import time
 from abc import abstractmethod
 
 import easyutils
 import pandas as pd
-import pywinauto
-import pywinauto.clipboard
 
 from . import exceptions
 from . import helpers
 from .config import client
 from .log import log
+
+if not sys.platform.startswith('darwin'):
+    import pywinauto
+    import pywinauto.clipboard
 
 
 class ClientTrader:
@@ -51,10 +54,14 @@ class ClientTrader:
         :param exe_path: 客户端路径类似 r'C:\\htzqzyb2\\xiadan.exe', 默认 r'C:\\htzqzyb2\\xiadan.exe'
         :return:
         """
-        self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path or self._config.DEFAULT_EXE_PATH),
+        connect_path = exe_path or self._config.DEFAULT_EXE_PATH
+        if connect_path is None:
+            raise ValueError('参数 exe_path 未设置，请设置客户端对应的 exe 地址,类似 C:\\客户端安装目录\\xiadan.exe')
+
+        self._app = pywinauto.Application().connect(path=connect_path,
                                                     timeout=10)
         self._close_prompt_windows()
-        self._main = self._app.window(title=self._config.TITLE)
+        self._main = self._app.top_window()
 
     @property
     def broker_type(self):
