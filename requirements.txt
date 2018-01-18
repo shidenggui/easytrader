@@ -1,7 +1,6 @@
 pywinauto
 bs4
 requests
-demjson
 dill
 click
 six
@@ -11,3 +10,4 @@ pytesseract
 pandas
 pyperclip
 rqopen-client
+easyutils

@@ -88,10 +88,14 @@ setup(
     url='https://github.com/shidenggui/easytrader',
     keywords='China stock trade',
     install_requires=[
-            'demjson',
-            'requests',
-            'six',
-            'rqopen-client',
+        'requests',
+        'six',
+        'rqopen-client',
+        'easyutils',
+        'flask',
+        'pywinauto',
+        'pillow',
+        'pandas'
     ],
     classifiers=['Development Status :: 4 - Beta',
                  'Programming Language :: Python :: 2.6',
