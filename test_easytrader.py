@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import unittest
+from unittest import mock
 
 sys.path.append('.')
 
@@ -108,6 +109,18 @@ class TestClientTrader(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             c.connect()
+
+    def test_auto_ipo_with_failed_situation(self):
+        from easytrader.clienttrader import ClientTrader
+        c = ClientTrader()
+        with mock.patch.object(c, '_switch_left_menus'):
+            for case, res in [
+                ([], {'message': '今日无新股'}),
+                ([{'申购数量': 0}], {'message': '没有发现可以申购的新股'})
+            ]:
+                with mock.patch.object(c, '_get_grid_data') as ipo_list_mock:
+                    ipo_list_mock.return_value = case
+                    self.assertDictEqual(c.auto_ipo(), res)
 
 
 if __name__ == '__main__':
