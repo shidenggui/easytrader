@@ -224,8 +224,12 @@ class ClientTrader:
             class_name='CVirtualGridCtrl'
         ).click(coords=(x, y))
 
+    def _is_exist_pop_dialog(self):
+        return self._main.wrapper_object() != self._app.top_window().wrapper_object()
+
+
     def _handle_auto_ipo_pop_dialog(self):
-        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+        while self._is_exist_pop_dialog():
             title = self._get_pop_dialog_title()
             if '提示信息' in title or '委托确认' in title or '网上交易用户协议' in title:
                 self._app.top_window().type_keys('%Y')
@@ -267,7 +271,7 @@ class ClientTrader:
 
     def _handle_trade_pop_dialog(self):
         self._wait(0.2)  # wait dialog display
-        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+        while self._is_exist_pop_dialog():
             pop_title = self._get_pop_dialog_title()
             if pop_title == '委托确认':
                 self._app.top_window().type_keys('%Y')
@@ -399,7 +403,7 @@ class ClientTrader:
         return df.to_dict('records')
 
     def _handle_cancel_entrust_pop_dialog(self):
-        while self._main.wrapper_object() != self._app.top_window().wrapper_object():
+        while self._is_exist_pop_dialog():
             title = self._get_pop_dialog_title()
             if '提示信息' in title:
                 self._app.top_window().type_keys('%Y')
