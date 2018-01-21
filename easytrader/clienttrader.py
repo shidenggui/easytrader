@@ -38,7 +38,7 @@ class PopDialogHandler:
         else:
             content = self._extract_content()
             self._close()
-            return {'message': 'unknown message: {}'.find(content)}
+            return {'message': 'unknown message: {}'.format(content)}
 
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
