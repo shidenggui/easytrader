@@ -45,7 +45,10 @@ class PopDialog:
             self._submit_by_shortcut()
 
         elif title == '提示信息':
-            if '超出涨跌停' in self._extract_content():
+            content = self._extract_content()
+            if '超出涨跌停' in content:
+                self._submit_by_shortcut()
+            elif '委托价格的小数价格应为' in content:
                 self._submit_by_shortcut()
 
         elif title == '提示':
