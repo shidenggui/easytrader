@@ -21,11 +21,11 @@ if not sys.platform.startswith('darwin'):
     import pywinauto.clipboard
 
 
-class PopDialog:
+class PopDialogHandler:
     def __init__(self, app):
         self._app = app
 
-    def handle_common(self, title):
+    def handle(self, title):
         if any(s in title for s in
                ['提示信息', '委托确认', '网上交易用户协议']):
             self._submit_by_shortcut()
@@ -40,7 +40,24 @@ class PopDialog:
             self._close()
             return {'message': 'unknown message: {}'.find(content)}
 
-    def handle_trade(self, title):
+    def _extract_content(self):
+        return self._app.top_window().Static.window_text()
+
+    def _extract_entrust_id(self, content):
+        return re.search(r'\d+', content).group()
+
+    def _submit_by_click(self):
+        self._app.top_window()['确定'].click()
+
+    def _submit_by_shortcut(self):
+        self._app.top_window().type_keys('%Y')
+
+    def _close(self):
+        self._app.top_window().close()
+
+
+class TradePopDialogHandler(PopDialogHandler):
+    def handle(self, title):
         if title == '委托确认':
             self._submit_by_shortcut()
 
@@ -63,21 +80,6 @@ class PopDialog:
                 raise exceptions.TradeError(content)
         else:
             self._close()
-
-    def _extract_content(self):
-        return self._app.top_window().Static.window_text()
-
-    def _extract_entrust_id(self, content):
-        return re.search(r'\d+', content).group()
-
-    def _submit_by_click(self):
-        self._app.top_window()['确定'].click()
-
-    def _submit_by_shortcut(self):
-        self._app.top_window().type_keys('%Y')
-
-    def _close(self):
-        self._app.top_window().close()
 
 
 class ClientTrader:
@@ -173,7 +175,7 @@ class ClientTrader:
         for i, entrust in enumerate(self.cancel_entrusts):
             if entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD] == entrust_no:
                 self._cancel_entrust_by_double_click(i)
-                return self._handle_common_pop_dialog()
+                return self._handle_pop_dialogs()
         else:
             return {'message': '委托单状态错误不能撤单, 该委托单可能已经成交或者已撤'}
 
@@ -233,7 +235,7 @@ class ClientTrader:
             self._set_market_trade_type(ttype)
         self._submit_trade()
 
-        return self._handle_trade_pop_dialog()
+        return self._handle_pop_dialogs(handler_class=TradePopDialogHandler)
 
     def _set_market_trade_type(self, ttype):
         """根据选择的市价交易类型选择对应的下拉选项"""
@@ -273,7 +275,7 @@ class ClientTrader:
         self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
         self._wait(0.1)
 
-        return self._handle_common_pop_dialog()
+        return self._handle_pop_dialogs()
 
     def _click_grid_by_row(self, row):
         x = self._config.COMMON_GRID_LEFT_MARGIN
@@ -310,7 +312,7 @@ class ClientTrader:
 
         self._submit_trade()
 
-        return self._handle_trade_pop_dialog()
+        return self._handle_pop_dialogs(handler_class=TradePopDialogHandler)
 
     def _click(self, control_id):
         self._app.top_window().window(
@@ -430,19 +432,13 @@ class ClientTrader:
     def _refresh(self):
         self._switch_left_menus(['买入[F1]'], sleep=0.05)
 
-    def _handle_trade_pop_dialog(self):
+    def _handle_pop_dialogs(self, handler_class=PopDialogHandler):
+        handler = handler_class(self._app)
+
         while self._is_exist_pop_dialog():
             title = self._get_pop_dialog_title()
 
-            result = PopDialog(self._app).handle_trade(title)
-            if result:
-                return result
-
-    def _handle_common_pop_dialog(self):
-        while self._is_exist_pop_dialog():
-            title = self._get_pop_dialog_title()
-
-            result = PopDialog(self._app).handle_common(title)
+            result = handler.handle(title)
             if result:
                 return result
         return {'message': 'success'}
