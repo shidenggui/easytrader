@@ -27,7 +27,7 @@ class PopDialogHandler:
 
     def handle(self, title):
         if any(s in title for s in
-               ['提示信息', '委托确认', '网上交易用户协议']):
+               {'提示信息', '委托确认', '网上交易用户协议'}):
             self._submit_by_shortcut()
 
         elif '提示' in title:
