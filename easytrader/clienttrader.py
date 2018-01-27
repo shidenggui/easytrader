@@ -103,6 +103,8 @@ class ClientTrader:
             account = helpers.file2dict(config_path)
             user = account['user']
             password = account['password']
+            comm_password = account.get('comm_password')
+            exe_path = account.get('exe_path')
         self.login(user, password, exe_path or self._config.DEFAULT_EXE_PATH, comm_password, **kwargs)
 
     @abstractmethod

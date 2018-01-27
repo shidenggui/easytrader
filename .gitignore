@@ -4,6 +4,7 @@ gft.json
 test.py
 ht_account.json
 .idea
+.vscode
 .ipynb_checkpoints
 Untitled.ipynb
 untitled.txt
@@ -11,6 +12,7 @@ untitled.txt
 __pycache__/
 *.py[cod]
 account.json
+account.session
 # C extensions
 *.so
 
