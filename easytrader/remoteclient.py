@@ -31,7 +31,7 @@ class RemoteClient:
         if config_path is not None:
             account = helpers.file2dict(config_path)
             params['user'] = account['user']
-            password['password'] = account['password']
+            params['password'] = account['password']
 
         params['broker'] = self._broker
 
