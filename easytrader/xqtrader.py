@@ -282,7 +282,7 @@ class XueQiuTrader(WebTrader):
                         raise TradeError(u"移除的股票操作无法撤销,建议重新买入")
                     balance = self.get_balance()[0]
                     volume = abs(entrust['target_weight'] - entrust['weight']) * balance['asset_balance'] / 100
-                    r = self.__trade(stock_code=entrust['stock_symbol'], volume=volume, entrust_bs=bs)
+                    r = self.__trade(security=entrust['stock_symbol'], volume=volume, entrust_bs=bs)
                     if len(r) > 0 and 'error_info' in r[0]:
                         raise TradeError(u"撤销失败!%s" % ('error_info' in r[0]))
         if not is_have:
@@ -362,17 +362,17 @@ class XueQiuTrader(WebTrader):
             else:
                 log.debug('调仓成功 %s: 持仓比例%d' % (stock['name'], weight))
 
-    def __trade(self, stock_code, price=0, amount=0, volume=0, entrust_bs='buy'):
+    def __trade(self, security, price=0, amount=0, volume=0, entrust_bs='buy'):
         """
         调仓
-        :param stock_code:
+        :param security:
         :param price:
         :param amount:
         :param volume:
         :param entrust_bs:
         :return:
         """
-        stock = self.__search_stock_info(stock_code)
+        stock = self.__search_stock_info(security)
         balance = self.get_balance()[0]
         if stock is None:
             raise TradeError(u"没有查询要操作的股票信息")
@@ -469,27 +469,27 @@ class XueQiuTrader(WebTrader):
                          'entrust_time': self.__time_strftime(rebalance_status['updated_at']),
                          'entrust_price': price,
                          'entrust_amount': amount,
-                         'stock_code': stock_code,
+                         'stock_code': security,
                          'entrust_bs': '买入',
                          'entrust_type': '雪球虚拟委托',
                          'entrust_status': '-'}]
 
-    def buy(self, stock_code, price=0, amount=0, volume=0, entrust_prop=0):
+    def buy(self, security, price=0, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票
-        :param stock_code: 股票代码
+        :param security: 股票代码
         :param price: 买入价格
         :param amount: 买入股数
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop:
         """
-        return self.__trade(stock_code, price, amount, volume, 'buy')
+        return self.__trade(security, price, amount, volume, 'buy')
 
-    def sell(self, stock_code, price=0, amount=0, volume=0, entrust_prop=0):
+    def sell(self, security, price=0, amount=0, volume=0, entrust_prop=0):
         """卖出股票
-        :param stock_code: 股票代码
+        :param security: 股票代码
         :param price: 卖出价格
         :param amount: 卖出股数
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop:
         """
-        return self.__trade(stock_code, price, amount, volume, 'sell')
+        return self.__trade(security, price, amount, volume, 'sell')

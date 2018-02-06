@@ -216,7 +216,7 @@ class BaseFollower(object):
                     break
 
                 args = {
-                    'stock_code': trade_cmd['stock_code'],
+                    'security': trade_cmd['stock_code'],
                     'price': trade_cmd['price'],
                     'amount': trade_cmd['amount'],
                     'entrust_prop': entrust_prop
