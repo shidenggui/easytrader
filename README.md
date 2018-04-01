@@ -25,8 +25,9 @@
 * 银河客户端, 须在 `windows` 平台下载 `银河双子星` 客户端
 * 华泰客户端(网上交易系统（专业版Ⅱ）)
 * 国金客户端(全能行证券交易终端PC版)
+* 其他券商通用同花顺客户端(需要手动登陆)
 
-注: 现在有些新的同花顺客户端对拷贝剪贴板数据做了限制，下面在 [issue](https://github.com/shidenggui/easytrader/issues/272) 里提供几个老版本的下载地址。
+注: 现在有些新的同花顺客户端对拷贝剪贴板数据做了限制，我在 [issue](https://github.com/shidenggui/easytrader/issues/272) 里提供了几个券商老版本的下载地址。
 
 
 ### 实盘易
