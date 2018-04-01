@@ -26,7 +26,7 @@
 * 华泰客户端(网上交易系统（专业版Ⅱ）)
 * 国金客户端(全能行证券交易终端PC版)
 
-注: 现在有些新的同花顺客户端对拷贝剪贴板数据做了限制，下面在 [issue](https://github.com/shidenggui/easytrader/issues/272) 里提供几个老版本同花顺的下载地址。如有大家有补充的也可以再下面回复
+注: 现在有些新的同花顺客户端对拷贝剪贴板数据做了限制，下面在 [issue](https://github.com/shidenggui/easytrader/issues/272) 里提供几个老版本的下载地址。
 
 
 ### 实盘易
