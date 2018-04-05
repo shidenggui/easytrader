@@ -1,8 +1,6 @@
 # coding:utf8
 from setuptools import setup
 
-import easytrader
-
 long_desc = """
 easytrader
 ===============
@@ -79,7 +77,7 @@ return::
 
 setup(
     name='easytrader',
-    version=easytrader.__version__,
+    version='0.13.5',
     description='A utility for China Stock Trade',
     long_description=long_desc,
     author='shidenggui',
@@ -88,23 +86,23 @@ setup(
     url='https://github.com/shidenggui/easytrader',
     keywords='China stock trade',
     install_requires=[
-        'requests',
-        'six',
-        'rqopen-client',
-        'easyutils',
-        'flask',
-        'pywinauto',
-        'pillow',
-        'pandas'
+        'requests', 'six', 'rqopen-client', 'easyutils', 'flask', 'pywinauto',
+        'pillow', 'pandas'
     ],
-    classifiers=['Development Status :: 4 - Beta',
-                 'Programming Language :: Python :: 2.6',
-                 'Programming Language :: Python :: 2.7',
-                 'Programming Language :: Python :: 3.2',
-                 'Programming Language :: Python :: 3.3',
-                 'Programming Language :: Python :: 3.4',
-                 'Programming Language :: Python :: 3.5',
-                 'License :: OSI Approved :: BSD License'],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'License :: OSI Approved :: BSD License'
+    ],
     packages=['easytrader', 'easytrader.config'],
-    package_data={'': ['*.jar', '*.json'], 'config': ['config/*.json'], 'thirdlibrary': ['thirdlibrary/*.jar']},
+    package_data={
+        '': ['*.jar', '*.json'],
+        'config': ['config/*.json'],
+        'thirdlibrary': ['thirdlibrary/*.jar']
+    },
 )

@@ -10,8 +10,10 @@ sys.path.append('.')
 
 TEST_CLIENTS = os.environ.get('EZ_TEST_CLIENTS', 'yh')
 
+IS_WIN_PLATFORM = sys.platform != 'darwin'
 
-@unittest.skipUnless('yh' in TEST_CLIENTS, 'skip yh test')
+
+@unittest.skipUnless('yh' in TEST_CLIENTS and IS_WIN_PLATFORM, 'skip yh test')
 class TestYhClientTrader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -57,7 +59,7 @@ class TestYhClientTrader(unittest.TestCase):
         self._user.auto_ipo()
 
 
-@unittest.skipUnless('ht' in TEST_CLIENTS, 'skip ht test')
+@unittest.skipUnless('ht' in TEST_CLIENTS and IS_WIN_PLATFORM, 'skip ht test')
 class TestHTClientTrader(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
