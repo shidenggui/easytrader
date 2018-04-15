@@ -32,6 +32,9 @@ class HTClientTrader(ClientTrader):
             while True:
                 try:
                     self._app.top_window().Edit1.wait('ready')
+                    #dlg = self._app.window(title='华泰证券网上证券交易分析系统')
+                    #dlg.wrapper_object()
+                    #dlg.button0.click()
                     break
                 except RuntimeError:
                     pass
@@ -41,7 +44,9 @@ class HTClientTrader(ClientTrader):
 
             self._app.top_window().Edit3.type_keys(comm_password)
 
-            self._app.top_window().type_keys('%Y')
+            # dlg = self._app.window(title='用户登陆')
+            # dlg.wrapper_object()
+            self._app.top_window().button0.click()
 
             # detect login is success or not
             self._app.top_window().wait_not('exists', 10)
