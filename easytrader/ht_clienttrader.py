@@ -24,7 +24,8 @@ class HTClientTrader(ClientTrader):
             raise ValueError('华泰必须设置通讯密码')
 
         try:
-            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
+            self._app = pywinauto.Application().connect(
+                path=self._run_exe_path(exe_path), timeout=1)
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
 
@@ -41,12 +42,13 @@ class HTClientTrader(ClientTrader):
 
             self._app.top_window().Edit3.type_keys(comm_password)
 
-            self._app.top_window().type_keys('%Y')
+            self._app.top_window().button0.click()
 
             # detect login is success or not
             self._app.top_window().wait_not('exists', 10)
 
-            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
+            self._app = pywinauto.Application().connect(
+                path=self._run_exe_path(exe_path), timeout=10)
         self._close_prompt_windows()
         self._main = self._app.window(title='网上股票交易系统5.0')
 
@@ -63,6 +65,5 @@ class HTClientTrader(ClientTrader):
                 self._main.window(
                     control_id=control_id,
                     class_name='Static',
-                ).window_text()
-            )
+                ).window_text())
         return result
