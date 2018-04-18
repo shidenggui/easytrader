@@ -142,6 +142,8 @@ user.buy('162411', price=0.55, amount=100)
 {'entrust_no': 'xxxxxxxx'}
 ```
 
+注: 系统可以配置是否返回成交回报。如果没配的话默认返回 `{"message": "success"}`
+
 #### 卖出:
 
 ```python
