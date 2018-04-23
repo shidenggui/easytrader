@@ -18,10 +18,11 @@ if six.PY2:
 
 class Ssl3HttpAdapter(HTTPAdapter):
     def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = PoolManager(num_pools=connections,
-                                       maxsize=maxsize,
-                                       block=block,
-                                       ssl_version=ssl.PROTOCOL_TLSv1)
+        self.poolmanager = PoolManager(
+            num_pools=connections,
+            maxsize=maxsize,
+            block=block,
+            ssl_version=ssl.PROTOCOL_TLSv1)
 
 
 def file2dict(path):
@@ -40,9 +41,11 @@ def get_stock_type(stock_code):
     stock_code = str(stock_code)
     if stock_code.startswith(('sh', 'sz')):
         return stock_code[:2]
-    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113', '132', '204', '78')):
+    if stock_code.startswith(('50', '51', '60', '73', '90', '110', '113',
+                              '132', '204', '78')):
         return 'sh'
-    if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30', '39', '115', '1318')):
+    if stock_code.startswith(('00', '13', '18', '15', '16', '18', '20', '30',
+                              '39', '115', '1318')):
         return 'sz'
     if stock_code.startswith(('5', '6', '9')):
         return 'sh'
@@ -79,11 +82,9 @@ def recognize_verify_code(image_path, broker='ht'):
 
 def detect_yh_client_result(image_path):
     """封装了tesseract的识别，部署在阿里云上，服务端源码地址为： https://github.com/shidenggui/yh_verify_code_docker"""
-    api = 'http://123.56.157.162:5000/yh_client'
+    api = 'http://yh.ez.shidenggui.com:5000/yh_client'
     with open(image_path, 'rb') as f:
-        rep = requests.post(api, files={
-            'image': f
-        })
+        rep = requests.post(api, files={'image': f})
     if rep.status_code != 201:
         error = rep.json()['message']
         raise Exception('request {} error: {]'.format(api, error))
@@ -94,7 +95,8 @@ def input_verify_code_manual(image_path):
     from PIL import Image
     image = Image.open(image_path)
     image.show()
-    code = input('image path: {}, input verify code answer:'.format(image_path))
+    code = input(
+        'image path: {}, input verify code answer:'.format(image_path))
     return code
 
 
@@ -129,15 +131,19 @@ def invoke_tesseract_to_recognize(img):
     try:
         res = pytesseract.image_to_string(img)
     except FileNotFoundError:
-        raise Exception('tesseract 未安装，请至 https://github.com/tesseract-ocr/tesseract/wiki 查看安装教程')
+        raise Exception(
+            'tesseract 未安装，请至 https://github.com/tesseract-ocr/tesseract/wiki 查看安装教程'
+        )
     valid_chars = re.findall('[0-9a-z]', res, re.IGNORECASE)
     return ''.join(valid_chars)
 
 
 def get_mac():
     # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
-    return ("".join(c + "-" if i % 2 else c for i, c in enumerate(hex(
-        uuid.getnode())[2:].zfill(12)))[:-1]).upper()
+    return ("".join(
+        c + "-" if i % 2 else c
+        for i, c in enumerate(hex(uuid.getnode())[2:].zfill(12)))[:-1]
+            ).upper()
 
 
 def grep_comma(num_str):
