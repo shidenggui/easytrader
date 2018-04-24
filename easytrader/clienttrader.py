@@ -384,7 +384,7 @@ class ClientTrader:
         self._main.window(
             control_id=control_id,
             class_name='Edit'
-        ).type_keys(text)
+        ).set_edit_text(text)
 
     def _get_clipboard_data(self):
         while True:
