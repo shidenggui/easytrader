@@ -11,6 +11,7 @@ import uuid
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from six.moves import input
+from . import exceptions
 
 if six.PY2:
     from io import open
@@ -87,7 +88,7 @@ def detect_yh_client_result(image_path):
         rep = requests.post(api, files={'image': f})
     if rep.status_code != 201:
         error = rep.json()['message']
-        raise Exception('request {} error: {]'.format(api, error))
+        raise exceptions.TradeError('request {} error: {}'.format(api, error))
     return rep.json()['result']
 
 
