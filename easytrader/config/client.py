@@ -66,7 +66,7 @@ class CommonConfig:
 
     AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID = 1098
     AUTO_IPO_BUTTON_CONTROL_ID = 1006
-    AUTO_IPO_MENU_PATH = ['新股申购', '批量新股申购']
+    AUTO_IPO_MENU_PATH = ['新股申购', '新股批量申购']
 
 
 class YH(CommonConfig):
