@@ -1,11 +1,16 @@
 # coding=utf-8
 import logging
 
+import six
+
 from .joinquant_follower import JoinQuantFollower
 from .log import log
 from .ricequant_follower import RiceQuantFollower
 from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
+
+if six.PY2:
+    raise TypeError('不支持 Python2，请升级 Python3 ')
 
 
 def use(broker, debug=True, **kwargs):
