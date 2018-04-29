@@ -90,6 +90,7 @@ class XueQiuTrader(webtrader.WebTrader):
             raise TypeError('雪球登陆需要设置 cookies， 具体见'
                             'https://smalltool.github.io/2016/08/02/cookie/')
         self.account_config = {
+            'cookies': kwargs['cookies'],
             'portfolio_code': kwargs['portfolio_code'],
             'portfolio_market': kwargs['portfolio_market']
         }
