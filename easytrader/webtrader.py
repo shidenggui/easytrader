@@ -2,10 +2,10 @@
 import logging
 import os
 import re
-import requests
-import six
 import time
 from threading import Thread
+
+import requests
 
 from . import exceptions
 from . import helpers

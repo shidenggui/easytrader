@@ -52,8 +52,8 @@ class XueQiuTrader(webtrader.WebTrader):
         if self.multiple < 1e3:
             raise ValueError('雪球初始资产不能小于1000元，当前预设值 {}'.format(self.multiple))
 
-        self.session = requests.Session()
-        self.session.headers.update(self._HEADERS)
+        self.s = requests.Session()
+        self.s.headers.update(self._HEADERS)
         self.account_config = None
 
     def autologin(self, **kwargs):
@@ -70,7 +70,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :type cookies: str
         """
         cookie_dict = helpers.parse_cookies_str(cookies)
-        self.session.cookies.update(cookie_dict)
+        self.s.cookies.update(cookie_dict)
 
     def _prepare_account(self, user='', password='', **kwargs):
         """
@@ -103,7 +103,7 @@ class XueQiuTrader(webtrader.WebTrader):
         return virtual * self.multiple
 
     def _get_html(self, url):
-        return self.session.get(url).text
+        return self.s.get(url).text
 
     def _search_stock_info(self, code):
         """
@@ -122,7 +122,7 @@ class XueQiuTrader(webtrader.WebTrader):
             'key': '47bce5c74f',
             'market': self.account_config['portfolio_market'],
         }
-        r = self.session.get(self.config['search_stock_url'], params=data)
+        r = self.s.get(self.config['search_stock_url'], params=data)
         stocks = json.loads(r.text)
         stocks = stocks['stocks']
         stock = None
@@ -223,7 +223,7 @@ class XueQiuTrader(webtrader.WebTrader):
             'count': 20,
             'page': 1
         }
-        resp = self.session.get(self.config['history_url'], params=data)
+        resp = self.s.get(self.config['history_url'], params=data)
         res = json.loads(resp.text)
         return res['list']
 
@@ -368,7 +368,7 @@ class XueQiuTrader(webtrader.WebTrader):
         }
 
         try:
-            resp = self.session.post(self.config['rebalance_url'], data=data)
+            resp = self.s.post(self.config['rebalance_url'], data=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return
@@ -473,7 +473,7 @@ class XueQiuTrader(webtrader.WebTrader):
         }
 
         try:
-            resp = self.session.post(self.config['rebalance_url'], data=data)
+            resp = self.s.post(self.config['rebalance_url'], data=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return
