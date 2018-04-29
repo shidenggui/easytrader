@@ -1,16 +1,14 @@
 # coding:utf8
-
+import pywinauto
+import pywinauto.clipboard
 import re
 import tempfile
 
-import pywinauto
-import pywinauto.clipboard
-
+from . import clienttrader
 from . import helpers
-from .clienttrader import ClientTrader
 
 
-class YHClientTrader(ClientTrader):
+class YHClientTrader(clienttrader.ClientTrader):
     @property
     def broker_type(self):
         return 'yh'
@@ -20,7 +18,8 @@ class YHClientTrader(ClientTrader):
         登陆客户端
         :param user: 账号
         :param password: 明文密码
-        :param exe_path: 客户端路径类似 r'C:\中国银河证券双子星3.2\Binarystar.exe', 默认 r'C:\中国银河证券双子星3.2\Binarystar.exe'
+        :param exe_path: 客户端路径类似 r'C:\中国银河证券双子星3.2\Binarystar.exe',
+            默认 r'C:\中国银河证券双子星3.2\Binarystar.exe'
         :param comm_password: 通讯密码, 华泰需要，可不设
         :return:
         """

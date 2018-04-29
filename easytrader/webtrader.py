@@ -2,38 +2,17 @@
 import logging
 import os
 import re
+import requests
+import six
 import time
 from threading import Thread
 
-import six
-import requests
-
+from . import exceptions
 from . import helpers
 from .log import log
 
-if six.PY2:
-    import sys
 
-    stdi, stdo, stde = sys.stdin, sys.stdout, sys.stderr  # 获取标准输入、标准输出和标准错误输出
-    reload(sys)
-    sys.stdin, sys.stdout, sys.stderr = stdi, stdo, stde  # 保持标准输入、标准输出和标准错误输出
-    sys.setdefaultencoding('utf8')
-
-
-class NotLoginError(Exception):
-
-    def __init__(self, result=None):
-        super(NotLoginError, self).__init__()
-        self.result = result
-
-
-class TradeError(Exception):
-
-    def __init__(self, message=None):
-        super(TradeError, self).__init__()
-        self.message = message
-
-
+# noinspection PyIncorrectDocstring
 class WebTrader(object):
     global_config_path = os.path.dirname(__file__) + '/config/global.json'
     config_path = ''
@@ -52,10 +31,10 @@ class WebTrader(object):
         try:
             self.account_config = helpers.file2dict(path)
         except ValueError:
-            log.error('配置文件格式有误，请勿使用记事本编辑，推荐使用 notepad++ 或者 sublime text')
+            log.error('配置文件格式有误，请勿使用记事本编辑，推荐 sublime text')
         for v in self.account_config:
             if type(v) is int:
-                log.warn('配置文件的值最好使用双引号包裹，使用字符串类型，否则可能导致不可知的问题')
+                log.warn('配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题')
 
     def prepare(self, config_file=None, user=None, password=None, **kwargs):
         """登录的统一接口
@@ -64,7 +43,8 @@ class WebTrader(object):
         :param password: 密码, 券商为加密后的密码，雪球为明文密码
         :param account: [雪球登录需要]雪球手机号(邮箱手机二选一)
         :param portfolio_code: [雪球登录需要]组合代码
-        :param portfolio_market: [雪球登录需要]交易市场， 可选['cn', 'us', 'hk'] 默认 'cn'
+        :param portfolio_market: [雪球登录需要]交易市场，
+            可选['cn', 'us', 'hk'] 默认 'cn'
         """
         if config_file is not None:
             self.read_config(config_file)
@@ -84,7 +64,8 @@ class WebTrader(object):
             if self.login():
                 break
         else:
-            raise NotLoginError('登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
+            raise exceptions.NotLoginError(
+                '登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
         self.keepalive()
 
     def login(self):
@@ -210,7 +191,7 @@ class WebTrader(object):
         return_data = self.fix_error_data(format_json_data)
         try:
             self.check_login_status(return_data)
-        except NotLoginError:
+        except exceptions.NotLoginError:
             self.autologin()
         return return_data
 

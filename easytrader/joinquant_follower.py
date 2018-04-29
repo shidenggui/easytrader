@@ -7,7 +7,7 @@ from threading import Thread
 
 from .follower import BaseFollower
 from .log import log
-from .webtrader import NotLoginError
+from easytrader.exceptions import NotLoginError
 
 
 class JoinQuantFollower(BaseFollower):
@@ -29,12 +29,16 @@ class JoinQuantFollower(BaseFollower):
         set_cookie = rep.headers['set-cookie']
         if len(set_cookie) < 100:
             raise NotLoginError('登录失败，请检查用户名和密码')
-        self.s.headers.update({
-            'cookie': set_cookie
-        })
+        self.s.headers.update({'cookie': set_cookie})
 
-    def follow(self, users, strategies, track_interval=1, trade_cmd_expire_seconds=120, cmd_cache=True,
-               entrust_prop='limit', send_interval=0):
+    def follow(self,
+               users,
+               strategies,
+               track_interval=1,
+               trade_cmd_expire_seconds=120,
+               cmd_cache=True,
+               entrust_prop='limit',
+               send_interval=0):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
@@ -51,7 +55,8 @@ class JoinQuantFollower(BaseFollower):
         if cmd_cache:
             self.load_expired_cmd_cache()
 
-        self.start_trader_thread(users, trade_cmd_expire_seconds, entrust_prop, send_interval)
+        self.start_trader_thread(users, trade_cmd_expire_seconds, entrust_prop,
+                                 send_interval)
 
         workers = []
         for strategy_url in strategies:
@@ -61,8 +66,10 @@ class JoinQuantFollower(BaseFollower):
             except:
                 log.error('抽取交易id和策略名失败, 无效的模拟交易url: {}'.format(strategy_url))
                 raise
-            strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
-                                     kwargs={'interval': track_interval})
+            strategy_worker = Thread(
+                target=self.track_strategy_worker,
+                args=[strategy_id, strategy_name],
+                kwargs={'interval': track_interval})
             strategy_worker.start()
             workers.append(strategy_worker)
             log.info('开始跟踪策略: {}'.format(strategy_name))
@@ -75,15 +82,12 @@ class JoinQuantFollower(BaseFollower):
 
     def extract_strategy_name(self, strategy_url):
         rep = self.s.get(strategy_url)
-        return self.re_find(r'(?<=title="点击修改策略名称"\>).*(?=\</span)', rep.content.decode('utf8'))
+        return self.re_find(r'(?<=title="点击修改策略名称"\>).*(?=\</span)',
+                            rep.content.decode('utf8'))
 
     def create_query_transaction_params(self, strategy):
         today_str = datetime.today().strftime('%Y-%m-%d')
-        params = {
-            'backtestId': strategy,
-            'date': today_str,
-            'ajax': 1
-        }
+        params = {'backtestId': strategy, 'date': today_str, 'ajax': 1}
         return params
 
     def extract_transactions(self, history):
@@ -92,7 +96,9 @@ class JoinQuantFollower(BaseFollower):
 
     @staticmethod
     def stock_shuffle_to_prefix(stock):
-        assert len(stock) == 11, 'stock {} must like 123456.XSHG or 123456.XSHE'.format(stock)
+        assert len(
+            stock
+        ) == 11, 'stock {} must like 123456.XSHG or 123456.XSHE'.format(stock)
         code = stock[:6]
         if stock.find('XSHG') != -1:
             return 'sh' + code

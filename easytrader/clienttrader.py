@@ -1,15 +1,13 @@
 # coding:utf-8
-
+import easyutils
 import functools
 import io
 import os
+import pandas as pd
 import re
 import sys
 import time
 from abc import abstractmethod
-
-import easyutils
-import pandas as pd
 
 from . import exceptions
 from . import helpers
@@ -26,8 +24,7 @@ class PopDialogHandler:
         self._app = app
 
     def handle(self, title):
-        if any(s in title for s in
-               {'提示信息', '委托确认', '网上交易用户协议'}):
+        if any(s in title for s in {'提示信息', '委托确认', '网上交易用户协议'}):
             self._submit_by_shortcut()
 
         elif '提示' in title:
@@ -88,7 +85,12 @@ class ClientTrader:
         self._app = None
         self._main = None
 
-    def prepare(self, config_path=None, user=None, password=None, exe_path=None, comm_password=None,
+    def prepare(self,
+                config_path=None,
+                user=None,
+                password=None,
+                exe_path=None,
+                comm_password=None,
                 **kwargs):
         """
         登陆客户端
@@ -105,7 +107,8 @@ class ClientTrader:
             password = account['password']
             comm_password = account.get('comm_password')
             exe_path = account.get('exe_path')
-        self.login(user, password, exe_path or self._config.DEFAULT_EXE_PATH, comm_password, **kwargs)
+        self.login(user, password, exe_path or self._config.DEFAULT_EXE_PATH,
+                   comm_password, **kwargs)
 
     @abstractmethod
     def login(self, user, password, exe_path, comm_password=None, **kwargs):
@@ -119,10 +122,11 @@ class ClientTrader:
         """
         connect_path = exe_path or self._config.DEFAULT_EXE_PATH
         if connect_path is None:
-            raise ValueError('参数 exe_path 未设置，请设置客户端对应的 exe 地址,类似 C:\\客户端安装目录\\xiadan.exe')
+            raise ValueError(
+                '参数 exe_path 未设置，请设置客户端对应的 exe 地址,类似 C:\\客户端安装目录\\xiadan.exe')
 
-        self._app = pywinauto.Application().connect(path=connect_path,
-                                                    timeout=10)
+        self._app = pywinauto.Application().connect(
+            path=connect_path, timeout=10)
         self._close_prompt_windows()
         self._main = self._app.top_window()
 
@@ -143,8 +147,7 @@ class ClientTrader:
                 self._main.window(
                     control_id=control_id,
                     class_name='Static',
-                ).window_text()
-            )
+                ).window_text())
         return result
 
     @property
@@ -175,7 +178,8 @@ class ClientTrader:
     def cancel_entrust(self, entrust_no):
         self._refresh()
         for i, entrust in enumerate(self.cancel_entrusts):
-            if entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD] == entrust_no:
+            if entrust[
+                    self._config.CANCEL_ENTRUST_ENTRUST_FIELD] == entrust_no:
                 self._cancel_entrust_by_double_click(i)
                 return self._handle_pop_dialogs()
         else:
@@ -243,8 +247,7 @@ class ClientTrader:
         """根据选择的市价交易类型选择对应的下拉选项"""
         selects = self._main(
             control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
-            class_name='ComboBox'
-        )
+            class_name='ComboBox')
         for i, text in selects.texts():
             # skip 0 index, because 0 index is current select index
             if i == 0:
@@ -262,7 +265,9 @@ class ClientTrader:
 
         if len(stock_list) == 0:
             return {'message': '今日无新股'}
-        invalid_list_idx = [i for i, v in enumerate(stock_list) if v['申购数量'] <= 0]
+        invalid_list_idx = [
+            i for i, v in enumerate(stock_list) if v['申购数量'] <= 0
+        ]
 
         if len(stock_list) == len(invalid_list_idx):
             return {'message': '没有发现可以申购的新股'}
@@ -284,17 +289,15 @@ class ClientTrader:
         y = self._config.COMMON_GRID_FIRST_ROW_HEIGHT + self._config.COMMON_GRID_ROW_HEIGHT * row
         self._app.top_window().window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
-            class_name='CVirtualGridCtrl'
-        ).click(coords=(x, y))
+            class_name='CVirtualGridCtrl').click(coords=(x, y))
 
     def _is_exist_pop_dialog(self):
         self._wait(0.2)  # wait dialog display
-        return self._main.wrapper_object() != self._app.top_window().wrapper_object()
+        return self._main.wrapper_object() != self._app.top_window(
+        ).wrapper_object()
 
     def _run_exe_path(self, exe_path):
-        return os.path.join(
-            os.path.dirname(exe_path), 'xiadan.exe'
-        )
+        return os.path.join(os.path.dirname(exe_path), 'xiadan.exe')
 
     def _wait(self, seconds):
         time.sleep(seconds)
@@ -318,73 +321,49 @@ class ClientTrader:
 
     def _click(self, control_id):
         self._app.top_window().window(
-            control_id=control_id,
-            class_name='Button'
-        ).click()
+            control_id=control_id, class_name='Button').click()
 
     def _submit_trade(self):
         time.sleep(0.05)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
-            class_name='Button'
-        ).click()
+            class_name='Button').click()
 
     def _get_pop_dialog_title(self):
         return self._app.top_window().window(
-            control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID
-        ).window_text()
+            control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID).window_text()
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
 
-        self._type_keys(
-            self._config.TRADE_SECURITY_CONTROL_ID,
-            code
-        )
+        self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
         self._wait(0.1)
 
-        self._type_keys(
-            self._config.TRADE_PRICE_CONTROL_ID,
-            easyutils.round_price_by_code(price, code)
-        )
-        self._type_keys(
-            self._config.TRADE_AMOUNT_CONTROL_ID,
-            str(int(amount))
-        )
+        self._type_keys(self._config.TRADE_PRICE_CONTROL_ID,
+                        easyutils.round_price_by_code(price, code))
+        self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _set_market_trade_params(self, security, amount):
         code = security[-6:]
 
-        self._type_keys(
-            self._config.TRADE_SECURITY_CONTROL_ID,
-            code
-        )
+        self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
         self._wait(0.1)
 
-        self._type_keys(
-            self._config.TRADE_AMOUNT_CONTROL_ID,
-            str(int(amount))
-        )
+        self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _get_grid_data(self, control_id):
         grid = self._main.window(
-            control_id=control_id,
-            class_name='CVirtualGridCtrl'
-        )
+            control_id=control_id, class_name='CVirtualGridCtrl')
         grid.type_keys('^A^C')
-        return self._format_grid_data(
-            self._get_clipboard_data()
-        )
+        return self._format_grid_data(self._get_clipboard_data())
 
     def _type_keys(self, control_id, text):
         self._main.window(
-            control_id=control_id,
-            class_name='Edit'
-        ).set_edit_text(text)
+            control_id=control_id, class_name='Edit').set_edit_text(text)
 
     def _get_clipboard_data(self):
         while True:
@@ -406,9 +385,7 @@ class ClientTrader:
         while True:
             try:
                 handle = self._main.window(
-                    control_id=129,
-                    class_name='SysTreeView32'
-                )
+                    control_id=129, class_name='SysTreeView32')
                 # sometime can't find handle ready, must retry
                 handle.wait('ready', 2)
                 return handle
@@ -416,11 +393,12 @@ class ClientTrader:
                 pass
 
     def _format_grid_data(self, data):
-        df = pd.read_csv(io.StringIO(data),
-                         delimiter='\t',
-                         dtype=self._config.GRID_DTYPE,
-                         na_filter=False,
-                         )
+        df = pd.read_csv(
+            io.StringIO(data),
+            delimiter='\t',
+            dtype=self._config.GRID_DTYPE,
+            na_filter=False,
+        )
         return df.to_dict('records')
 
     def _cancel_entrust_by_double_click(self, row):
@@ -428,8 +406,7 @@ class ClientTrader:
         y = self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
         self._app.top_window().window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
-            class_name='CVirtualGridCtrl'
-        ).double_click(coords=(x, y))
+            class_name='CVirtualGridCtrl').double_click(coords=(x, y))
 
     def _refresh(self):
         self._switch_left_menus(['买入[F1]'], sleep=0.05)

@@ -1,6 +1,5 @@
 # coding=utf-8
 import logging
-
 import six
 
 from .joinquant_follower import JoinQuantFollower
@@ -47,8 +46,10 @@ def use(broker, debug=True, **kwargs):
 def follower(platform, **kwargs):
     """用于生成特定的券商对象
     :param platform:平台支持 ['jq', 'joinquant', '聚宽’]
-    :param initial_assets: [雪球参数] 控制雪球初始资金，默认为一万, 总资金由 initial_assets * 组合当前净值 得出
-    :param total_assets: [雪球参数] 控制雪球总资金，无默认值, 若设置则覆盖 initial_assets
+    :param initial_assets: [雪球参数] 控制雪球初始资金，默认为一万,
+        总资金由 initial_assets * 组合当前净值 得出
+    :param total_assets: [雪球参数] 控制雪球总资金，无默认值,
+        若设置则覆盖 initial_assets
     :return the class of follower
 
     Usage::

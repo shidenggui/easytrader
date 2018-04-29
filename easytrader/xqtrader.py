@@ -1,44 +1,56 @@
 # -*- coding: utf-8 -*-
 import json
+import numbers
 import os
 import re
-import time
-from numbers import Number
-
 import requests
+import time
 
+from . import exceptions
+from . import webtrader
 from .log import log
-from .webtrader import NotLoginError, TradeError
-from .webtrader import WebTrader
 
 
-class XueQiuTrader(WebTrader):
+class XueQiuTrader(webtrader.WebTrader):
     config_path = os.path.dirname(__file__) + '/config/xq.json'
+
+    _HEADERS = {
+        'User-Agent':
+        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) '
+        'Gecko/20100101 Firefox/32.0',
+        'Host':
+        'xueqiu.com',
+        'Pragma':
+        'no-cache',
+        'Connection':
+        'keep-alive',
+        'Accept':
+        '*/*',
+        'Accept-Encoding':
+        'gzip,deflate,sdch',
+        'Cache-Control':
+        'no-cache',
+        'Referer':
+        'http://xueqiu.com/P/ZH003694',
+        'X-Requested-With':
+        'XMLHttpRequest',
+        'Accept-Language':
+        'zh-CN,zh;q=0.8'
+    }
 
     def __init__(self, **kwargs):
         super(XueQiuTrader, self).__init__()
 
         # 资金换算倍数
-        self.multiple = kwargs['initial_assets'] if 'initial_assets' in kwargs else 1000000
-        if not isinstance(self.multiple, Number):
+        self.multiple = kwargs[
+            'initial_assets'] if 'initial_assets' in kwargs else 1000000
+        if not isinstance(self.multiple, numbers.Number):
             raise TypeError('initial assets must be number(int, float)')
         if self.multiple < 1e3:
             raise ValueError('雪球初始资产不能小于1000元，当前预设值 {}'.format(self.multiple))
 
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) Gecko/20100101 Firefox/32.0',
-            'Host': 'xueqiu.com',
-            'Pragma': 'no-cache',
-            'Connection': 'keep-alive',
-            'Accept': '*/*',
-            'Accept-Encoding': 'gzip,deflate,sdch',
-            'Cache-Control': 'no-cache',
-            'Referer': 'http://xueqiu.com/P/ZH003694',
-            'X-Requested-With': 'XMLHttpRequest',
-            'Accept-Language': 'zh-CN,zh;q=0.8'
-        }
         self.session = requests.Session()
-        self.session.headers.update(headers)
+        self.session.headers.update(self._HEADERS)
         self.account_config = None
 
     def autologin(self, **kwargs):
@@ -57,7 +69,7 @@ class XueQiuTrader(WebTrader):
         """
         login_status, result = self.post_login_data()
         if login_status is False and throw:
-            raise NotLoginError(result)
+            raise exceptions.NotLoginError(result)
         log.debug('login status: %s' % result)
         return login_status
 
@@ -89,11 +101,10 @@ class XueQiuTrader(WebTrader):
         login_post_data = {
             'username': self.account_config.get('username', ''),
             'areacode': '86',
-            # 'telephone': self.account_config['account'],
-            # 'remember_me': '0',
             'password': self.account_config['password']
         }
-        login_response = self.session.post(self.config['login_api'], data=login_post_data)
+        login_response = self.session.post(
+            self.config['login_api'], data=login_post_data)
         login_status = login_response.json()
         if 'error_description' in login_status:
             return False, login_status['error_description']
@@ -115,9 +126,10 @@ class XueQiuTrader(WebTrader):
         通过雪球的接口获取股票详细信息
         :param code: 股票代码 000001
         :return: 查询到的股票 {u'stock_id': 1000279, u'code': u'SH600325',
-        u'name': u'华发股份', u'ind_color': u'#d9633b', u'chg': -1.09,
-         u'ind_id': 100014, u'percent': -9.31, u'current': 10.62, u'hasexist': None,
-          u'flag': 1, u'ind_name': u'房地产', u'type': None, u'enName': None}
+            u'name': u'华发股份', u'ind_color': u'#d9633b', u'chg': -1.09,
+            u'ind_id': 100014, u'percent': -9.31, u'current': 10.62,
+            u'hasexist': None, u'flag': 1, u'ind_name': u'房地产', u'type': None,
+            u'enName': None}
             ** flag : 未上市(0)、正常(1)、停牌(2)、涨跌停(3)、退市(4)
         """
         data = {
@@ -143,7 +155,8 @@ class XueQiuTrader(WebTrader):
         html = self.__get_html(url)
         match_info = re.search(r'(?<=SNB.cubeInfo = ).*(?=;\n)', html)
         if match_info is None:
-            raise Exception('cant get portfolio info, portfolio html : {}'.format(html))
+            raise Exception(
+                'cant get portfolio info, portfolio html : {}'.format(html))
         try:
             portfolio_info = json.loads(match_info.group())
         except Exception as e:
@@ -155,26 +168,29 @@ class XueQiuTrader(WebTrader):
         获取账户资金状况
         :return:
         """
-        portfolio_code = self.account_config.get('portfolio_code', 'ch')  # 组合代码
-        portfolio_info = self.__get_portfolio_info(portfolio_code)  # 组合信息
-        asset_balance = self.__virtual_to_balance(float(portfolio_info['net_value']))  # 总资产
+        portfolio_code = self.account_config.get('portfolio_code', 'ch')
+        portfolio_info = self.__get_portfolio_info(portfolio_code)
+        asset_balance = self.__virtual_to_balance(
+            float(portfolio_info['net_value']))  # 总资产
         position = portfolio_info['view_rebalancing']  # 仓位结构
         cash = asset_balance * float(position['cash']) / 100
         market = asset_balance - cash
-        return [{'asset_balance': asset_balance,
-                 'current_balance': cash,
-                 'enable_balance': cash,
-                 'market_value': market,
-                 'money_type': u'人民币',
-                 'pre_interest': 0.25}]
+        return [{
+            'asset_balance': asset_balance,
+            'current_balance': cash,
+            'enable_balance': cash,
+            'market_value': market,
+            'money_type': u'人民币',
+            'pre_interest': 0.25
+        }]
 
     def __get_position(self):
         """
         获取雪球持仓
         :return:
         """
-        portfolio_code = self.account_config['portfolio_code']  # 组合代码
-        portfolio_info = self.__get_portfolio_info(portfolio_code)  # 组合信息
+        portfolio_code = self.account_config['portfolio_code']
+        portfolio_info = self.__get_portfolio_info(portfolio_code)
         position = portfolio_info['view_rebalancing']  # 仓位结构
         stocks = position['holdings']  # 持仓股票
         return stocks
@@ -197,17 +213,18 @@ class XueQiuTrader(WebTrader):
         position_list = []
         for pos in xq_positions:
             volume = pos['weight'] * balance['asset_balance'] / 100
-            position_list.append({'cost_price': volume / 100,
-                                  'current_amount': 100,
-                                  'enable_amount': 100,
-                                  'income_balance': 0,
-                                  'keep_cost_price': volume / 100,
-                                  'last_price': volume / 100,
-                                  'market_value': volume,
-                                  'position_str': 'random',
-                                  'stock_code': pos['stock_symbol'],
-                                  'stock_name': pos['stock_name']
-                                  })
+            position_list.append({
+                'cost_price': volume / 100,
+                'current_amount': 100,
+                'enable_amount': 100,
+                'income_balance': 0,
+                'keep_cost_price': volume / 100,
+                'last_price': volume / 100,
+                'market_value': volume,
+                'position_str': 'random',
+                'stock_code': pos['stock_symbol'],
+                'stock_name': pos['stock_name']
+            })
         return position_list
 
     def __get_xq_history(self):
@@ -243,24 +260,36 @@ class XueQiuTrader(WebTrader):
             status = xq_entrusts['status']  # 调仓状态
             if status == 'pending':
                 status = "已报"
-            elif status in ['canceled','failed']:
+            elif status in ['canceled', 'failed']:
                 status = "废单"
             else:
                 status = "已成"
             for entrust in xq_entrusts['rebalancing_histories']:
-                volume = abs(entrust['target_weight'] - replace_none(entrust['prev_weight'])) * self.multiple / 10000
+                volume = abs(entrust['target_weight'] - replace_none(
+                    entrust['prev_weight'])) * self.multiple / 10000
                 price = entrust['price']
                 entrust_list.append({
-                    'entrust_no': entrust['id'],
-                    'entrust_bs': u"买入" if entrust['target_weight'] > replace_none(entrust['prev_weight']) else u"卖出",
-                    'report_time': self.__time_strftime(entrust['updated_at']),
-                    'entrust_status': status,
-                    'stock_code': entrust['stock_symbol'],
-                    'stock_name': entrust['stock_name'],
-                    'business_amount': 100,
-                    'business_price': price,
-                    'entrust_amount': 100,
-                    'entrust_price': price,
+                    'entrust_no':
+                    entrust['id'],
+                    'entrust_bs':
+                    u"买入" if entrust['target_weight'] > replace_none(
+                        entrust['prev_weight']) else u"卖出",
+                    'report_time':
+                    self.__time_strftime(entrust['updated_at']),
+                    'entrust_status':
+                    status,
+                    'stock_code':
+                    entrust['stock_symbol'],
+                    'stock_name':
+                    entrust['stock_name'],
+                    'business_amount':
+                    100,
+                    'business_price':
+                    price,
+                    'entrust_amount':
+                    100,
+                    'entrust_price':
+                    price,
                 })
         return entrust_list
 
@@ -279,14 +308,19 @@ class XueQiuTrader(WebTrader):
                     is_have = True
                     bs = 'buy' if entrust['target_weight'] < entrust['weight'] else 'sell'
                     if entrust['target_weight'] == 0 and entrust['weight'] == 0:
-                        raise TradeError(u"移除的股票操作无法撤销,建议重新买入")
+                        raise exceptions.TradeError(u"移除的股票操作无法撤销,建议重新买入")
                     balance = self.get_balance()[0]
-                    volume = abs(entrust['target_weight'] - entrust['weight']) * balance['asset_balance'] / 100
-                    r = self.__trade(security=entrust['stock_symbol'], volume=volume, entrust_bs=bs)
+                    volume = abs(entrust['target_weight'] - entrust['weight']
+                                 ) * balance['asset_balance'] / 100
+                    r = self.__trade(
+                        security=entrust['stock_symbol'],
+                        volume=volume,
+                        entrust_bs=bs)
                     if len(r) > 0 and 'error_info' in r[0]:
-                        raise TradeError(u"撤销失败!%s" % ('error_info' in r[0]))
+                        raise exceptions.TradeError(u"撤销失败!%s" %
+                                                    ('error_info' in r[0]))
         if not is_have:
-            raise TradeError(u"撤销对象已失效")
+            raise exceptions.TradeError(u"撤销对象已失效")
         return True
 
     def adjust_weight(self, stock_code, weight):
@@ -298,9 +332,9 @@ class XueQiuTrader(WebTrader):
 
         stock = self.__search_stock_info(stock_code)
         if stock is None:
-            raise TradeError(u"没有查询要操作的股票信息")
+            raise exceptions.TradeError(u"没有查询要操作的股票信息")
         if stock['flag'] != 1:
-            raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+            raise exceptions.TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
 
         # 仓位比例向下取两位数
         weight = round(weight, 2)
@@ -313,7 +347,9 @@ class XueQiuTrader(WebTrader):
                 position['proactive'] = True
                 position['weight'] = weight
 
-        if weight != 0 and stock['stock_id'] not in [k['stock_id'] for k in position_list]:
+        if weight != 0 and stock['stock_id'] not in [
+                k['stock_id'] for k in position_list
+        ]:
             position_list.append({
                 "code": stock['code'],
                 "name": stock['name'],
@@ -348,17 +384,19 @@ class XueQiuTrader(WebTrader):
         }
 
         try:
-            rebalance_res = self.session.post(self.config['rebalance_url'], data=data)
+            resp = self.session.post(self.config['rebalance_url'], data=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return
         else:
             log.debug('调仓 %s: 持仓比例%d' % (stock['name'], weight))
-            rebalance_status = json.loads(rebalance_res.text)
-            if 'error_description' in rebalance_status.keys() and rebalance_res.status_code != 200:
-                log.error('调仓错误: %s' % (rebalance_status['error_description']))
-                return [{'error_no': rebalance_status['error_code'],
-                         'error_info': rebalance_status['error_description']}]
+            resp_json = json.loads(resp.text)
+            if 'error_description' in resp_json and resp.status_code != 200:
+                log.error('调仓错误: %s' % (resp_json['error_description']))
+                return [{
+                    'error_no': resp_json['error_code'],
+                    'error_info': resp_json['error_description']
+                }]
             else:
                 log.debug('调仓成功 %s: 持仓比例%d' % (stock['name'], weight))
 
@@ -375,15 +413,15 @@ class XueQiuTrader(WebTrader):
         stock = self.__search_stock_info(security)
         balance = self.get_balance()[0]
         if stock is None:
-            raise TradeError(u"没有查询要操作的股票信息")
+            raise exceptions.TradeError(u"没有查询要操作的股票信息")
         if not volume:
             volume = int(float(price) * amount)  # 可能要取整数
         if balance['current_balance'] < volume and entrust_bs == 'buy':
-            raise TradeError(u"没有足够的现金进行操作")
+            raise exceptions.TradeError(u"没有足够的现金进行操作")
         if stock['flag'] != 1:
-            raise TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+            raise exceptions.TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
         if volume == 0:
-            raise TradeError(u"操作金额不能为零")
+            raise exceptions.TradeError(u"操作金额不能为零")
 
         # 计算调仓调仓份额
         weight = volume / balance['asset_balance'] * 100
@@ -403,7 +441,7 @@ class XueQiuTrader(WebTrader):
                     position['weight'] = weight + old_weight
                 else:
                     if weight > old_weight:
-                        raise TradeError(u"操作数量大于实际可卖出数量")
+                        raise exceptions.TradeError(u"操作数量大于实际可卖出数量")
                     else:
                         position['weight'] = old_weight - weight
                 position['weight'] = round(position['weight'], 2)
@@ -431,12 +469,14 @@ class XueQiuTrader(WebTrader):
                     "price": str(stock['current'])
                 })
             else:
-                raise TradeError(u"没有持有要卖出的股票")
+                raise exceptions.TradeError(u"没有持有要卖出的股票")
 
         if entrust_bs == 'buy':
-            cash = (balance['current_balance'] - volume) / balance['asset_balance'] * 100
+            cash = (balance['current_balance'] - volume
+                    ) / balance['asset_balance'] * 100
         else:
-            cash = (balance['current_balance'] + volume) / balance['asset_balance'] * 100
+            cash = (balance['current_balance'] + volume
+                    ) / balance['asset_balance'] * 100
         cash = round(cash, 2)
         log.debug("weight:%f, cash:%f" % (weight, cash))
 
@@ -449,30 +489,47 @@ class XueQiuTrader(WebTrader):
         }
 
         try:
-            rebalance_res = self.session.post(self.config['rebalance_url'], data=data)
+            resp = self.session.post(self.config['rebalance_url'], data=data)
         except Exception as e:
             log.warn('调仓失败: %s ' % e)
             return
         else:
-            log.debug('调仓 %s%s: %d' % (entrust_bs, stock['name'], rebalance_res.status_code))
-            rebalance_status = json.loads(rebalance_res.text)
-            if 'error_description' in rebalance_status and rebalance_res.status_code != 200:
-                log.error('调仓错误: %s' % (rebalance_status['error_description']))
-                return [{'error_no': rebalance_status['error_code'],
-                         'error_info': rebalance_status['error_description']}]
+            log.debug('调仓 %s%s: %d' % (entrust_bs, stock['name'],
+                                       resp.status_code))
+            resp_json = json.loads(resp.text)
+            if 'error_description' in resp_json and resp.status_code != 200:
+                log.error('调仓错误: %s' % (resp_json['error_description']))
+                return [{
+                    'error_no': resp_json['error_code'],
+                    'error_info': resp_json['error_description']
+                }]
             else:
-                return [{'entrust_no': rebalance_status['id'],
-                         'init_date': self.__time_strftime(rebalance_status['created_at']),
-                         'batch_no': '委托批号',
-                         'report_no': '申报号',
-                         'seat_no': '席位编号',
-                         'entrust_time': self.__time_strftime(rebalance_status['updated_at']),
-                         'entrust_price': price,
-                         'entrust_amount': amount,
-                         'stock_code': security,
-                         'entrust_bs': '买入',
-                         'entrust_type': '雪球虚拟委托',
-                         'entrust_status': '-'}]
+                return [{
+                    'entrust_no':
+                    resp_json['id'],
+                    'init_date':
+                    self.__time_strftime(resp_json['created_at']),
+                    'batch_no':
+                    '委托批号',
+                    'report_no':
+                    '申报号',
+                    'seat_no':
+                    '席位编号',
+                    'entrust_time':
+                    self.__time_strftime(resp_json['updated_at']),
+                    'entrust_price':
+                    price,
+                    'entrust_amount':
+                    amount,
+                    'stock_code':
+                    security,
+                    'entrust_bs':
+                    '买入',
+                    'entrust_type':
+                    '雪球虚拟委托',
+                    'entrust_status':
+                    '-'
+                }]
 
     def buy(self, security, price=0, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票

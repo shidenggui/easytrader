@@ -7,9 +7,9 @@ from datetime import datetime
 from numbers import Number
 from threading import Thread
 
+from easytrader import exceptions
 from .follower import BaseFollower
 from .log import log
-from .webtrader import NotLoginError
 
 
 class XueQiuFollower(BaseFollower):
@@ -24,7 +24,7 @@ class XueQiuFollower(BaseFollower):
 
     def check_login_success(self, login_status):
         if 'error_description' in login_status:
-            raise NotLoginError(login_status['error_description'])
+            raise exceptions.NotLoginError(login_status['error_description'])
 
     def create_login_params(self, user, password, **kwargs):
         params = {
@@ -36,15 +36,24 @@ class XueQiuFollower(BaseFollower):
         }
         return params
 
-    def follow(self, users, strategies, total_assets=10000, initial_assets=None, track_interval=10,
-               trade_cmd_expire_seconds=120, cmd_cache=True):
-        """跟踪joinquant对应的模拟交易，支持多用户多策略
-        :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
+    def follow(self,
+               users,
+               strategies,
+               total_assets=10000,
+               initial_assets=None,
+               track_interval=10,
+               trade_cmd_expire_seconds=120,
+               cmd_cache=True):
+        """跟踪 joinquant 对应的模拟交易，支持多用户多策略
+        :param users: 支持 easytrader 的用户对象，支持使用 [] 指定多个用户
         :param strategies: 雪球组合名, 类似 ZH123450
-        :param total_assets: 雪球组合对应的总资产， 格式 [ 组合1对应资金, 组合2对应资金 ]
-            若 strategies=['ZH000001', 'ZH000002'] 设置 total_assets=[10000, 10000], 则表明每个组合对应的资产为 1w 元，
-            假设组合 ZH000001 加仓 价格为 p 股票 A 10%, 则对应的交易指令为 买入 股票 A 价格 P 股数 1w * 10% / p 并按 100 取整
-        :param initial_assets:雪球组合对应的初始资产, 格式 [ 组合1对应资金, 组合2对应资金 ]
+        :param total_assets: 雪球组合对应的总资产， 格式 [组合1对应资金, 组合2对应资金]
+            若 strategies=['ZH000001', 'ZH000002'],
+                设置 total_assets=[10000, 10000], 则表明每个组合对应的资产为 1w 元
+            假设组合 ZH000001 加仓 价格为 p 股票 A 10%,
+                则对应的交易指令为 买入 股票 A 价格 P 股数 1w * 10% / p 并按 100 取整
+        :param initial_assets: 雪球组合对应的初始资产,
+            格式 [ 组合1对应资金, 组合2对应资金 ]
             总资产由 初始资产 × 组合净值 算得， total_assets 会覆盖此参数
         :param track_interval: 轮训模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
@@ -60,21 +69,30 @@ class XueQiuFollower(BaseFollower):
 
         self.start_trader_thread(users, trade_cmd_expire_seconds)
 
-        for strategy_url, strategy_total_assets, strategy_initial_assets in zip(strategies, total_assets,
-                                                                                initial_assets):
-            assets = self.calculate_assets(strategy_url, strategy_total_assets, strategy_initial_assets)
+        for strategy_url, strategy_total_assets, strategy_initial_assets in zip(
+                strategies, total_assets, initial_assets):
+            assets = self.calculate_assets(strategy_url, strategy_total_assets,
+                                           strategy_initial_assets)
             try:
                 strategy_id = self.extract_strategy_id(strategy_url)
                 strategy_name = self.extract_strategy_name(strategy_url)
             except:
-                log.error('抽取交易id和策略名失败, 无效的模拟交易url: {}'.format(strategy_url))
+                log.error('抽取交易id和策略名失败, 无效模拟交易url: {}'.format(strategy_url))
                 raise
-            strategy_worker = Thread(target=self.track_strategy_worker, args=[strategy_id, strategy_name],
-                                     kwargs={'interval': track_interval, 'assets': assets})
+            strategy_worker = Thread(
+                target=self.track_strategy_worker,
+                args=[strategy_id, strategy_name],
+                kwargs={
+                    'interval': track_interval,
+                    'assets': assets
+                })
             strategy_worker.start()
             log.info('开始跟踪策略: {}'.format(strategy_name))
 
-    def calculate_assets(self, strategy_url, total_assets=None, initial_assets=None):
+    def calculate_assets(self,
+                         strategy_url,
+                         total_assets=None,
+                         initial_assets=None):
         # 都设置时优先选择 total_assets
         if total_assets is None and initial_assets is not None:
             net_value = self._get_portfolio_net_value(strategy_url)
@@ -90,7 +108,8 @@ class XueQiuFollower(BaseFollower):
         return strategy_url
 
     def extract_strategy_name(self, strategy_url):
-        url = 'https://xueqiu.com/cubes/nav_daily/all.json?cube_symbol={}'.format(strategy_url)
+        base_url = 'https://xueqiu.com/cubes/nav_daily/all.json?cube_symbol={}'
+        url = base_url.format(strategy_url)
         rep = self.s.get(url)
         info_index = 0
         return rep.json()[info_index]['name']
@@ -100,27 +119,26 @@ class XueQiuFollower(BaseFollower):
         if history['count'] <= 0:
             return []
         rebalancing_index = 0
-        transactions = history['list'][rebalancing_index]['rebalancing_histories']
+        transactions = history['list'][rebalancing_index][
+            'rebalancing_histories']
         return transactions
 
     def create_query_transaction_params(self, strategy):
-        params = {
-            'cube_symbol': strategy,
-            'page': 1,
-            'count': 1
-        }
+        params = {'cube_symbol': strategy, 'page': 1, 'count': 1}
         return params
 
     # noinspection PyMethodOverriding
-    def none_to_zero(self,data):
-        if data==None:
+    def none_to_zero(self, data):
+        if data is None:
             return 0
         else:
             return data
 
+    # noinspection PyMethodOverriding
     def project_transactions(self, transactions, assets):
         for t in transactions:
-            weight_diff = self.none_to_zero(t['weight']) - self.none_to_zero(t['prev_weight'])
+            weight_diff = self.none_to_zero(t['weight']) - self.none_to_zero(
+                t['prev_weight'])
 
             initial_amount = abs(weight_diff) / 100 * assets / t['price']
             t['amount'] = int(round(initial_amount, -2))
@@ -137,9 +155,11 @@ class XueQiuFollower(BaseFollower):
         """
         url = self.PORTFOLIO_URL + portfolio_code
         portfolio_page = self.s.get(url)
-        match_info = re.search(r'(?<=SNB.cubeInfo = ).*(?=;\n)', portfolio_page.text)
+        match_info = re.search(r'(?<=SNB.cubeInfo = ).*(?=;\n)',
+                               portfolio_page.text)
         if match_info is None:
-            raise Exception('cant get portfolio info, portfolio url : {}'.format(url))
+            raise Exception(
+                'cant get portfolio info, portfolio url : {}'.format(url))
         try:
             portfolio_info = json.loads(match_info.group())
         except Exception as e:
