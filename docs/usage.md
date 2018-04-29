@@ -94,7 +94,7 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 需要先手动登陆客户端到交易窗口，然后运用下面的代码连接交易窗口
 
 ```python
-user.connect(r'客户端xiadan.exe路径') # 类似 r'C:\htzqzyb2\xiadan.exe' 
+user.connect(r'客户端xiadan.exe路径') # 类似 r'C:\htzqzyb2\xiadan.exe'
 ```
 
 
@@ -351,7 +351,7 @@ enjoy it
 
 ```
 xq_follower = easytrader.follower('xq')
-xq_follower.login(user='xq用户名', password='xq密码')
+xq_follower.login(cookies='雪球 cookies，登陆后获取，获取方式见 https://smalltool.github.io/2016/08/02/cookie/')
 ```
 
 #### 连接 follower 和 trader

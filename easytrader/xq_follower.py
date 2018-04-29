@@ -7,7 +7,7 @@ from datetime import datetime
 from numbers import Number
 from threading import Thread
 
-from easytrader import exceptions
+from . import helpers
 from .follower import BaseFollower
 from .log import log
 
@@ -22,19 +22,26 @@ class XueQiuFollower(BaseFollower):
     def __init__(self):
         super(XueQiuFollower, self).__init__()
 
-    def check_login_success(self, login_status):
-        if 'error_description' in login_status:
-            raise exceptions.NotLoginError(login_status['error_description'])
+    def login(self, user=None, password=None, **kwargs):
+        """
+        雪球登陆， 需要设置 cookies
+        :param cookies: 雪球登陆需要设置 cookies， 具体见
+            https://smalltool.github.io/2016/08/02/cookie/
+        :return:
+        """
+        cookies = kwargs.get('cookies')
+        if cookies is None:
+            raise TypeError('雪球登陆需要设置 cookies， 具体见'
+                            'https://smalltool.github.io/2016/08/02/cookie/')
+        headers = self._generate_headers()
+        self.s.headers.update(headers)
 
-    def create_login_params(self, user, password, **kwargs):
-        params = {
-            'username': user,
-            'areacode': '86',
-            'telephone': kwargs.get('account', ''),
-            'remember_me': '0',
-            'password': password
-        }
-        return params
+        self.s.get(self.LOGIN_PAGE)
+
+        cookie_dict = helpers.parse_cookies_str(cookies)
+        self.s.cookies.update(cookie_dict)
+
+        log.info('登录成功')
 
     def follow(self,
                users,

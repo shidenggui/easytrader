@@ -4,13 +4,15 @@ from __future__ import division
 import datetime
 import json
 import re
-import requests
-import six
 import ssl
 import uuid
+
+import requests
+import six
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.poolmanager import PoolManager
 from six.moves import input
+
 from . import exceptions
 
 if six.PY2:
@@ -24,6 +26,21 @@ class Ssl3HttpAdapter(HTTPAdapter):
             maxsize=maxsize,
             block=block,
             ssl_version=ssl.PROTOCOL_TLSv1)
+
+
+def parse_cookies_str(cookies):
+    """
+    parse cookies str to dict
+    :param cookies: cookies str
+    :type cookies: str
+    :return: cookie dict
+    :rtype: dict
+    """
+    cookie_dict = {}
+    for record in cookies.split(";"):
+        key, value = record.strip().split("=", 1)
+        cookie_dict[key] = value
+    return cookie_dict
 
 
 def file2dict(path):
@@ -196,7 +213,8 @@ def get_today_ipo_data():
     home_page_url = 'https://xueqiu.com'
     ipo_data_url = "https://xueqiu.com/proipo/query.json?column=symbol,name,onl_subcode,onl_subbegdate,actissqty,onl" \
                    "_actissqty,onl_submaxqty,iss_price,onl_lotwiner_stpub_date,onl_lotwinrt,onl_lotwin_amount,stock_" \
-                   "income&orderBy=onl_subbegdate&order=desc&stockType=&page=1&size=30&_=%s" % (str(sj))
+                   "income&orderBy=onl_subbegdate&order=desc&stockType=&page=1&size=30&_=%s" % (
+                       str(sj))
 
     session = requests.session()
     session.get(home_page_url, headers=send_headers)  # 产生cookies

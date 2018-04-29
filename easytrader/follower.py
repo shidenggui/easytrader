@@ -29,18 +29,15 @@ class BaseFollower(object):
 
         self.s = requests.Session()
 
-    def login(self, user, password, **kwargs):
-        # mock headers
-        headers = {
-            'Accept': 'application/json, text/javascript, */*; q=0.01',
-            'Accept-Encoding': 'gzip, deflate, br',
-            'Accept-Language': 'en-US,en;q=0.8',
-            'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36',
-            'Referer': self.WEB_REFERER,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Origin': self.WEB_ORIGIN,
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-        }
+    def login(self, user=None, password=None, **kwargs):
+        """
+        登陆接口
+        :param user: 用户名
+        :param password: 密码
+        :param kwargs: 其他参数
+        :return:
+        """
+        headers = self._generate_headers()
         self.s.headers.update(headers)
 
         # init cookie
@@ -52,6 +49,27 @@ class BaseFollower(object):
 
         self.check_login_success(rep)
         log.info('登录成功')
+
+    def _generate_headers(self):
+        headers = {
+            'Accept':
+            'application/json, text/javascript, */*; q=0.01',
+            'Accept-Encoding':
+            'gzip, deflate, br',
+            'Accept-Language':
+            'en-US,en;q=0.8',
+            'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36',
+            'Referer':
+            self.WEB_REFERER,
+            'X-Requested-With':
+            'XMLHttpRequest',
+            'Origin':
+            self.WEB_ORIGIN,
+            'Content-Type':
+            'application/x-www-form-urlencoded; charset=UTF-8',
+        }
+        return headers
 
     def check_login_success(self, rep):
         """检查登录状态是否成功
@@ -67,8 +85,13 @@ class BaseFollower(object):
         """
         pass
 
-    def follow(self, users, strategies, track_interval=1,
-               trade_cmd_expire_seconds=120, cmd_cache=True, **kwargs):
+    def follow(self,
+               users,
+               strategies,
+               track_interval=1,
+               trade_cmd_expire_seconds=120,
+               cmd_cache=True,
+               **kwargs):
         """跟踪平台对应的模拟交易，支持多用户多策略
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: 雪球组合名, 类似 ZH123450
@@ -88,10 +111,19 @@ class BaseFollower(object):
             with open(self.CMD_CACHE_FILE, 'rb') as f:
                 self.expired_cmds = pickle.load(f)
 
-    def start_trader_thread(self, users, trade_cmd_expire_seconds, entrust_prop='limit', send_interval=0):
-        trader = Thread(target=self.trade_worker, args=[users], kwargs={'expire_seconds': trade_cmd_expire_seconds,
-                                                                        'entrust_prop': entrust_prop,
-                                                                        'send_interval': send_interval})
+    def start_trader_thread(self,
+                            users,
+                            trade_cmd_expire_seconds,
+                            entrust_prop='limit',
+                            send_interval=0):
+        trader = Thread(
+            target=self.trade_worker,
+            args=[users],
+            kwargs={
+                'expire_seconds': trade_cmd_expire_seconds,
+                'entrust_prop': entrust_prop,
+                'send_interval': send_interval
+            })
         trader.setDaemon(True)
         trader.start()
 
@@ -125,7 +157,8 @@ class BaseFollower(object):
         :param interval: 轮询策略的时间间隔，单位为秒"""
         while True:
             try:
-                transactions = self.query_strategy_transaction(strategy, **kwargs)
+                transactions = self.query_strategy_transaction(
+                    strategy, **kwargs)
             except Exception as e:
                 log.warning('无法获取策略 {} 调仓信息, 错误: {}, 跳过此次调仓查询'.format(name, e))
                 continue
@@ -141,10 +174,11 @@ class BaseFollower(object):
                 }
                 if self.is_cmd_expired(trade_cmd):
                     continue
-                log.info('策略 [{}] 发送指令到交易队列, 股票: {} 动作: {} 数量: {} 价格: {} 信号产生时间: {}'.format(
-                    name, trade_cmd['stock_code'], trade_cmd['action'], trade_cmd['amount'], trade_cmd['price'],
-                    trade_cmd['datetime']
-                ))
+                log.info(
+                    '策略 [{}] 发送指令到交易队列, 股票: {} 动作: {} 数量: {} 价格: {} 信号产生时间: {}'.
+                    format(name, trade_cmd['stock_code'], trade_cmd['action'],
+                           trade_cmd['amount'], trade_cmd['price'],
+                           trade_cmd['datetime']))
                 self.trade_queue.put(trade_cmd)
                 self.add_cmd_to_expired_cmds(trade_cmd)
             try:
@@ -157,7 +191,8 @@ class BaseFollower(object):
     @staticmethod
     def generate_expired_cmd_key(cmd):
         return '{}_{}_{}_{}_{}_{}'.format(
-            cmd['strategy_name'], cmd['stock_code'], cmd['action'], cmd['amount'], cmd['price'], cmd['datetime'])
+            cmd['strategy_name'], cmd['stock_code'], cmd['action'],
+            cmd['amount'], cmd['price'], cmd['datetime'])
 
     def is_cmd_expired(self, cmd):
         key = self.generate_expired_cmd_key(cmd)
@@ -178,7 +213,11 @@ class BaseFollower(object):
         except ValueError:
             return False
 
-    def trade_worker(self, users, expire_seconds=120, entrust_prop='limit', send_interval=0):
+    def trade_worker(self,
+                     users,
+                     expire_seconds=120,
+                     entrust_prop='limit',
+                     send_interval=0):
         """
         :param send_interval: 交易发送间隔， 默认为0s。调大可防止卖出买入时买出单没有及时成交导致的买入金额不足
         """
@@ -190,29 +229,32 @@ class BaseFollower(object):
                 expire = (now - trade_cmd['datetime']).total_seconds()
                 if expire > expire_seconds:
                     log.warning(
-                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃'.format(
-                            trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
-                            trade_cmd['amount'],
-                            trade_cmd['price'], trade_cmd['datetime'], now, expire_seconds))
+                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃'.
+                        format(trade_cmd['strategy_name'],
+                               trade_cmd['stock_code'], trade_cmd['action'],
+                               trade_cmd['amount'], trade_cmd['price'],
+                               trade_cmd['datetime'], now, expire_seconds))
                     break
 
                 # check price
                 price = trade_cmd['price']
                 if not self._is_number(price) or price <= 0:
                     log.warning(
-                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 价格无效 , 被丢弃'.format(
-                            trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
-                            trade_cmd['amount'],
-                            trade_cmd['price'], trade_cmd['datetime'], now))
+                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 价格无效 , 被丢弃'.
+                        format(trade_cmd['strategy_name'],
+                               trade_cmd['stock_code'], trade_cmd['action'],
+                               trade_cmd['amount'], trade_cmd['price'],
+                               trade_cmd['datetime'], now))
                     break
 
                 # check amount
                 if trade_cmd['amount'] <= 0:
                     log.warning(
-                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃'.format(
-                            trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
-                            trade_cmd['amount'],
-                            trade_cmd['price'], trade_cmd['datetime'], now))
+                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃'.
+                        format(trade_cmd['strategy_name'],
+                               trade_cmd['stock_code'], trade_cmd['action'],
+                               trade_cmd['amount'], trade_cmd['price'],
+                               trade_cmd['datetime'], now))
                     break
 
                 args = {
@@ -227,16 +269,18 @@ class BaseFollower(object):
                     trader_name = type(user).__name__
                     err_msg = '{}: {}'.format(type(e).__name__, e.message)
                     log.error(
-                        '{} 执行 策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}'.format(
-                            trader_name, trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
-                            trade_cmd['amount'],
-                            trade_cmd['price'], trade_cmd['datetime'], err_msg))
+                        '{} 执行 策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}'.
+                        format(trader_name, trade_cmd['strategy_name'],
+                               trade_cmd['stock_code'], trade_cmd['action'],
+                               trade_cmd['amount'], trade_cmd['price'],
+                               trade_cmd['datetime'], err_msg))
                     continue
                 log.info(
-                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 执行成功, 返回: {}'.format(
-                        trade_cmd['strategy_name'], trade_cmd['stock_code'], trade_cmd['action'],
-                        trade_cmd['amount'],
-                        trade_cmd['price'], trade_cmd['datetime'], response))
+                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 执行成功, 返回: {}'.
+                    format(trade_cmd['strategy_name'], trade_cmd['stock_code'],
+                           trade_cmd['action'], trade_cmd['amount'],
+                           trade_cmd['price'], trade_cmd['datetime'],
+                           response))
                 time.sleep(send_interval)
 
     def query_strategy_transaction(self, strategy, **kwargs):

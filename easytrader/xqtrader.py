@@ -3,10 +3,12 @@ import json
 import numbers
 import os
 import re
-import requests
 import time
 
+import requests
+
 from . import exceptions
+from . import helpers
 from . import webtrader
 from .log import log
 
@@ -67,11 +69,8 @@ class XueQiuTrader(webtrader.WebTrader):
         :param cookies: 雪球 cookies
         :type cookies: str
         """
-        cookie_dict = {}
-        for record in cookies.split(";"):
-            key, value = record.strip().split("=", 1)
-            cookie_dict[key] = value
-            self.session.cookies[key] = value
+        cookie_dict = helpers.parse_cookies_str(cookies)
+        self.session.cookies.update(cookie_dict)
 
     def _prepare_account(self, user='', password='', **kwargs):
         """
@@ -181,7 +180,7 @@ class XueQiuTrader(webtrader.WebTrader):
         return stocks
 
     @staticmethod
-    def __time_strftime(time_stamp):
+    def _time_strftime(time_stamp):
         try:
             local_time = time.localtime(time_stamp / 1000)
             return time.strftime("%Y-%m-%d %H:%M:%S", local_time)
@@ -260,7 +259,7 @@ class XueQiuTrader(webtrader.WebTrader):
                     u"买入" if entrust['target_weight'] > replace_none(
                         entrust['prev_weight']) else u"卖出",
                     'report_time':
-                    self.__time_strftime(entrust['updated_at']),
+                    self._time_strftime(entrust['updated_at']),
                     'entrust_status':
                     status,
                     'stock_code':
@@ -493,7 +492,7 @@ class XueQiuTrader(webtrader.WebTrader):
                     'entrust_no':
                     resp_json['id'],
                     'init_date':
-                    self.__time_strftime(resp_json['created_at']),
+                    self._time_strftime(resp_json['created_at']),
                     'batch_no':
                     '委托批号',
                     'report_no':
@@ -501,7 +500,7 @@ class XueQiuTrader(webtrader.WebTrader):
                     'seat_no':
                     '席位编号',
                     'entrust_time':
-                    self.__time_strftime(resp_json['updated_at']),
+                    self._time_strftime(resp_json['updated_at']),
                     'entrust_price':
                     price,
                     'entrust_amount':
