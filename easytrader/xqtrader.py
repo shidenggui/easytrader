@@ -16,8 +16,9 @@ class XueQiuTrader(webtrader.WebTrader):
 
     _HEADERS = {
         'User-Agent':
-        'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:32.0) '
-        'Gecko/20100101 Firefox/32.0',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/64.0.3282.167 Safari/537.36',
         'Host':
         'xueqiu.com',
         'Pragma':
@@ -27,15 +28,15 @@ class XueQiuTrader(webtrader.WebTrader):
         'Accept':
         '*/*',
         'Accept-Encoding':
-        'gzip,deflate,sdch',
+        'gzip, deflate, br',
+        'Accept-Language':
+        'zh-CN,zh;q=0.9,en;q=0.8',
         'Cache-Control':
         'no-cache',
         'Referer':
-        'http://xueqiu.com/P/ZH003694',
+        'https://xueqiu.com/P/ZH004612',
         'X-Requested-With':
         'XMLHttpRequest',
-        'Accept-Language':
-        'zh-CN,zh;q=0.8'
     }
 
     def __init__(self, **kwargs):
@@ -55,30 +56,28 @@ class XueQiuTrader(webtrader.WebTrader):
 
     def autologin(self, **kwargs):
         """
-        重写自动登录方法
-        避免重试导致的帐号封停
+        使用 cookies 之后不需要自动登陆
         :return:
         """
-        self.login()
+        self._set_cookies(self.account_config['cookies'])
 
-    def login(self, throw=False):
+    def _set_cookies(self, cookies):
+        """设置雪球 cookies，代码来自于
+        https://github.com/shidenggui/easytrader/issues/269
+        :param cookies: 雪球 cookies
+        :type cookies: str
         """
-        登录
-        :param throw:
-        :return:
-        """
-        login_status, result = self.post_login_data()
-        if login_status is False and throw:
-            raise exceptions.NotLoginError(result)
-        log.debug('login status: %s' % result)
-        return login_status
+        cookie_dict = {}
+        for record in cookies.split(";"):
+            key, value = record.strip().split("=", 1)
+            cookie_dict[key] = value
+            self.session.cookies[key] = value
 
     def _prepare_account(self, user='', password='', **kwargs):
         """
         转换参数到登录所需的字典格式
-        :param user: 雪球邮箱(邮箱手机二选一)
-        :param password: 雪球密码
-        :param account: 雪球手机号(邮箱手机二选一)
+        :param cookies: 雪球登陆需要设置 cookies， 具体见
+            https://smalltool.github.io/2016/08/02/cookie/
         :param portfolio_code: 组合代码
         :param portfolio_market: 交易市场， 可选['cn', 'us', 'hk'] 默认 'cn'
         :return:
@@ -87,30 +86,15 @@ class XueQiuTrader(webtrader.WebTrader):
             raise TypeError('雪球登录需要设置 portfolio_code(组合代码) 参数')
         if 'portfolio_market' not in kwargs:
             kwargs['portfolio_market'] = 'cn'
-        if 'account' not in kwargs:
-            kwargs['account'] = ''
+        if 'cookies' not in kwargs:
+            raise TypeError('雪球登陆需要设置 cookies， 具体见'
+                            'https://smalltool.github.io/2016/08/02/cookie/')
         self.account_config = {
-            'username': user,
-            'account': kwargs['account'],
-            'password': password,
             'portfolio_code': kwargs['portfolio_code'],
             'portfolio_market': kwargs['portfolio_market']
         }
 
-    def post_login_data(self):
-        login_post_data = {
-            'username': self.account_config.get('username', ''),
-            'areacode': '86',
-            'password': self.account_config['password']
-        }
-        login_response = self.session.post(
-            self.config['login_api'], data=login_post_data)
-        login_status = login_response.json()
-        if 'error_description' in login_status:
-            return False, login_status['error_description']
-        return True, "SUCCESS"
-
-    def __virtual_to_balance(self, virtual):
+    def _virtual_to_balance(self, virtual):
         """
         虚拟净值转化为资金
         :param virtual: 雪球组合净值
@@ -118,10 +102,10 @@ class XueQiuTrader(webtrader.WebTrader):
         """
         return virtual * self.multiple
 
-    def __get_html(self, url):
+    def _get_html(self, url):
         return self.session.get(url).text
 
-    def __search_stock_info(self, code):
+    def _search_stock_info(self, code):
         """
         通过雪球的接口获取股票详细信息
         :param code: 股票代码 000001
@@ -146,13 +130,13 @@ class XueQiuTrader(webtrader.WebTrader):
             stock = stocks[0]
         return stock
 
-    def __get_portfolio_info(self, portfolio_code):
+    def _get_portfolio_info(self, portfolio_code):
         """
         获取组合信息
         :return: 字典
         """
         url = self.config['portfolio_url'] + portfolio_code
-        html = self.__get_html(url)
+        html = self._get_html(url)
         match_info = re.search(r'(?<=SNB.cubeInfo = ).*(?=;\n)', html)
         if match_info is None:
             raise Exception(
@@ -169,8 +153,8 @@ class XueQiuTrader(webtrader.WebTrader):
         :return:
         """
         portfolio_code = self.account_config.get('portfolio_code', 'ch')
-        portfolio_info = self.__get_portfolio_info(portfolio_code)
-        asset_balance = self.__virtual_to_balance(
+        portfolio_info = self._get_portfolio_info(portfolio_code)
+        asset_balance = self._virtual_to_balance(
             float(portfolio_info['net_value']))  # 总资产
         position = portfolio_info['view_rebalancing']  # 仓位结构
         cash = asset_balance * float(position['cash']) / 100
@@ -184,13 +168,13 @@ class XueQiuTrader(webtrader.WebTrader):
             'pre_interest': 0.25
         }]
 
-    def __get_position(self):
+    def _get_position(self):
         """
         获取雪球持仓
         :return:
         """
         portfolio_code = self.account_config['portfolio_code']
-        portfolio_info = self.__get_portfolio_info(portfolio_code)
+        portfolio_info = self._get_portfolio_info(portfolio_code)
         position = portfolio_info['view_rebalancing']  # 仓位结构
         stocks = position['holdings']  # 持仓股票
         return stocks
@@ -208,7 +192,7 @@ class XueQiuTrader(webtrader.WebTrader):
         获取持仓
         :return:
         """
-        xq_positions = self.__get_position()
+        xq_positions = self._get_position()
         balance = self.get_balance()[0]
         position_list = []
         for pos in xq_positions:
@@ -227,7 +211,7 @@ class XueQiuTrader(webtrader.WebTrader):
             })
         return position_list
 
-    def __get_xq_history(self):
+    def _get_xq_history(self):
         """
         获取雪球调仓历史
         :param instance:
@@ -239,13 +223,13 @@ class XueQiuTrader(webtrader.WebTrader):
             'count': 20,
             'page': 1
         }
-        r = self.session.get(self.config['history_url'], params=data)
-        r = json.loads(r.text)
-        return r['list']
+        resp = self.session.get(self.config['history_url'], params=data)
+        res = json.loads(resp.text)
+        return res['list']
 
     @property
     def history(self):
-        return self.__get_xq_history()
+        return self._get_xq_history()
 
     def get_entrust(self):
         """
@@ -253,7 +237,7 @@ class XueQiuTrader(webtrader.WebTrader):
         操作数量都按1手模拟换算的
         :return:
         """
-        xq_entrust_list = self.__get_xq_history()
+        xq_entrust_list = self._get_xq_history()
         entrust_list = []
         replace_none = lambda s: s or 0
         for xq_entrusts in xq_entrust_list:
@@ -299,7 +283,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :param entrust_no:
         :return:
         """
-        xq_entrust_list = self.__get_xq_history()
+        xq_entrust_list = self._get_xq_history()
         is_have = False
         for xq_entrusts in xq_entrust_list:
             status = xq_entrusts['status']  # 调仓状态
@@ -312,7 +296,7 @@ class XueQiuTrader(webtrader.WebTrader):
                     balance = self.get_balance()[0]
                     volume = abs(entrust['target_weight'] - entrust['weight']
                                  ) * balance['asset_balance'] / 100
-                    r = self.__trade(
+                    r = self._trade(
                         security=entrust['stock_symbol'],
                         volume=volume,
                         entrust_bs=bs)
@@ -330,7 +314,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :param weight: float 调整之后的持仓百分比， 0 - 100 之间的浮点数
         """
 
-        stock = self.__search_stock_info(stock_code)
+        stock = self._search_stock_info(stock_code)
         if stock is None:
             raise exceptions.TradeError(u"没有查询要操作的股票信息")
         if stock['flag'] != 1:
@@ -339,7 +323,7 @@ class XueQiuTrader(webtrader.WebTrader):
         # 仓位比例向下取两位数
         weight = round(weight, 2)
         # 获取原有仓位信息
-        position_list = self.__get_position()
+        position_list = self._get_position()
 
         # 调整后的持仓
         for position in position_list:
@@ -400,7 +384,7 @@ class XueQiuTrader(webtrader.WebTrader):
             else:
                 log.debug('调仓成功 %s: 持仓比例%d' % (stock['name'], weight))
 
-    def __trade(self, security, price=0, amount=0, volume=0, entrust_bs='buy'):
+    def _trade(self, security, price=0, amount=0, volume=0, entrust_bs='buy'):
         """
         调仓
         :param security:
@@ -410,7 +394,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :param entrust_bs:
         :return:
         """
-        stock = self.__search_stock_info(security)
+        stock = self._search_stock_info(security)
         balance = self.get_balance()[0]
         if stock is None:
             raise exceptions.TradeError(u"没有查询要操作的股票信息")
@@ -428,7 +412,7 @@ class XueQiuTrader(webtrader.WebTrader):
         weight = round(weight, 2)
 
         # 获取原有仓位信息
-        position_list = self.__get_position()
+        position_list = self._get_position()
 
         # 调整后的持仓
         is_have = False
@@ -539,7 +523,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :param volume: 买入总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop:
         """
-        return self.__trade(security, price, amount, volume, 'buy')
+        return self._trade(security, price, amount, volume, 'buy')
 
     def sell(self, security, price=0, amount=0, volume=0, entrust_prop=0):
         """卖出股票
@@ -549,4 +533,4 @@ class XueQiuTrader(webtrader.WebTrader):
         :param volume: 卖出总金额 由 volume / price 取整， 若指定 price 则此参数无效
         :param entrust_prop:
         """
-        return self.__trade(security, price, amount, volume, 'sell')
+        return self._trade(security, price, amount, volume, 'sell')

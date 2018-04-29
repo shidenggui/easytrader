@@ -45,6 +45,8 @@ user = easytrader.use('ths')
 user.prepare(user='用户名', password='雪球、银河客户端为明文密码', comm_password='华泰通讯密码，其他券商不用')
 ```
 
+注: 雪球比较特殊，见下列配置文件格式
+
 **使用配置文件**
 
 ```python
@@ -72,6 +74,17 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
   "user": "华泰用户名",
   "password": "华泰明文密码"
   "comm_password": "华泰通讯密码"
+}
+
+```
+
+雪球
+
+```
+{
+  "cookies": "雪球 cookies，登陆后获取，获取方式见 https://smalltool.github.io/2016/08/02/cookie/",
+  "portfolio_code": "组合代码(例:ZH818559)",
+  "portfolio_market": "交易市场(例:us 或者 cn 或者 hk)"
 }
 
 ```
