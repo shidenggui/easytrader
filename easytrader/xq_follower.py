@@ -48,6 +48,7 @@ class XueQiuFollower(BaseFollower):
                strategies,
                total_assets=10000,
                initial_assets=None,
+               adjust_sell=False,
                track_interval=10,
                trade_cmd_expire_seconds=120,
                cmd_cache=True):
@@ -59,6 +60,10 @@ class XueQiuFollower(BaseFollower):
                 设置 total_assets=[10000, 10000], 则表明每个组合对应的资产为 1w 元
             假设组合 ZH000001 加仓 价格为 p 股票 A 10%,
                 则对应的交易指令为 买入 股票 A 价格 P 股数 1w * 10% / p 并按 100 取整
+        :param adjust_sell: 是否根据用户的实际持仓数调整卖出股票数量，
+            当卖出股票数大于实际持仓数时，调整为实际持仓数。目前仅在银河客户端测试通过。
+            当 users 为多个时，根据第一个 user 的持仓数决定
+        :type adjust_sell: bool
         :param initial_assets: 雪球组合对应的初始资产,
             格式 [ 组合1对应资金, 组合2对应资金 ]
             总资产由 初始资产 × 组合净值 算得， total_assets 会覆盖此参数
@@ -66,7 +71,11 @@ class XueQiuFollower(BaseFollower):
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         """
+        self._adjust_sell = adjust_sell
+
         users = self.warp_list(users)
+        self._users = users
+
         strategies = self.warp_list(strategies)
         total_assets = self.warp_list(total_assets)
         initial_assets = self.warp_list(initial_assets)
@@ -148,13 +157,49 @@ class XueQiuFollower(BaseFollower):
                 t['prev_weight'])
 
             initial_amount = abs(weight_diff) / 100 * assets / t['price']
-            t['amount'] = int(round(initial_amount, -2))
 
             t['datetime'] = datetime.fromtimestamp(t['created_at'] // 1000)
 
             t['stock_code'] = t['stock_symbol'].lower()
 
             t['action'] = 'buy' if weight_diff > 0 else 'sell'
+
+            t['amount'] = int(round(initial_amount, -2))
+            if self._adjust_sell:
+                t['amount'] = self._adjust_sell_amount(t['stock_code'],
+                                                       t['amount'])
+
+    def _adjust_sell_amount(self, stock_code, amount):
+        """
+        根据实际持仓值计算雪球卖出股数
+          因为雪球的交易指令是基于持仓百分比，在取近似值的情况下可能出现不精确的问题。
+        导致如下情况的产生，计算出的指令为买入 1049 股，取近似值买入 1000 股。
+        而卖出的指令计算出为卖出 1051 股，取近似值卖出 1100 股，超过 1000 股的买入量，
+        导致卖出失败
+        :param stock_code: 证券代码
+        :type stock_code: str
+        :param amount: 卖出股份数
+        :type amount: int
+        :return: 考虑实际持仓之后的卖出股份数
+        :rtype: int
+        """
+        user = self._users[0]
+        position = user.position
+        try:
+            stock = next(s for s in position if s['证券代码'] == stock_code)
+        except StopIteration:
+            log.info('根据持仓调整 {} 卖出额，发现未持有股票 {}, 不做任何调整'.format(
+                stock_code, stock_code))
+            return amount
+
+        available_amount = stock['可用余额']
+        if available_amount >= amount:
+            return amount
+
+        adjust_amount = available_amount // 100 * 100
+        log.info('股票 {} 实际可用余额 {}, 指令卖出股数为 {}, 调整为 {}'.format(
+            stock_code, available_amount, amount, adjust_amount))
+        return adjust_amount
 
     def _get_portfolio_info(self, portfolio_code):
         """
