@@ -1,0 +1,15 @@
+language: python
+
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+env:
+  - PROJ=${PWD##*/}
+
+install:
+  - pip install -r test-requirements.txt
+
+script:
+  - pytest --cov=$PROJ -v tests
