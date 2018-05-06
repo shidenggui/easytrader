@@ -1,13 +1,14 @@
 # coding:utf-8
-import easyutils
 import functools
 import io
 import os
-import pandas as pd
 import re
 import sys
 import time
 from abc import abstractmethod
+
+import easyutils
+import pandas as pd
 
 from . import exceptions
 from . import helpers

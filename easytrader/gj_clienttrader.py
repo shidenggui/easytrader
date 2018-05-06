@@ -1,12 +1,12 @@
 # coding:utf8
 from __future__ import division
 
-# import pandas as pd
-import pywinauto
-import pywinauto.clipboard
 import re
 import tempfile
 import time
+
+import pywinauto
+import pywinauto.clipboard
 
 from . import helpers
 from .clienttrader import ClientTrader
@@ -27,7 +27,8 @@ class GJClientTrader(ClientTrader):
         :return:
         """
         try:
-            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=1)
+            self._app = pywinauto.Application().connect(
+                path=self._run_exe_path(exe_path), timeout=1)
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
 
@@ -45,9 +46,7 @@ class GJClientTrader(ClientTrader):
             while True:
                 try:
                     code = self._handle_verify_code()
-                    edit3.type_keys(
-                        code
-                    )
+                    edit3.type_keys(code)
                     time.sleep(1)
                     self._app.top_window()['确定(Y)'].click()
                     # detect login is success or not
@@ -60,7 +59,8 @@ class GJClientTrader(ClientTrader):
                 except Exception as e:
                     pass
 
-            self._app = pywinauto.Application().connect(path=self._run_exe_path(exe_path), timeout=10)
+            self._app = pywinauto.Application().connect(
+                path=self._run_exe_path(exe_path), timeout=10)
         self._main = self._app.window(title='网上股票交易系统5.0')
 
     def _handle_verify_code(self):
