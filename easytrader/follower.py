@@ -12,6 +12,7 @@ import requests
 # noinspection PyUnresolvedReferences
 from six.moves.queue import Queue
 
+from . import exceptions
 from .log import log
 
 
@@ -59,7 +60,9 @@ class BaseFollower(object):
             'Accept-Language':
             'en-US,en;q=0.8',
             'User-Agent':
-            'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/54.0.2840.100 Safari/537.36',
+            'Mozilla/5.0 (X11; Linux x86_64) '
+            'AppleWebKit/537.36 (KHTML, like Gecko) '
+            'Chrome/54.0.2840.100 Safari/537.36',
             'Referer':
             self.WEB_REFERER,
             'X-Requested-With':
@@ -213,6 +216,73 @@ class BaseFollower(object):
         except ValueError:
             return False
 
+    def _execute_trade_cmd(self, trade_cmd, users, expire_seconds,
+                           entrust_prop, send_interval):
+        """分发交易指令到对应的 user 并执行
+        :param trade_cmd:
+        :param users:
+        :param expire_seconds:
+        :param entrust_prop:
+        :param send_interval:
+        :return:
+        """
+        for user in users:
+            # check expire
+            now = datetime.now()
+            expire = (now - trade_cmd['datetime']).total_seconds()
+            if expire > expire_seconds:
+                log.warning(
+                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃'.
+                    format(trade_cmd['strategy_name'], trade_cmd['stock_code'],
+                           trade_cmd['action'], trade_cmd['amount'],
+                           trade_cmd['price'], trade_cmd['datetime'], now,
+                           expire_seconds))
+                break
+
+            # check price
+            price = trade_cmd['price']
+            if not self._is_number(price) or price <= 0:
+                log.warning(
+                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 价格无效 , 被丢弃'.
+                    format(trade_cmd['strategy_name'], trade_cmd['stock_code'],
+                           trade_cmd['action'], trade_cmd['amount'],
+                           trade_cmd['price'], trade_cmd['datetime'], now))
+                break
+
+            # check amount
+            if trade_cmd['amount'] <= 0:
+                log.warning(
+                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃'.
+                    format(trade_cmd['strategy_name'], trade_cmd['stock_code'],
+                           trade_cmd['action'], trade_cmd['amount'],
+                           trade_cmd['price'], trade_cmd['datetime'], now))
+                break
+
+            args = {
+                'security': trade_cmd['stock_code'],
+                'price': trade_cmd['price'],
+                'amount': trade_cmd['amount'],
+                'entrust_prop': entrust_prop
+            }
+            try:
+                response = getattr(user, trade_cmd['action'])(**args)
+            except exceptions.TradeError as e:
+                trader_name = type(user).__name__
+                err_msg = '{}: {}'.format(type(e).__name__, e.args)
+                log.error(
+                    '{} 执行 策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}'.
+                    format(trader_name, trade_cmd['strategy_name'],
+                           trade_cmd['stock_code'], trade_cmd['action'],
+                           trade_cmd['amount'], trade_cmd['price'],
+                           trade_cmd['datetime'], err_msg))
+            else:
+                log.info(
+                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 执行成功, 返回: {}'.
+                    format(trade_cmd['strategy_name'], trade_cmd['stock_code'],
+                           trade_cmd['action'], trade_cmd['amount'],
+                           trade_cmd['price'], trade_cmd['datetime'],
+                           response))
+
     def trade_worker(self,
                      users,
                      expire_seconds=120,
@@ -223,65 +293,9 @@ class BaseFollower(object):
         """
         while True:
             trade_cmd = self.trade_queue.get()
-            for user in users:
-                # check expire
-                now = datetime.now()
-                expire = (now - trade_cmd['datetime']).total_seconds()
-                if expire > expire_seconds:
-                    log.warning(
-                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃'.
-                        format(trade_cmd['strategy_name'],
-                               trade_cmd['stock_code'], trade_cmd['action'],
-                               trade_cmd['amount'], trade_cmd['price'],
-                               trade_cmd['datetime'], now, expire_seconds))
-                    break
-
-                # check price
-                price = trade_cmd['price']
-                if not self._is_number(price) or price <= 0:
-                    log.warning(
-                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 价格无效 , 被丢弃'.
-                        format(trade_cmd['strategy_name'],
-                               trade_cmd['stock_code'], trade_cmd['action'],
-                               trade_cmd['amount'], trade_cmd['price'],
-                               trade_cmd['datetime'], now))
-                    break
-
-                # check amount
-                if trade_cmd['amount'] <= 0:
-                    log.warning(
-                        '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃'.
-                        format(trade_cmd['strategy_name'],
-                               trade_cmd['stock_code'], trade_cmd['action'],
-                               trade_cmd['amount'], trade_cmd['price'],
-                               trade_cmd['datetime'], now))
-                    break
-
-                args = {
-                    'security': trade_cmd['stock_code'],
-                    'price': trade_cmd['price'],
-                    'amount': trade_cmd['amount'],
-                    'entrust_prop': entrust_prop
-                }
-                try:
-                    response = getattr(user, trade_cmd['action'])(**args)
-                except Exception as e:
-                    trader_name = type(user).__name__
-                    err_msg = '{}: {}'.format(type(e).__name__, e.message)
-                    log.error(
-                        '{} 执行 策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}'.
-                        format(trader_name, trade_cmd['strategy_name'],
-                               trade_cmd['stock_code'], trade_cmd['action'],
-                               trade_cmd['amount'], trade_cmd['price'],
-                               trade_cmd['datetime'], err_msg))
-                    continue
-                log.info(
-                    '策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 执行成功, 返回: {}'.
-                    format(trade_cmd['strategy_name'], trade_cmd['stock_code'],
-                           trade_cmd['action'], trade_cmd['amount'],
-                           trade_cmd['price'], trade_cmd['datetime'],
-                           response))
-                time.sleep(send_interval)
+            self._execute_trade_cmd(trade_cmd, users, expire_seconds,
+                                    entrust_prop, send_interval)
+            time.sleep(send_interval)
 
     def query_strategy_transaction(self, strategy, **kwargs):
         params = self.create_query_transaction_params(strategy)

@@ -183,6 +183,7 @@ class XueQiuFollower(BaseFollower):
         :return: 考虑实际持仓之后的卖出股份数
         :rtype: int
         """
+        stock_code = stock_code[-6:]
         user = self._users[0]
         position = user.position
         try:

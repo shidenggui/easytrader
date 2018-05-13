@@ -28,6 +28,7 @@ class TestXueQiuTrader(unittest.TestCase):
             ('169101', 600, 600),
             ('169101', 700, 600),
             ('000000', 100, 100),
+            ('sh169101', 700, 600),
         ]
         for stock_code, sell_amount, excepted_amount in test_cases:
             amount = follower._adjust_sell_amount(stock_code, sell_amount)
