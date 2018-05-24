@@ -9,5 +9,5 @@ Pillow
 pytesseract
 pandas
 pyperclip
-rqopen-client
+rqopen-client>=0.0.5
 easyutils
