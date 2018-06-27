@@ -9,7 +9,7 @@ from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
 
 if six.PY2:
-    raise TypeError('不支持 Python2，请升级 Python3 ')
+    raise TypeError("不支持 Python2，请升级 Python3 ")
 
 
 def use(broker, debug=True, **kwargs):
@@ -27,19 +27,23 @@ def use(broker, debug=True, **kwargs):
     """
     if not debug:
         log.setLevel(logging.INFO)
-    elif broker.lower() in ['xq', '雪球']:
+    elif broker.lower() in ["xq", "雪球"]:
         return XueQiuTrader(**kwargs)
-    elif broker.lower() in ['yh_client', '银河客户端']:
+    elif broker.lower() in ["yh_client", "银河客户端"]:
         from .yh_clienttrader import YHClientTrader
+
         return YHClientTrader()
-    elif broker.lower() in ['ht_client', '华泰客户端']:
+    elif broker.lower() in ["ht_client", "华泰客户端"]:
         from .ht_clienttrader import HTClientTrader
+
         return HTClientTrader()
-    elif broker.lower() in ['gj_client', '国金客户端']:
+    elif broker.lower() in ["gj_client", "国金客户端"]:
         from .gj_clienttrader import GJClientTrader
+
         return GJClientTrader()
-    elif broker.lower() in ['ths', '同花顺客户端']:
+    elif broker.lower() in ["ths", "同花顺客户端"]:
         from .clienttrader import ClientTrader
+
         return ClientTrader()
 
 
@@ -61,9 +65,9 @@ def follower(platform, **kwargs):
         >>> jq.login(user='username', password='password')
         >>> jq.follow(users=user, strategies=['strategies_link'])
     """
-    if platform.lower() in ['rq', 'ricequant', '米筐']:
+    if platform.lower() in ["rq", "ricequant", "米筐"]:
         return RiceQuantFollower()
-    if platform.lower() in ['jq', 'joinquant', '聚宽']:
+    if platform.lower() in ["jq", "joinquant", "聚宽"]:
         return JoinQuantFollower()
-    if platform.lower() in ['xq', 'xueqiu', '雪球']:
+    if platform.lower() in ["xq", "xueqiu", "雪球"]:
         return XueQiuFollower(**kwargs)

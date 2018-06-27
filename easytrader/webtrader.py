@@ -14,13 +14,13 @@ from .log import log
 
 # noinspection PyIncorrectDocstring
 class WebTrader(object):
-    global_config_path = os.path.dirname(__file__) + '/config/global.json'
-    config_path = ''
+    global_config_path = os.path.dirname(__file__) + "/config/global.json"
+    config_path = ""
 
     def __init__(self, debug=True):
         self.__read_config()
-        self.trade_prefix = self.config['prefix']
-        self.account_config = ''
+        self.trade_prefix = self.config["prefix"]
+        self.account_config = ""
         self.heart_active = True
         self.heart_thread = Thread(target=self.send_heartbeat)
         self.heart_thread.setDaemon(True)
@@ -31,10 +31,10 @@ class WebTrader(object):
         try:
             self.account_config = helpers.file2dict(path)
         except ValueError:
-            log.error('配置文件格式有误，请勿使用记事本编辑，推荐 sublime text')
+            log.error("配置文件格式有误，请勿使用记事本编辑，推荐 sublime text")
         for v in self.account_config:
             if type(v) is int:
-                log.warn('配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题')
+                log.warn("配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题")
 
     def prepare(self, config_file=None, user=None, password=None, **kwargs):
         """登录的统一接口
@@ -54,7 +54,7 @@ class WebTrader(object):
 
     def _prepare_account(self, user, password, **kwargs):
         """映射用户名密码到对应的字段"""
-        raise Exception('支持参数登录需要实现此方法')
+        raise Exception("支持参数登录需要实现此方法")
 
     def autologin(self, limit=10):
         """实现自动登录
@@ -65,7 +65,8 @@ class WebTrader(object):
                 break
         else:
             raise exceptions.NotLoginError(
-                '登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常')
+                "登录失败次数过多, 请检查密码是否正确 / 券商服务器是否处于维护中 / 网络连接是否正常"
+            )
         self.keepalive()
 
     def login(self):
@@ -95,7 +96,7 @@ class WebTrader(object):
             pass
         except Exception as e:
             log.setLevel(self.log_level)
-            log.error('心跳线程发现账户出现错误: {} {}, 尝试重新登陆'.format(e.__class__, e))
+            log.error("心跳线程发现账户出现错误: {} {}, 尝试重新登陆".format(e.__class__, e))
             self.autologin()
         finally:
             log.setLevel(self.log_level)
@@ -123,7 +124,7 @@ class WebTrader(object):
 
     def get_balance(self):
         """获取账户资金状况"""
-        return self.do(self.config['balance'])
+        return self.do(self.config["balance"])
 
     @property
     def position(self):
@@ -131,7 +132,7 @@ class WebTrader(object):
 
     def get_position(self):
         """获取持仓"""
-        return self.do(self.config['position'])
+        return self.do(self.config["position"])
 
     @property
     def entrust(self):
@@ -139,7 +140,7 @@ class WebTrader(object):
 
     def get_entrust(self):
         """获取当日委托列表"""
-        return self.do(self.config['entrust'])
+        return self.do(self.config["entrust"])
 
     @property
     def current_deal(self):
@@ -148,7 +149,7 @@ class WebTrader(object):
     def get_current_deal(self):
         """获取当日委托列表"""
         # return self.do(self.config['current_deal'])
-        log.warning('目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充')
+        log.warning("目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充")
 
     @property
     def exchangebill(self):
@@ -167,7 +168,7 @@ class WebTrader(object):
         :param end_date: 20160211
         :return:
         """
-        log.warning('目前仅在 华泰子类 中实现, 其余券商需要补充')
+        log.warning("目前仅在 华泰子类 中实现, 其余券商需要补充")
 
     def get_ipo_limit(self, stock_code):
         """
@@ -175,7 +176,7 @@ class WebTrader(object):
         :param stock_code: 申购代码 ID
         :return:
         """
-        log.warning('目前仅在 佣金宝子类 中实现, 其余券商需要补充')
+        log.warning("目前仅在 佣金宝子类 中实现, 其余券商需要补充")
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
@@ -221,15 +222,15 @@ class WebTrader(object):
         if type(response_data) is not list:
             return response_data
 
-        int_match_str = '|'.join(self.config['response_format']['int'])
-        float_match_str = '|'.join(self.config['response_format']['float'])
+        int_match_str = "|".join(self.config["response_format"]["int"])
+        float_match_str = "|".join(self.config["response_format"]["float"])
         for item in response_data:
             for key in item:
                 try:
                     if re.search(int_match_str, key) is not None:
-                        item[key] = helpers.str2num(item[key], 'int')
+                        item[key] = helpers.str2num(item[key], "int")
                     elif re.search(float_match_str, key) is not None:
-                        item[key] = helpers.str2num(item[key], 'float')
+                        item[key] = helpers.str2num(item[key], "float")
                 except ValueError:
                     continue
         return response_data
