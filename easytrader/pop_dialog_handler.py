@@ -2,7 +2,7 @@
 import re
 import time
 
-from easytrader import exceptions
+from . import exceptions
 
 
 class PopDialogHandler:

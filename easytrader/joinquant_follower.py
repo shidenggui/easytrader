@@ -1,13 +1,11 @@
-# coding:utf8
-from __future__ import unicode_literals
-
+# -*- coding: utf-8 -*-
 import re
 from datetime import datetime
 from threading import Thread
 
+from . import exceptions
 from .follower import BaseFollower
 from .log import log
-from easytrader.exceptions import NotLoginError
 
 
 class JoinQuantFollower(BaseFollower):
@@ -30,7 +28,7 @@ class JoinQuantFollower(BaseFollower):
     def check_login_success(self, rep):
         set_cookie = rep.headers["set-cookie"]
         if len(set_cookie) < 100:
-            raise NotLoginError("登录失败，请检查用户名和密码")
+            raise exceptions.NotLoginError("登录失败，请检查用户名和密码")
         self.s.headers.update({"cookie": set_cookie})
 
     def follow(

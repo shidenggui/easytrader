@@ -1,6 +1,4 @@
-# coding: utf-8
-from __future__ import division
-
+# -*- coding: utf-8 -*-
 import datetime
 import json
 import re
@@ -236,7 +234,6 @@ def get_today_ipo_data():
     today_ipo = []
 
     for line in json_data["data"]:
-        # if datetime.datetime(2016, 9, 14).ctime()[:10] == line[3][:10]:
         if datetime.datetime.now().strftime("%a %b %d") == line[3][:10]:
             today_ipo.append(
                 {

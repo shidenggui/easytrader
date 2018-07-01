@@ -1,4 +1,4 @@
-# coding:utf-8
+# -*- coding: utf-8 -*-
 import abc
 import functools
 import os
@@ -9,8 +9,8 @@ import easyutils
 
 from . import grid_data_get_strategy
 from . import helpers
-from .config import client
 from . import pop_dialog_handler
+from .config import client
 
 if not sys.platform.startswith("darwin"):
     import pywinauto

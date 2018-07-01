@@ -1,6 +1,4 @@
-# coding:utf8
-
-
+# -*- coding: utf-8 -*-
 def create(broker):
     if broker == "yh":
         return YH

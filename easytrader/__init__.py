@@ -1,4 +1,4 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 from .api import *
 from .webtrader import WebTrader
 from .joinquant_follower import JoinQuantFollower

@@ -1,5 +1,4 @@
-# coding:utf8
-
+# -*- coding: utf-8 -*-
 import pywinauto
 import pywinauto.clipboard
 

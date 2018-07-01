@@ -1,6 +1,4 @@
-# coding:utf8
-
-
+# -*- coding: utf-8 -*-
 class TradeError(IOError):
     pass
 

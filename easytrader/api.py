@@ -1,5 +1,6 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 import logging
+
 import six
 
 from .joinquant_follower import JoinQuantFollower

@@ -1,12 +1,10 @@
-# coding:utf8
-from __future__ import unicode_literals, print_function, division
-
+# -*- coding: utf-8 -*-
+import datetime
 import os
 import pickle
 import re
+import threading
 import time
-from datetime import datetime
-from threading import Thread
 
 import requests
 
@@ -116,7 +114,7 @@ class BaseFollower(object):
         entrust_prop="limit",
         send_interval=0,
     ):
-        trader = Thread(
+        trader = threading.Thread(
             target=self.trade_worker,
             args=[users],
             kwargs={
@@ -238,7 +236,7 @@ class BaseFollower(object):
         """
         for user in users:
             # check expire
-            now = datetime.now()
+            now = datetime.datetime.now()
             expire = (now - trade_cmd["datetime"]).total_seconds()
             if expire > expire_seconds:
                 log.warning(
