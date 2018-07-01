@@ -6,7 +6,7 @@ import unittest
 
 sys.path.append(".")
 
-TEST_CLIENTS = os.environ.get("EZ_TEST_CLIENTS", "yh")
+TEST_CLIENTS = os.environ.get("EZ_TEST_CLIENTS", "")
 
 IS_WIN_PLATFORM = sys.platform != "darwin"
 
