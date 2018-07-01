@@ -3,10 +3,10 @@
 import pywinauto
 import pywinauto.clipboard
 
-from .clienttrader import ClientTrader
+from . import clienttrader
 
 
-class HTClientTrader(ClientTrader):
+class HTClientTrader(clienttrader.BaseLoginClientTrader):
     @property
     def broker_type(self):
         return "ht"

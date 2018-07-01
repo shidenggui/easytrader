@@ -3,7 +3,6 @@ import os
 import sys
 import time
 import unittest
-from unittest import mock
 
 sys.path.append(".")
 
@@ -24,7 +23,7 @@ class TestYhClientTrader(unittest.TestCase):
         # input your test account and password
         cls._ACCOUNT = os.environ.get("EZ_TEST_YH_ACCOUNT") or "your account"
         cls._PASSWORD = (
-            os.environ.get("EZ_TEST_YH_password") or "your password"
+            os.environ.get("EZ_TEST_YH_PASSWORD") or "your password"
         )
 
         cls._user = easytrader.use("yh_client")
@@ -74,10 +73,10 @@ class TestHTClientTrader(unittest.TestCase):
         # input your test account and password
         cls._ACCOUNT = os.environ.get("EZ_TEST_HT_ACCOUNT") or "your account"
         cls._PASSWORD = (
-            os.environ.get("EZ_TEST_HT_password") or "your password"
+            os.environ.get("EZ_TEST_HT_PASSWORD") or "your password"
         )
         cls._COMM_PASSWORD = (
-            os.environ.get("EZ_TEST_HT_comm_password") or "your comm password"
+            os.environ.get("EZ_TEST_HT_COMM_PASSWORD") or "your comm password"
         )
 
         cls._user = easytrader.use("ht_client")

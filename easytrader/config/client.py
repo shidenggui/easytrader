@@ -69,7 +69,7 @@ class CommonConfig:
 
 
 class YH(CommonConfig):
-    DEFAULT_EXE_PATH = r"C:\中国银河证券双子星3.2\Binarystar.exe"
+    DEFAULT_EXE_PATH = r"C:\双子星-中国银河证券\Binarystar.exe"
 
     BALANCE_GRID_CONTROL_ID = 1308
 

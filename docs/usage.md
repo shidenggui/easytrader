@@ -97,6 +97,16 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 user.connect(r'客户端xiadan.exe路径') # 类似 r'C:\htzqzyb2\xiadan.exe'
 ```
 
+## 某些同花顺客户端不允许拷贝 `Grid` 数据导致无法获取持仓等问题的解决办法
+
+现在默认获取 `Grid` 数据的策略是通过剪切板拷贝，有些券商不允许这种方式，所以额外实现了一种通过将 `Grid` 数据存为文件再读取的策略，
+使用方式如下:
+
+```python
+from easytrader import grid_data_get_strategy
+
+user.grid_data_get_strategy = grid_data_get_strategy.XlsStrategy
+```
 
 ### 交易相关
 

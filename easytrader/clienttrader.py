@@ -1,126 +1,99 @@
 # coding:utf-8
+import abc
 import functools
-import io
 import os
-import re
 import sys
 import time
-from abc import abstractmethod
 
 import easyutils
-import pandas as pd
 
-from . import exceptions
+from . import grid_data_get_strategy
 from . import helpers
 from .config import client
-from .log import log
+from . import pop_dialog_handler
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
     import pywinauto.clipboard
 
 
-class PopDialogHandler:
-    def __init__(self, app):
-        self._app = app
+class IClientTrader(abc.ABC):
+    @property
+    @abc.abstractmethod
+    def app(self):
+        """Return current app instance"""
+        pass
 
-    def handle(self, title):
-        if any(s in title for s in {"提示信息", "委托确认", "网上交易用户协议"}):
-            self._submit_by_shortcut()
+    @property
+    @abc.abstractmethod
+    def main(self):
+        """Return current main window instance"""
+        pass
 
-        elif "提示" in title:
-            content = self._extract_content()
-            self._submit_by_click()
-            return {"message": content}
+    @property
+    @abc.abstractmethod
+    def config(self):
+        """Return current config instance"""
+        pass
 
-        else:
-            content = self._extract_content()
-            self._close()
-            return {"message": "unknown message: {}".format(content)}
+    @abc.abstractmethod
+    def wait(self, seconds):
+        """Wait for operation return"""
+        pass
 
-    def _extract_content(self):
-        return self._app.top_window().Static.window_text()
+    @property
+    @abc.abstractmethod
+    def grid_data_get_strategy(self):
+        """
+        :return: Implement class of IGridDataGetStrategy
+        :rtype: grid_data.get_strategy.IGridDataGetStrategy
+        """
+        pass
 
-    def _extract_entrust_id(self, content):
-        return re.search(r"\d+", content).group()
-
-    def _submit_by_click(self):
-        self._app.top_window()["确定"].click()
-
-    def _submit_by_shortcut(self):
-        self._app.top_window().type_keys("%Y")
-
-    def _close(self):
-        self._app.top_window().close()
-
-
-class TradePopDialogHandler(PopDialogHandler):
-    def handle(self, title):
-        if title == "委托确认":
-            self._submit_by_shortcut()
-
-        elif title == "提示信息":
-            content = self._extract_content()
-            if "超出涨跌停" in content:
-                self._submit_by_shortcut()
-            elif "委托价格的小数价格应为" in content:
-                self._submit_by_shortcut()
-
-        elif title == "提示":
-            content = self._extract_content()
-            if "成功" in content:
-                entrust_no = self._extract_entrust_id(content)
-                self._submit_by_click()
-                return {"entrust_no": entrust_no}
-            else:
-                self._submit_by_click()
-                time.sleep(0.05)
-                raise exceptions.TradeError(content)
-        else:
-            self._close()
+    @grid_data_get_strategy.setter
+    @abc.abstractmethod
+    def grid_data_get_strategy(self, strategy_cls):
+        """
+        :param strategy_cls: Grid data get strategy
+        :type strategy_cls: grid_data.get_strategy.IGridDataGetStrategy
+        :return: formatted grid data
+        :rtype: list[dict]
+        """
+        pass
 
 
-class ClientTrader:
+class ClientTrader(IClientTrader):
     def __init__(self):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
+        self.grid_data_get_strategy = grid_data_get_strategy.CopyStrategy
 
-    def prepare(
-        self,
-        config_path=None,
-        user=None,
-        password=None,
-        exe_path=None,
-        comm_password=None,
-        **kwargs
-    ):
-        """
-        登陆客户端
-        :param config_path: 登陆配置文件，跟参数登陆方式二选一
-        :param user: 账号
-        :param password: 明文密码
-        :param exe_path: 客户端路径类似 r'C:\\htzqzyb2\\xiadan.exe', 默认 r'C:\\htzqzyb2\\xiadan.exe'
-        :param comm_password: 通讯密码
-        :return:
-        """
-        if config_path is not None:
-            account = helpers.file2dict(config_path)
-            user = account["user"]
-            password = account["password"]
-            comm_password = account.get("comm_password")
-            exe_path = account.get("exe_path")
-        self.login(
-            user,
-            password,
-            exe_path or self._config.DEFAULT_EXE_PATH,
-            comm_password,
-            **kwargs
-        )
+    @property
+    def app(self):
+        return self._app
 
-    @abstractmethod
-    def login(self, user, password, exe_path, comm_password=None, **kwargs):
-        pass
+    @property
+    def main(self):
+        return self._main
+
+    @property
+    def config(self):
+        return self._config
+
+    @property
+    def grid_data_get_strategy(self):
+        return self._grid_data_get_strategy
+
+    @grid_data_get_strategy.setter
+    def grid_data_get_strategy(self, strategy_cls):
+        if not issubclass(
+            strategy_cls, grid_data_get_strategy.IGridDataGetStrategy
+        ):
+            raise TypeError(
+                "Strategy must be implement class of IGridDataGetStrategy"
+            )
+        self._grid_data_get_strategy = strategy_cls(self)
 
     def connect(self, exe_path=None, **kwargs):
         """
@@ -253,7 +226,9 @@ class ClientTrader:
             self._set_market_trade_type(ttype)
         self._submit_trade()
 
-        return self._handle_pop_dialogs(handler_class=TradePopDialogHandler)
+        return self._handle_pop_dialogs(
+            handler_class=pop_dialog_handler.TradePopDialogHandler
+        )
 
     def _set_market_trade_type(self, ttype):
         """根据选择的市价交易类型选择对应的下拉选项"""
@@ -286,14 +261,14 @@ class ClientTrader:
             return {"message": "没有发现可以申购的新股"}
 
         self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
-        self._wait(0.1)
+        self.wait(0.1)
 
         for row in invalid_list_idx:
             self._click_grid_by_row(row)
-        self._wait(0.1)
+        self.wait(0.1)
 
         self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
-        self._wait(0.1)
+        self.wait(0.1)
 
         return self._handle_pop_dialogs()
 
@@ -309,7 +284,7 @@ class ClientTrader:
         ).click(coords=(x, y))
 
     def _is_exist_pop_dialog(self):
-        self._wait(0.2)  # wait dialog display
+        self.wait(0.2)  # wait dialog display
         return (
             self._main.wrapper_object()
             != self._app.top_window().wrapper_object()
@@ -318,25 +293,27 @@ class ClientTrader:
     def _run_exe_path(self, exe_path):
         return os.path.join(os.path.dirname(exe_path), "xiadan.exe")
 
-    def _wait(self, seconds):
+    def wait(self, seconds):
         time.sleep(seconds)
 
     def exit(self):
         self._app.kill()
 
     def _close_prompt_windows(self):
-        self._wait(1)
+        self.wait(1)
         for w in self._app.windows(class_name="#32770"):
             if w.window_text() != self._config.TITLE:
                 w.close()
-        self._wait(1)
+        self.wait(1)
 
     def trade(self, security, price, amount):
         self._set_trade_params(security, price, amount)
 
         self._submit_trade()
 
-        return self._handle_pop_dialogs(handler_class=TradePopDialogHandler)
+        return self._handle_pop_dialogs(
+            handler_class=pop_dialog_handler.TradePopDialogHandler
+        )
 
     def _click(self, control_id):
         self._app.top_window().window(
@@ -363,7 +340,7 @@ class ClientTrader:
         self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
-        self._wait(0.1)
+        self.wait(0.1)
 
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
@@ -377,36 +354,25 @@ class ClientTrader:
         self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
-        self._wait(0.1)
+        self.wait(0.1)
 
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _get_grid_data(self, control_id):
-        grid = self._main.window(
-            control_id=control_id, class_name="CVirtualGridCtrl"
-        )
-        grid.type_keys("^A^C")
-        return self._format_grid_data(self._get_clipboard_data())
+        return self._grid_data_get_strategy.get(control_id)
 
     def _type_keys(self, control_id, text):
         self._main.window(
             control_id=control_id, class_name="Edit"
         ).set_edit_text(text)
 
-    def _get_clipboard_data(self):
-        while True:
-            try:
-                return pywinauto.clipboard.GetData()
-            except Exception as e:
-                log.warning("{}, retry ......".format(e))
-
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
-        self._wait(sleep)
+        self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
-        self._wait(sleep)
+        self.wait(sleep)
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
@@ -420,15 +386,6 @@ class ClientTrader:
                 return handle
             except:
                 pass
-
-    def _format_grid_data(self, data):
-        df = pd.read_csv(
-            io.StringIO(data),
-            delimiter="\t",
-            dtype=self._config.GRID_DTYPE,
-            na_filter=False,
-        )
-        return df.to_dict("records")
 
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
@@ -444,7 +401,9 @@ class ClientTrader:
     def _refresh(self):
         self._switch_left_menus(["买入[F1]"], sleep=0.05)
 
-    def _handle_pop_dialogs(self, handler_class=PopDialogHandler):
+    def _handle_pop_dialogs(
+        self, handler_class=pop_dialog_handler.PopDialogHandler
+    ):
         handler = handler_class(self._app)
 
         while self._is_exist_pop_dialog():
@@ -454,3 +413,42 @@ class ClientTrader:
             if result:
                 return result
         return {"message": "success"}
+
+
+class BaseLoginClientTrader(ClientTrader):
+    @abc.abstractmethod
+    def login(self, user, password, exe_path, comm_password=None, **kwargs):
+        """Login Client Trader"""
+        pass
+
+    def prepare(
+        self,
+        config_path=None,
+        user=None,
+        password=None,
+        exe_path=None,
+        comm_password=None,
+        **kwargs
+    ):
+        """
+        登陆客户端
+        :param config_path: 登陆配置文件，跟参数登陆方式二选一
+        :param user: 账号
+        :param password: 明文密码
+        :param exe_path: 客户端路径类似 r'C:\\htzqzyb2\\xiadan.exe', 默认 r'C:\\htzqzyb2\\xiadan.exe'
+        :param comm_password: 通讯密码
+        :return:
+        """
+        if config_path is not None:
+            account = helpers.file2dict(config_path)
+            user = account["user"]
+            password = account["password"]
+            comm_password = account.get("comm_password")
+            exe_path = account.get("exe_path")
+        self.login(
+            user,
+            password,
+            exe_path or self._config.DEFAULT_EXE_PATH,
+            comm_password,
+            **kwargs
+        )

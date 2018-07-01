@@ -1,14 +1,26 @@
 # coding:utf8
-import pywinauto
-import pywinauto.clipboard
 import re
 import tempfile
 
+import pywinauto
+
 from . import clienttrader
+from . import grid_data_get_strategy
 from . import helpers
 
 
-class YHClientTrader(clienttrader.ClientTrader):
+class YHClientTrader(clienttrader.BaseLoginClientTrader):
+    def __init__(self):
+        """
+        Changelog:
+
+        2018.07.01:
+            银河客户端 2018.5.11 更新后不再支持通过剪切板复制获取 Grid 内容，
+            改为使用保存为 Xls 再读取的方式获取
+        """
+        super().__init__()
+        self.grid_data_get_strategy = grid_data_get_strategy.XlsStrategy
+
     @property
     def broker_type(self):
         return "yh"
@@ -65,7 +77,7 @@ class YHClientTrader(clienttrader.ClientTrader):
                 "ready", 2
             )
         except:
-            self._wait(2)
+            self.wait(2)
             self._switch_window_to_normal_mode()
 
     def _switch_window_to_normal_mode(self):
@@ -80,8 +92,8 @@ class YHClientTrader(clienttrader.ClientTrader):
 
         file_path = tempfile.mktemp()
         control.capture_as_image().save(file_path, "jpeg")
-        vcode = helpers.recognize_verify_code(file_path, "yh_client")
-        return "".join(re.findall("\d+", vcode))
+        verify_code = helpers.recognize_verify_code(file_path, "yh_client")
+        return "".join(re.findall("\d+", verify_code))
 
     @property
     def balance(self):

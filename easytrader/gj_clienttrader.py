@@ -1,5 +1,4 @@
 # coding:utf8
-from __future__ import division
 
 import re
 import tempfile
@@ -8,11 +7,11 @@ import time
 import pywinauto
 import pywinauto.clipboard
 
+from . import clienttrader
 from . import helpers
-from .clienttrader import ClientTrader
 
 
-class GJClientTrader(ClientTrader):
+class GJClientTrader(clienttrader.BaseLoginClientTrader):
     @property
     def broker_type(self):
         return "gj"
