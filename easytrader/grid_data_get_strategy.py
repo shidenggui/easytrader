@@ -81,7 +81,7 @@ class XlsStrategy(BaseStrategy):
         grid.type_keys("^s")
         self._trader.wait(1)
 
-        temp_path = tempfile.mktemp(suffix=".csv", prefix="easytrader_")
+        temp_path = tempfile.mktemp(suffix=".csv")
         self._trader.app.top_window().type_keys(temp_path)
 
         # alt+s保存，alt+y替换已存在的文件
