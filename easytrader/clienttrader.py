@@ -37,7 +37,7 @@ class IClientTrader(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def wait(self, seconds):
+    def wait(self, seconds: int):
         """Wait for operation return"""
         pass
 

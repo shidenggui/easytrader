@@ -51,7 +51,7 @@ class CopyStrategy(BaseStrategy):
         content = self._get_clipboard_data()
         return self._format_grid_data(content)
 
-    def _format_grid_data(self, data):
+    def _format_grid_data(self, data: str) -> dict:
         df = pd.read_csv(
             io.StringIO(data),
             delimiter="\t",
@@ -60,7 +60,7 @@ class CopyStrategy(BaseStrategy):
         )
         return df.to_dict("records")
 
-    def _get_clipboard_data(self):
+    def _get_clipboard_data(self) -> str:
         while True:
             try:
                 return pywinauto.clipboard.GetData()
@@ -84,11 +84,14 @@ class XlsStrategy(BaseStrategy):
         temp_path = tempfile.mktemp(suffix=".csv")
         self._trader.app.top_window().type_keys(temp_path)
 
+        # Wait until file save complete
+        self._trader.wait(0.5)
+
         # alt+s保存，alt+y替换已存在的文件
         self._trader.app.top_window().type_keys("%{s}%{y}")
         return self._format_grid_data(temp_path)
 
-    def _format_grid_data(self, data):
+    def _format_grid_data(self, data: str) -> dict:
         df = pd.read_csv(
             data,
             encoding="gbk",
