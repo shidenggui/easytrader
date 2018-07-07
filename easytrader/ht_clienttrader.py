@@ -108,8 +108,8 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             )
         return result
     
-    # check top_window
-    def check_top_window(self):
-        """只需要3ms"""
-        while '网上股票交易系统' not in self._app.top_window().window_text():
-            self._app.top_window().close()
+#     # check top_window
+#     def check_top_window(self):
+#         """只需要3ms"""
+#         while '网上股票交易系统' not in self._app.top_window().window_text():
+#             self._app.top_window().close()
