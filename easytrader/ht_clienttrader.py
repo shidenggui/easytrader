@@ -99,13 +99,21 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         return self._get_balance_from_statics()
 
     def _get_balance_from_statics(self):
+#         result = {}
+#         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
+#             result[key] = float(
+#                 self._main.window(
+#                     control_id=control_id, class_name="Static"
+#                 ).window_text()
+#             )
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
-            result[key] = float(
-                self._main.window(
-                    control_id=control_id, class_name="Static"
-                ).window_text()
-            )
+            ww = self._main.window(control_id=control_id, class_name="Static")
+            @pywinauto.timings.always_wait_until_passes(30, 0.1)
+            def f(ww):
+                self.check_top_window()
+                return float(ww.window_text())
+            result[key] = f(ww)
         return result
     
 #     # check top_window
