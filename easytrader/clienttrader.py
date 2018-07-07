@@ -112,7 +112,13 @@ class ClientTrader(IClientTrader):
         )
         self._close_prompt_windows()
         self._main = self._app.top_window()
-
+        
+    # check top_window
+    def check_top_window(self):
+        """只需要3ms"""
+        while '网上股票交易系统' not in self._app.top_window().window_text():
+            self._app.top_window().close()
+            
     @property
     def broker_type(self):
         return "ths"
@@ -367,25 +373,40 @@ class ClientTrader(IClientTrader):
         ).set_edit_text(text)
 
     def _switch_left_menus(self, path, sleep=0.2):
-        self._get_left_menus_handle().get_item(path).click()
-        self.wait(sleep)
+#         self._get_left_menus_handle().get_item(path).click()
+#         self.wait(sleep)
+        while True:
+            try:
+                self.check_top_window()
+                w = self._main.window_(control_id=129, class_name="SysTreeView32")
+                # sometime can't find handle ready, must retry
+                w.wait("ready", 2)
+                treeview = w.wrapper_object()
+                treeview.wait_for_idle()
+                break
+            except:
+                pass
+        self.check_top_window()
+        while not treeview.IsSelected(path):
+            treeview.Select(path)
+            self.check_top_window()
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
         self.wait(sleep)
 
-    @functools.lru_cache()
-    def _get_left_menus_handle(self):
-        while True:
-            try:
-                handle = self._main.window(
-                    control_id=129, class_name="SysTreeView32"
-                )
-                # sometime can't find handle ready, must retry
-                handle.wait("ready", 2)
-                return handle
-            except:
-                pass
+#     @functools.lru_cache()
+#     def _get_left_menus_handle(self):
+#         while True:
+#             try:
+#                 handle = self._main.window(
+#                     control_id=129, class_name="SysTreeView32"
+#                 )
+#                 # sometime can't find handle ready, must retry
+#                 handle.wait("ready", 2)
+#                 return handle
+#             except:
+#                 pass
 
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
