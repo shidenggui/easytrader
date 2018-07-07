@@ -88,8 +88,9 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             )
 #         self._close_prompt_windows()
 #         self._main = self._app.window(title="网上股票交易系统5.0")
-        time.sleep(5)
+
         self._main = self._app.window_(title_re="网上股票交易系统")
+        time.sleep(5)
 
     @property
     def balance(self):
