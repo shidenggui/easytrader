@@ -368,9 +368,11 @@ class ClientTrader(IClientTrader):
         return self._grid_data_get_strategy.get(control_id)
 
     def _type_keys(self, control_id, text):
-        self._main.window(
+        test = self._main.window(
             control_id=control_id, class_name="Edit"
-        ).set_edit_text(text)
+        )
+        test.SetEditText('')
+        test.SetEditText(text)
 
     def _switch_left_menus(self, path, sleep=0.2):
 #         self._get_left_menus_handle().get_item(path).click()
