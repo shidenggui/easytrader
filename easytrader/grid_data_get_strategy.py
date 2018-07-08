@@ -58,7 +58,10 @@ class CopyStrategy(BaseStrategy):
             dtype=self._trader.config.GRID_DTYPE,
             na_filter=False,
         )
-        return df.to_dict("records")
+        if len(df) != 0:
+            return df.to_dict("records")
+        else:
+            return []
 
     def _get_clipboard_data(self) -> str:
         while True:
@@ -99,4 +102,7 @@ class XlsStrategy(BaseStrategy):
             dtype=self._trader.config.GRID_DTYPE,
             na_filter=False,
         )
-        return df.to_dict("records")
+        if len(df) != 0:
+            return df.to_dict("records")
+        else:
+            return []
