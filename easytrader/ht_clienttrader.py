@@ -15,7 +15,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         while c < 3:
             c += 1
             try:
-                self.login_basic(user, password, exe_path, comm_password=None, **kwargs)
+                self.login_basic(user, password, exe_path, comm_password, **kwargs)
             except Exception:
                 print('login again')
                 for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
