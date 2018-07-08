@@ -39,6 +39,11 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=1
             )
+           # 关闭其它窗口
+            self.check_top_window()
+            for w in self._app.windows(class_name="#32770"):
+                if w.is_visible() and ('股票交易系统' not in w.window_text()):
+                    w.close()
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
             
@@ -49,16 +54,10 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             # wait login window ready
             while True:
                 try:
-                    # self._app.top_window().Edit1.wait("ready")
                     logie.Edit1.wait("ready")
                     break
                 except RuntimeError:
                     pass
-
-#             self._app.top_window().Edit1.type_keys(user)
-#             self._app.top_window().Edit2.type_keys(password)
-#             self._app.top_window().Edit3.type_keys(comm_password)
-#             self._app.top_window().button0.click()
             # 输入用户名
             logie.Edit1.SetEditText('')
             logie.Edit1.SetEditText(user)
@@ -71,8 +70,6 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             # 点击确定
             logie.button0.click()
             
-#             # detect login is success or not
-#             self._app.top_window().wait_not("exists", 10)
             # 等待登录界面关闭
             logie.wait_not('exists', timeout=30, retry_interval=None)
             time.sleep(0.1)
@@ -82,16 +79,14 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             for w in self._app.windows(class_name="#32770"):
                 if w.is_visible() and ('股票交易系统' not in w.window_text()):
                     w.close()
-            time.sleep(0.1)
-        
+                    
+            # 重连客户端
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
             )
-#         self._close_prompt_windows()
-#         self._main = self._app.window(title="网上股票交易系统5.0")
-
+            time.sleep(5)
         self._main = self._app.window_(title_re="网上股票交易系统")
-        time.sleep(5)
+        
 
     @property
     def balance(self):
@@ -100,13 +95,6 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         return self._get_balance_from_statics()
 
     def _get_balance_from_statics(self):
-#         result = {}
-#         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
-#             result[key] = float(
-#                 self._main.window(
-#                     control_id=control_id, class_name="Static"
-#                 ).window_text()
-#             )
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             ww = self._main.window(control_id=control_id, class_name="Static")
@@ -117,8 +105,3 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             result[key] = f(ww)
         return result
     
-#     # check top_window
-#     def check_top_window(self):
-#         """只需要3ms"""
-#         while '网上股票交易系统' not in self._app.top_window().window_text():
-#             self._app.top_window().close()
