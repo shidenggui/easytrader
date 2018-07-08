@@ -47,8 +47,13 @@ class CopyStrategy(BaseStrategy):
 
     def get(self, control_id: int):
         grid = self._get_grid(control_id)
-        grid.type_keys("^A^C")
-        content = self._get_clipboard_data()
+        content = ''
+        while len(content) == 0:
+            grid.type_keys("^A^C")
+            try:
+                content = pywinauto.clipboard.GetData()
+            except Exception as e:
+                log.warning("{}, retry ......".format(e))                
         return self._format_grid_data(content)
 
     def _format_grid_data(self, data: str) -> dict:
@@ -64,11 +69,12 @@ class CopyStrategy(BaseStrategy):
             return []
 
     def _get_clipboard_data(self) -> str:
-        while True:
-            try:
-                return pywinauto.clipboard.GetData()
-            except Exception as e:
-                log.warning("{}, retry ......".format(e))
+        pass
+#         while True:
+#             try:
+#                 return pywinauto.clipboard.GetData()
+#             except Exception as e:
+#                 log.warning("{}, retry ......".format(e))
 
 
 class XlsStrategy(BaseStrategy):
