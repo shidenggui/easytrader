@@ -375,11 +375,9 @@ class ClientTrader(IClientTrader):
         test.SetEditText(text)
 
     def _switch_left_menus(self, path, sleep=0.2):
-#         self._get_left_menus_handle().get_item(path).click()
-#         self.wait(sleep)
         while True:
             try:
-                self.check_top_window()
+                
                 w = self._main.window_(control_id=129, class_name="SysTreeView32")
                 # sometime can't find handle ready, must retry
                 w.wait("ready", 2)
@@ -388,10 +386,11 @@ class ClientTrader(IClientTrader):
                 break
             except:
                 pass
-        self.check_top_window()
+            
         while not treeview.IsSelected(path):
             treeview.Select(path)
-            self.check_top_window()
+            
+        self.check_top_window()
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
