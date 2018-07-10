@@ -342,11 +342,10 @@ class ClientTrader(IClientTrader):
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
-
         self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
-        # wait security input finish
-        self.wait(0.1)
+        # wait security input finish 看起来不必要!
+#         self.wait(0.05)
 
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
