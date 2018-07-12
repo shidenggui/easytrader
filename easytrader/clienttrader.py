@@ -261,7 +261,7 @@ class ClientTrader(IClientTrader):
             control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
             class_name="ComboBox",
         )
-        for i, text in selects.texts():
+        for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
             if i == 0:
                 continue
