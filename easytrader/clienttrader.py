@@ -309,11 +309,17 @@ class ClientTrader(IClientTrader):
         ).click(coords=(x, y))
 
     def _is_exist_pop_dialog(self):
-        self.wait(0.2)  # wait dialog display
-        return (
-            self._main.wrapper_object()
-            != self._app.top_window().wrapper_object()
-        )
+        # 最多等待10秒
+        for c in range(200):
+            time.sleep(0.05)  # wait dialog display
+            test_handle = app.top_window().wrapper_object().handle
+            if test_handle != self._main_handle:
+                """弹出窗口"""
+                return True
+            else:
+                """没弹出，再试几下"""
+                continue
+        return False
 
     def _run_exe_path(self, exe_path):
         return os.path.join(os.path.dirname(exe_path), "xiadan.exe")
@@ -346,7 +352,6 @@ class ClientTrader(IClientTrader):
         ).click()
 
     def _submit_trade(self):
-#         time.sleep(0.05)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
@@ -362,9 +367,6 @@ class ClientTrader(IClientTrader):
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
         self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
-
-        # wait security input finish 看起来不必要!
-#         self.wait(0.05)
 
         self._type_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
@@ -403,19 +405,6 @@ class ClientTrader(IClientTrader):
         self._app.top_window().type_keys(shortcut)
         self.wait(sleep)
 
-#     @functools.lru_cache()
-#     def _get_left_menus_handle(self):
-#         while True:
-#             try:
-#                 handle = self._main.window(
-#                     control_id=129, class_name="SysTreeView32"
-#                 )
-#                 # sometime can't find handle ready, must retry
-#                 handle.wait("ready", 2)
-#                 return handle
-#             except:
-#                 pass
-
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
         y = (
@@ -437,11 +426,10 @@ class ClientTrader(IClientTrader):
 
         while self._is_exist_pop_dialog():
             title = self._get_pop_dialog_title()
-
             result = handler.handle(title)
             if result:
                 return result
-        return {"message": "success"}
+        return {"success???": "不应该出现这里"}
 
 
 class BaseLoginClientTrader(ClientTrader):
