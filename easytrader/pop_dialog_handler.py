@@ -69,6 +69,6 @@ class TradePopDialogHandler(PopDialogHandler):
                 return {"success": entrust_no}
             else:
                 self._submit_by_click()
-                return {"failure": "提示弹窗->下单失败"}
+                return {"failure": content}
         else:
             self._close()
