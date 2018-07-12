@@ -4,7 +4,7 @@ import functools
 import os
 import sys
 import time
-
+import pandas as pd
 import easyutils
 
 from . import grid_data_get_strategy
@@ -129,45 +129,60 @@ class ClientTrader(IClientTrader):
 
     @property
     def balance(self):
-        self._switch_left_menus(["查询[F4]", "资金股票"])
-
+        self._switch_left_menus(self._config.BALANCE_MENU_PATH)
         return self._get_balance_from_statics()
-
+    
     def _get_balance_from_statics(self):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
-            result[key] = float(
-                self._main.window(
-                    control_id=control_id, class_name="Static"
-                ).window_text()
-            )
+            ww = self._main.window(control_id=control_id, class_name="Static")
+            @pywinauto.timings.always_wait_until_passes(30, 0.1)
+            def f(ww):
+                return float(ww.window_text())
+            result[key] = f(ww)
         return result
-
+    
     @property
     def position(self):
-        self._switch_left_menus(["查询[F4]", "资金股票"])
-
-        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+        while c < 100:
+            c += 1
+            self._switch_left_menus(["查询[F4]", "资金股票"])
+            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            if isinstance(test, pd.DataFrame):
+                break
+        return test
 
     @property
     def today_entrusts(self):
-        self._switch_left_menus(["查询[F4]", "当日委托"])
-
-        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+        while c < 100:
+            c += 1
+            self._switch_left_menus(["查询[F4]", "当日委托"])
+            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            if isinstance(test, pd.DataFrame):
+                break
+        return test
 
     @property
     def today_trades(self):
-        self._switch_left_menus(["查询[F4]", "当日成交"])
-
-        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+        while c < 100:
+            c += 1
+            self._switch_left_menus(["查询[F4]", "当日成交"])
+            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            if isinstance(test, pd.DataFrame):
+                break
+        return test
 
     @property
     def cancel_entrusts(self):
-        self._refresh()
-        self._switch_left_menus(["撤单[F3]"])
-
-        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-
+        while c < 100:
+            c += 1
+            self._refresh()
+            self._switch_left_menus(["撤单[F3]"])
+            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            if isinstance(test, pd.DataFrame):
+                break
+        return test 
+    
     def cancel_entrust(self, entrust_no):
         self._refresh()
         for i, entrust in enumerate(self.cancel_entrusts):
