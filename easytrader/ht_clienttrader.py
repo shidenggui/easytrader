@@ -40,7 +40,6 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                 path=self._run_exe_path(exe_path), timeout=1
             )
            # 关闭其它窗口
-            self.check_top_window()
             for w in self._app.windows(class_name="#32770"):
                 if w.is_visible() and ('股票交易系统' not in w.window_text()):
                     w.close()
@@ -75,23 +74,25 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             time.sleep(0.1)
             
             # 关闭其它窗口
-            self.check_top_window()
             for w in self._app.windows(class_name="#32770"):
                 if w.is_visible() and ('股票交易系统' not in w.window_text()):
                     w.close()
-                    
+                   
             # 重连客户端
+            time.sleep(0.1)
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
             )
             time.sleep(5)
         self._main = self._app.window_(title_re="网上股票交易系统")
+        self._main_handle = self._main.handle
+        self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32").wrapper_object()
+        self._left_treeview.wait_for_idle()    
         
 
     @property
     def balance(self):
         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
-
         return self._get_balance_from_statics()
 
     def _get_balance_from_statics(self):
@@ -100,7 +101,6 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             ww = self._main.window(control_id=control_id, class_name="Static")
             @pywinauto.timings.always_wait_until_passes(30, 0.1)
             def f(ww):
-                self.check_top_window()
                 return float(ww.window_text())
             result[key] = f(ww)
         return result
