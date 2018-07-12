@@ -352,8 +352,7 @@ class ClientTrader(IClientTrader):
         ).click()
 
     def _submit_trade(self):
-        # 休息一下，判断更准?
-        time.sleep(0.05)
+#         time.sleep(0.05)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
@@ -374,18 +373,32 @@ class ClientTrader(IClientTrader):
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code),
         )
+        
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
+        
+        self._wait_price_showup()
+
 
     def _set_market_trade_params(self, security, amount):
         code = security[-6:]
 
         self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
-        # wait security input finish
-        self.wait(0.1)
-
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
+        
+        self._wait_price_showup()
 
+    def _wait_price_showup(self):
+        ww = self._main.window(control_id=TRADE_SECURITY_HIGH_LIMIT, class_name="Static")
+        c = 0
+        while c < 200:
+            c += 1
+            try:
+                test = float(ww.window_text())
+                break
+            except Exception:
+                time.sleep(0.05)
+                
     def _get_grid_data(self, control_id):
         return self._grid_data_get_strategy.get(control_id)
 
