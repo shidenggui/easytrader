@@ -396,10 +396,6 @@ class ClientTrader(IClientTrader):
         c = 0
         while c < 100 and (not self._left_treeview.IsSelected(path)):
             c += 1
-            # 重新查找left_menus
-            if c > 3:
-                self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32").wrapper_object()
-                self._left_treeview.wait_for_idle()
             self.check_top_window()
             self._left_treeview.Select(path) 
 
