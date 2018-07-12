@@ -43,19 +43,14 @@ class CopyStrategy(BaseStrategy):
     通过复制 grid 内容到剪切板z再读取来获取 grid 内容
     """
     def get(self, control_id: int):
-        content = ''
-        c = 0
-        while c < 100 and len(content) == 0:
-            c += 1
-            grid = self._get_grid(control_id)
-            grid.type_keys("^A^C")
-            try:
-                content = pywinauto.clipboard.GetData()
-                break
-            except Exception as e:
-                log.warning("{}, retry ......".format(e))   
+        grid = self._get_grid(control_id)
+        grid.type_keys("^A^C")
+        try:
+            content = pywinauto.clipboard.GetData()
+        except Exception as e:
+            log.warning("{}, retry ......".format(e))   
             time.sleep(0.1)
-            
+            return None
         return self._format_grid_data(content)
 
     def _format_grid_data(self, data: str) -> dict:
