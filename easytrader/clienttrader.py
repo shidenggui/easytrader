@@ -67,6 +67,8 @@ class ClientTrader(IClientTrader):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
+        self._main_handle = None
+        self._left_treeview = None
         self.grid_data_get_strategy = grid_data_get_strategy.CopyStrategy
 
     @property
@@ -116,7 +118,9 @@ class ClientTrader(IClientTrader):
     # check top_window
     def check_top_window(self):
         """只需要3ms"""
-        while '网上股票交易系统' not in self._app.top_window().window_text():
+        c = 0
+        while c < 20 and self._app.top_window().handle != self._main_handle:
+            c += 1
             self._app.top_window().close()
             
     @property
@@ -374,19 +378,11 @@ class ClientTrader(IClientTrader):
         test.SetEditText(text)
 
     def _switch_left_menus(self, path, sleep=0.2):
-        while True:
-            try:
-                w = self._main.window_(control_id=129, class_name="SysTreeView32")
-                # sometime can't find handle ready, must retry
-                w.wait("ready", 2)
-                treeview = w.wrapper_object()
-                treeview.wait_for_idle()
-                break
-            except:
-                pass
-        while not treeview.IsSelected(path):
-            treeview.Select(path) 
-        self.check_top_window()
+        c = 0
+        while c < 20 and (not self._left_treeview.IsSelected(path)):
+            c += 1
+            self.check_top_window()
+            self._left_treeview.Select(path) 
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
