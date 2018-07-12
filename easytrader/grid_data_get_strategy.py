@@ -59,7 +59,6 @@ class CopyStrategy(BaseStrategy):
         return self._format_grid_data(content)
 
     def _format_grid_data(self, data: str) -> dict:
-        df = pd.DataFrame()
         try:
             df = pd.read_csv(
                 io.StringIO(data),
@@ -68,8 +67,7 @@ class CopyStrategy(BaseStrategy):
                 na_filter=False,
             )
         except Exception:
-            pass
-        
+            df = pd.DataFrame()
         return df
 #         if len(df) != 0:
 #             return df.to_dict("records")
