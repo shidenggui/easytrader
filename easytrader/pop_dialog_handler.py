@@ -35,6 +35,12 @@ class PopDialogHandler:
     def _submit_by_shortcut(self):
         self._app.top_window().type_keys("%Y")
 
+    def _submit_by_shortcut_yes(self):  # 点击 是
+        self._app.top_window().type_keys("%Y")
+
+    def _submit_by_shortcut_no(self):   # 点击 否
+        self._app.top_window().type_keys("%N")
+        
     def _close(self):
         self._app.top_window().close()
 
@@ -42,24 +48,27 @@ class PopDialogHandler:
 class TradePopDialogHandler(PopDialogHandler):
     def handle(self, title):
         if title == "委托确认":
-            self._submit_by_shortcut()
+            self._submit_by_shortcut_yes()
 
         elif title == "提示信息":
             content = self._extract_content()
             if "超出涨跌停" in content:
-                self._submit_by_shortcut()
-            elif "委托价格的小数价格应为" in content:
-                self._submit_by_shortcut()
+                self._submit_by_shortcut_no()
+                return {"failure": content}
+            elif "委托价格的小数部分应为" in content:
+                self._submit_by_shortcut_no()
+                return {"failure": content}
+            else:
+                self._submit_by_shortcut_yes()
 
         elif title == "提示":
             content = self._extract_content()
             if "成功" in content:
                 entrust_no = self._extract_entrust_id(content)
                 self._submit_by_click()
-                return {"entrust_no": entrust_no}
+                return {"success": entrust_no}
             else:
                 self._submit_by_click()
-                time.sleep(0.05)
-                raise exceptions.TradeError(content)
+                return {"failure": "提示弹窗->下单失败"}
         else:
             self._close()
