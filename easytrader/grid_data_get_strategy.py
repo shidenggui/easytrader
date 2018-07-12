@@ -2,12 +2,10 @@
 import abc
 import io
 import tempfile
-
+import time
 import pandas as pd
 import pywinauto.clipboard
-
 from .log import log
-
 
 class IGridDataGetStrategy(abc.ABC):
     @abc.abstractmethod
@@ -44,31 +42,39 @@ class CopyStrategy(BaseStrategy):
     """
     通过复制 grid 内容到剪切板z再读取来获取 grid 内容
     """
-
     def get(self, control_id: int):
-        grid = self._get_grid(control_id)
         content = ''
         c = 0
-        while c < 20 and len(content) == 0:
+        while c < 100 and len(content) == 0:
             c += 1
+            grid = self._get_grid(control_id)
             grid.type_keys("^A^C")
             try:
                 content = pywinauto.clipboard.GetData()
+                break
             except Exception as e:
-                log.warning("{}, retry ......".format(e))                
+                log.warning("{}, retry ......".format(e))   
+            time.sleep(0.1)
+            
         return self._format_grid_data(content)
 
     def _format_grid_data(self, data: str) -> dict:
-        df = pd.read_csv(
-            io.StringIO(data),
-            delimiter="\t",
-            dtype=self._trader.config.GRID_DTYPE,
-            na_filter=False,
-        )
-        if len(df) != 0:
-            return df.to_dict("records")
-        else:
-            return []
+        df = pd.DataFrame()
+        try:
+            df = pd.read_csv(
+                io.StringIO(data),
+                delimiter="\t",
+                dtype=self._trader.config.GRID_DTYPE,
+                na_filter=False,
+            )
+        except Exception:
+            pass
+        
+        return df
+#         if len(df) != 0:
+#             return df.to_dict("records")
+#         else:
+#             return []
 
     def _get_clipboard_data(self) -> str:
         pass
