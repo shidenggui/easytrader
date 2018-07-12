@@ -48,7 +48,9 @@ class CopyStrategy(BaseStrategy):
     def get(self, control_id: int):
         grid = self._get_grid(control_id)
         content = ''
-        while len(content) == 0:
+        c = 0
+        while c < 20 and len(content) == 0:
+            c += 1
             grid.type_keys("^A^C")
             try:
                 content = pywinauto.clipboard.GetData()
