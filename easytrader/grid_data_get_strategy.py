@@ -47,20 +47,21 @@ class CopyStrategy(BaseStrategy):
         grid.wait('ready')
         grid.SetFocus()
         content = ''
-        count = 0
-        c = 0
+        count_1 = 0
+        count_2 = 0
         while True:
             try:
                 grid.type_keys("^A^C")
                 content = pywinauto.clipboard.GetData()
+                if content != '':  # 读取成功，count_1 += 1
+                    count_1 += 1
+                else:              # 读取失败，count_2 += 1
+                    count_2 += 1
             except Exception as e:
                 log.warning("{}, retry ......".format(e))  
-            if content != '':
-                count += 1
-            else:
-                c += 1
-            if count == 2 or c == 2:
-                break 
+            # 只有读取成功两次或失败两次才跳出循环
+            if count_1 == 2 or count_2 == 2:
+                break   
         if content == '':
             time.sleep(0.1)
             return None
