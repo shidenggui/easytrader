@@ -60,9 +60,11 @@ class CopyStrategy(BaseStrategy):
                 dtype=self._trader.config.GRID_DTYPE,
                 na_filter=False,
             )
+            # return list of dict
+            return df.to_dict("records")
         except Exception:
-            df = pd.DataFrame()
-        return df
+            # return empty list
+            return []
 
 
     def _get_clipboard_data(self) -> str:
