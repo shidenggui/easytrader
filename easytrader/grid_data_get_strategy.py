@@ -44,6 +44,8 @@ class CopyStrategy(BaseStrategy):
     """
     def get(self, control_id: int):
         grid = self._get_grid(control_id)
+        grid.wait('ready')
+        grid.SetFocus()
         grid.type_keys("^A^C")
         content = ''
         try:
