@@ -71,20 +71,20 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             
             # 等待登录界面关闭
             logie.wait_not('exists', timeout=30, retry_interval=None)
-            time.sleep(0.1)
+            time.sleep(3)
             
             # 关闭其它窗口
             for w in self._app.windows(class_name="#32770"):
                 if w.is_visible() and ('股票交易系统' not in w.window_text()):
                     w.close()
-                   
+            time.sleep(3)    
+            
             # 重连客户端
             time.sleep(0.1)
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
             )
-            time.sleep(5)
-            
+ 
         self._main = self._app.window_(title_re="网上股票交易系统")
         self._main.wait('exists enabled visible ready')
         
