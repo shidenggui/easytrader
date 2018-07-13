@@ -45,12 +45,16 @@ class CopyStrategy(BaseStrategy):
     def get(self, control_id: int):
         grid = self._get_grid(control_id)
         grid.type_keys("^A^C")
+        content = ''
         try:
             content = pywinauto.clipboard.GetData()
         except Exception as e:
-            log.warning("{}, retry ......".format(e))   
+            log.warning("{}, retry ......".format(e))  
+            
+        if content == '':
             return None
-        return self._format_grid_data(content)
+        else:
+            return self._format_grid_data(content)
 
     def _format_grid_data(self, data: str) -> dict:
         try:
