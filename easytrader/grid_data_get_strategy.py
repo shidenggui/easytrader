@@ -59,8 +59,10 @@ class CopyStrategy(BaseStrategy):
                 if '\n' in content:    # 读取成功, 直接跳出
                     break
                 elif content != '':    # 只读取到表头，count_1 += 1
+                    time.sleep(0.1)
                     count_1 += 1
                 else:                  # 读取失败，还是''，count_2 += 1
+                    time.sleep(0.1)
                     count_2 += 1
             except Exception as e:
                 log.warning("{}, retry ......".format(e))  
@@ -70,7 +72,6 @@ class CopyStrategy(BaseStrategy):
                 break 
                 
         if content == '':
-            time.sleep(0.1)
             return None
         else:
             return self._format_grid_data(content)
