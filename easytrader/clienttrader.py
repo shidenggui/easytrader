@@ -185,7 +185,9 @@ class ClientTrader(IClientTrader):
     
     def cancel_entrust(self, entrust_no):
         self._refresh()
-        for i, entrust in enumerate(self.cancel_entrusts):
+        test = self.cancel_entrusts
+        test = test.to_dict("records")
+        for i, entrust in enumerate(test):
             if (
                 entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD]
                 == entrust_no
