@@ -52,17 +52,16 @@ class CopyStrategy(BaseStrategy):
             content = ''
             try:
                 grid.type_keys("^A")
-                time.sleep(0.05)
                 grid.type_keys("^C")
                 time.sleep(0.05)
                 content = pywinauto.clipboard.GetData()
                 if '\n' in content:    # 读取成功, 直接跳出
                     break
                 elif content != '':    # 只读取到表头，count_1 += 1
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                     count_1 += 1
                 else:                  # 读取失败，还是''，count_2 += 1
-                    time.sleep(0.1)
+                    time.sleep(0.05)
                     count_2 += 1
             except Exception as e:
                 log.warning("{}, retry ......".format(e))  
