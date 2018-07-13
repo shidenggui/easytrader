@@ -46,22 +46,29 @@ class CopyStrategy(BaseStrategy):
         grid = self._get_grid(control_id)
         grid.wait('ready')
         grid.SetFocus()
-        content = ''
         count_1 = 0
         count_2 = 0
         while True:
+            content = ''
             try:
-                grid.type_keys("^A^C")
+                grid.type_keys("^A")
+                time.sleep(0.05)
+                grid.type_keys("^C")
+                time.sleep(0.05)
                 content = pywinauto.clipboard.GetData()
-                if content != '':  # 读取成功，count_1 += 1
+                if '\n' in content:    # 读取成功, 直接跳出
+                    break
+                elif content != '':    # 只读取到表头，count_1 += 1
                     count_1 += 1
-                else:              # 读取失败，count_2 += 1
+                else:                  # 读取失败，还是''，count_2 += 1
                     count_2 += 1
             except Exception as e:
                 log.warning("{}, retry ......".format(e))  
+                
             # 只有读取成功两次或失败两次才跳出循环
             if count_1 == 2 or count_2 == 2:
-                break   
+                break 
+                
         if content == '':
             time.sleep(0.1)
             return None
@@ -76,11 +83,10 @@ class CopyStrategy(BaseStrategy):
                 dtype=self._trader.config.GRID_DTYPE,
                 na_filter=False,
             )
-            # return list of dict
-            return df.to_dict("records")
         except Exception:
-            # return empty list
-            return []
+            df = pd.DataFrame()
+            
+        return df
 
 
     def _get_clipboard_data(self) -> str:
