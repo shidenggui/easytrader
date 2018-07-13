@@ -149,6 +149,7 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
                 break
+            time.sleep(0.1)
         return test
 
     @property
@@ -158,6 +159,7 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
                 break
+            time.sleep(0.1)
         return test
 
     @property
@@ -167,6 +169,7 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
                 break
+            time.sleep(0.1)
         return test
 
     @property
@@ -177,6 +180,7 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
                 break
+            time.sleep(0.1)
         return test 
     
     def cancel_entrust(self, entrust_no):
