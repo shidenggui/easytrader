@@ -46,13 +46,21 @@ class CopyStrategy(BaseStrategy):
         grid = self._get_grid(control_id)
         grid.wait('ready')
         grid.SetFocus()
-        grid.type_keys("^A^C")
         content = ''
-        try:
-            content = pywinauto.clipboard.GetData()
-        except Exception as e:
-            log.warning("{}, retry ......".format(e))  
-            
+        count = 0
+        c = 0
+        while True:
+            try:
+                grid.type_keys("^A^C")
+                content = pywinauto.clipboard.GetData()
+            except Exception as e:
+                log.warning("{}, retry ......".format(e))  
+            if content != '':
+                count += 1
+            else:
+                c += 1
+            if count == 2 or c == 2:
+                break 
         if content == '':
             time.sleep(0.1)
             return None
