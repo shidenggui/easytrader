@@ -142,42 +142,82 @@ class ClientTrader(IClientTrader):
             result[key] = f(ww)
         return result
     
+    # 注意，各大券商此接口重写，统一输出
     @property
     def position(self):
         for c in range(10):
             self._switch_left_menus(["查询[F4]", "资金股票"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, list):
+            if isinstance(test, pd.DataFrame):
                 break
+                
+        if isinstance(test, pd.DataFrame):
+            if len(test) > 0:
+                test = test.to_dict("records")
+            else:
+                test = []
+        else:
+            print('读取position失败...')
+            test = []
         return test
 
+    # 注意，各大券商此接口重写，统一输出
     @property
     def today_entrusts(self):
         for c in range(10):
             self._switch_left_menus(["查询[F4]", "当日委托"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, list):
+            if isinstance(test, pd.DataFrame):
                 break
+                
+        if isinstance(test, pd.DataFrame):
+            if len(test) > 0:
+                test = test.to_dict("records")
+            else:
+                test = []
+        else:
+            print('读取today_entrusts失败...')
+            test = []
         return test
 
+    # 注意，各大券商此接口重写，统一输出
     @property
     def today_trades(self):
         for c in range(10):
             self._switch_left_menus(["查询[F4]", "当日成交"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, list):
+            if isinstance(test, pd.DataFrame):
                 break
+                
+        if isinstance(test, pd.DataFrame):
+            if len(test) > 0:
+                test = test.to_dict("records")
+            else:
+                test = []
+        else:
+            print('读取today_trades失败...')
+            test = []
         return test
-    
+
+    # 注意，各大券商此接口重写，统一输出   
     @property
     def cancel_entrusts(self):
         self._refresh()
         for c in range(10):
             self._switch_left_menus(["撤单[F3]"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, list):
+            if isinstance(test, pd.DataFrame):
                 break
-        return test 
+                
+        if isinstance(test, pd.DataFrame):
+            if len(test) > 0:
+                test = test.to_dict("records")
+            else:
+                test = []
+        else:
+            print('读取cancel_entrusts失败...')
+            test = []
+        return test
     
     def cancel_entrust(self, entrust_no):
         """entrust_no: str"""
@@ -270,9 +310,21 @@ class ClientTrader(IClientTrader):
             raise TypeError("不支持对应的市价类型: {}".format(ttype))
 
     def auto_ipo(self):
-        self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
 
-        stock_list = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+        for c in range(10):
+            self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
+            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            if isinstance(test, pd.DataFrame):
+                break
+
+        if isinstance(test, pd.DataFrame):
+            if len(test) > 0:
+                stock_list = test.to_dict("records")
+            else:
+                stock_list = []
+        else:
+            print('获取auto_ipo失败...')
+            stock_list = []
 
         if len(stock_list) == 0:
             return {"message": "今日无新股"}
