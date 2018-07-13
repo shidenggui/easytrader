@@ -86,8 +86,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             time.sleep(5)
         self._main = self._app.window_(title_re="网上股票交易系统")
         self._main_handle = self._main.handle
-        self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32").wrapper_object()
-        self._left_treeview.wait_for_idle()    
+        self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32") 
         
 
     @property
