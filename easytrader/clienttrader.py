@@ -418,7 +418,6 @@ class ClientTrader(IClientTrader):
             except:
                 self.check_top_window()
                 time.sleep(0.05)
-                pass
             
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_treeview_ready()
