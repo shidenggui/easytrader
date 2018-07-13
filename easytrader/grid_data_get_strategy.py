@@ -49,7 +49,6 @@ class CopyStrategy(BaseStrategy):
             content = pywinauto.clipboard.GetData()
         except Exception as e:
             log.warning("{}, retry ......".format(e))   
-            time.sleep(0.1)
             return None
         return self._format_grid_data(content)
 
@@ -64,18 +63,10 @@ class CopyStrategy(BaseStrategy):
         except Exception:
             df = pd.DataFrame()
         return df
-#         if len(df) != 0:
-#             return df.to_dict("records")
-#         else:
-#             return []
+
 
     def _get_clipboard_data(self) -> str:
         pass
-#         while True:
-#             try:
-#                 return pywinauto.clipboard.GetData()
-#             except Exception as e:
-#                 log.warning("{}, retry ......".format(e))
 
 
 class XlsStrategy(BaseStrategy):
