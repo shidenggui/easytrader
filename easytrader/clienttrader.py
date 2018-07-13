@@ -390,9 +390,7 @@ class ClientTrader(IClientTrader):
 
     def _wait_price_showup(self):
         ww = self._main.window(control_id=TRADE_SECURITY_HIGH_LIMIT, class_name="Static")
-        c = 0
-        while c < 200:
-            c += 1
+        for c in range(200):
             try:
                 test = float(ww.window_text())
                 break
