@@ -149,7 +149,6 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, list):
                 break
-            time.sleep(0.1)
         return test
 
     @property
@@ -159,7 +158,6 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, list):
                 break
-            time.sleep(0.1)
         return test
 
     @property
@@ -169,7 +167,6 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, list):
                 break
-            time.sleep(0.1)
         return test
     
     @property
@@ -180,13 +177,13 @@ class ClientTrader(IClientTrader):
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, list):
                 break
-            time.sleep(0.1)
         return test 
     
     def cancel_entrust(self, entrust_no):
         """entrust_no: str"""
         self._refresh()
-        for i, entrust in enumerate(self.cancel_entrusts):
+        test = self.cancel_entrusts()
+        for i, entrust in enumerate(test):
             if (
                 entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD]
                 == entrust_no
@@ -420,10 +417,10 @@ class ClientTrader(IClientTrader):
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_treeview_ready()
         c = 0
-        while c < 100 and (not self._left_treeview.IsSelected(path)):
+        while c < 20 and (not self._left_treeview.IsSelected(path)):
             c += 1
-            self._check_top_window()
             self._left_treeview.Select(path) 
+            time.sleep(0.1)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
