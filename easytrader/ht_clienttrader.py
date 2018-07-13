@@ -103,7 +103,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             ww = self._main.window(control_id=control_id, class_name="Static")
-            @pywinauto.timings.always_wait_until_passes(30, 0.1)
+            @pywinauto.timings.always_wait_until_passes(10, 0.05)
             def f(ww):
                 return float(ww.window_text())
             result[key] = f(ww)
