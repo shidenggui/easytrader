@@ -116,7 +116,7 @@ class ClientTrader(IClientTrader):
         self._main = self._app.top_window()
         
     # check top_window
-    def check_top_window(self):
+    def _check_top_window(self):
         """只需要3ms"""
         c = 0
         while c < 20 and self._app.top_window().handle != self._main_handle:
@@ -416,7 +416,7 @@ class ClientTrader(IClientTrader):
                 self._left_treeview.wait("ready", 2)
                 return
             except:
-                self.check_top_window()
+                self._check_top_window()
                 time.sleep(0.05)
             
     def _switch_left_menus(self, path, sleep=0.2):
@@ -425,7 +425,7 @@ class ClientTrader(IClientTrader):
         c = 0
         while c < 100 and (not self._left_treeview.IsSelected(path)):
             c += 1
-            self.check_top_window()
+            self._check_top_window()
             self._left_treeview.Select(path) 
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
