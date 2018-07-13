@@ -311,14 +311,13 @@ class ClientTrader(IClientTrader):
     def _is_exist_pop_dialog(self):
         # 最多等待10秒
         for c in range(200):
-            time.sleep(0.05)  # wait dialog display
             test_handle = app.top_window().wrapper_object().handle
             if test_handle != self._main_handle:
                 """弹出窗口"""
                 return True
             else:
                 """没弹出，再试几下"""
-                continue
+                time.sleep(0.05)  # wait dialog display
         return False
 
     def _run_exe_path(self, exe_path):
