@@ -11,14 +11,14 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         return "ht"
     
     def login(self, user, password, exe_path, comm_password=None, **kwargs):
-        c = 0 
-        while c < 3:
-            c += 1
+        # 至多尝试3次
+        for i in range(3):
             try:
                 self.login_basic(user, password, exe_path, comm_password, **kwargs)
                 break
             except Exception:
                 print('login again')
+                time.sleep(0.5)
                 for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
                     pywinauto.Application().connect(handle=i).kill()  
                 
@@ -84,9 +84,14 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                 path=self._run_exe_path(exe_path), timeout=10
             )
             time.sleep(5)
+            
         self._main = self._app.window_(title_re="网上股票交易系统")
+        self._main.wait('exists enabled visible ready')
+        
         self._main_handle = self._main.handle
+        
         self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32") 
+        self._left_treeview.wait('exists enabled visible ready')
         
 
     @property
