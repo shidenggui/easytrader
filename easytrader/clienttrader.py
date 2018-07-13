@@ -147,7 +147,7 @@ class ClientTrader(IClientTrader):
         for c in range(100):
             self._switch_left_menus(["查询[F4]", "资金股票"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, pd.DataFrame):
+            if isinstance(test, list):
                 break
             time.sleep(0.1)
         return test
@@ -157,7 +157,7 @@ class ClientTrader(IClientTrader):
         for c in range(100):
             self._switch_left_menus(["查询[F4]", "当日委托"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, pd.DataFrame):
+            if isinstance(test, list):
                 break
             time.sleep(0.1)
         return test
@@ -167,18 +167,18 @@ class ClientTrader(IClientTrader):
         for c in range(100):
             self._switch_left_menus(["查询[F4]", "当日成交"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, pd.DataFrame):
+            if isinstance(test, list):
                 break
             time.sleep(0.1)
         return test
-
+    
     @property
     def cancel_entrusts(self):
         for c in range(100):
             self._refresh()
             self._switch_left_menus(["撤单[F3]"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
-            if isinstance(test, pd.DataFrame):
+            if isinstance(test, list):
                 break
             time.sleep(0.1)
         return test 
