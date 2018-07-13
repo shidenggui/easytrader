@@ -408,8 +408,21 @@ class ClientTrader(IClientTrader):
         )
         test.SetEditText('')
         test.SetEditText(text)
-
+        
+    @functools.lru_cache()
+    def _get_left_treeview_ready(self):
+        while True:
+            try:
+                self._left_treeview.wait("ready", 2)
+                return
+            except:
+                self.check_top_window()
+                time.sleep(0.05)
+                pass
+            
     def _switch_left_menus(self, path, sleep=0.2):
+        self._get_left_treeview_ready()
+   
         c = 0
         while c < 100 and (not self._left_treeview.IsSelected(path)):
             c += 1
