@@ -421,7 +421,6 @@ class ClientTrader(IClientTrader):
             
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_treeview_ready()
-   
         c = 0
         while c < 100 and (not self._left_treeview.IsSelected(path)):
             c += 1
