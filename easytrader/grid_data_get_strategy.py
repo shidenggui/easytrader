@@ -54,6 +54,7 @@ class CopyStrategy(BaseStrategy):
             log.warning("{}, retry ......".format(e))  
             
         if content == '':
+            time.sleep(0.1)
             return None
         else:
             return self._format_grid_data(content)
