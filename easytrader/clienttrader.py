@@ -131,15 +131,24 @@ class ClientTrader(IClientTrader):
     def balance(self):
         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
         return self._get_balance_from_statics()
-    
+
     def _get_balance_from_statics(self):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             ww = self._main.window(control_id=control_id, class_name="Static")
-            @pywinauto.timings.always_wait_until_passes(10, 0.05)
-            def f(ww):
-                return float(ww.window_text())
-            result[key] = f(ww)
+            count = 0
+            while True:
+                try:
+                    test = float(ww.window_text())
+                    # 如果股票市值为0, 要多试一下!
+                    if (key == "股票市值" and abs(test) < 0.0001 and count < 4):
+                        time.sleep(0.05)
+                        count += 1
+                        continue
+                    result[key] = test
+                    break
+                except Exception:
+                    time.sleep(0.05)
         return result
     
     # 注意，各大券商此接口重写，统一输出
