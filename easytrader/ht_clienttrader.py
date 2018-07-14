@@ -71,13 +71,13 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             
             # 等待登录界面关闭
             logie.wait_not('exists', timeout=30, retry_interval=None)
-            time.sleep(3)
+            time.sleep(0.1)
             
             # 关闭其它窗口
             for w in self._app.windows(class_name="#32770"):
                 if w.is_visible() and ('股票交易系统' not in w.window_text()):
                     w.close()
-            time.sleep(3)    
+            time.sleep(0.1)    
             
             # 重连客户端
             time.sleep(0.1)
@@ -93,6 +93,8 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32") 
         self._left_treeview.wait('exists enabled visible ready')
         
+        self._get_balance_after_login()
+        
 
     @property
     def balance(self):
@@ -103,9 +105,38 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             ww = self._main.window(control_id=control_id, class_name="Static")
-            @pywinauto.timings.always_wait_until_passes(10, 0.05)
-            def f(ww):
-                return float(ww.window_text())
-            result[key] = f(ww)
+            count = 0
+            while True:
+                try:
+                    test = float(ww.window_text())
+                    # 如果股票市值为0, 要多试一下!
+                    if (key == "股票市值" and abs(test) < 0.0001 and count < 2):
+                        time.sleep(0.05)
+                        count += 1
+                        continue
+                    result[key] = test
+                    break
+                except Exception:
+                    time.sleep(0.05)
+        return result
+    
+    def _get_balance_after_login(self):
+        self._switch_left_menus(self._config.BALANCE_MENU_PATH)
+        result = {}
+        for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
+            ww = self._main.window(control_id=control_id, class_name="Static")
+            count = 0
+            while True:
+                try:
+                    test = float(ww.window_text())
+                    # 如果股票市值为0, 要多试几下!
+                    if (key == "股票市值" and abs(test) < 0.0001 and count < 10):
+                        time.sleep(1)
+                        count += 1
+                        continue
+                    result[key] = test
+                    break
+                except Exception:
+                    time.sleep(0.05)
         return result
     
