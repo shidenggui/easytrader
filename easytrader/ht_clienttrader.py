@@ -110,7 +110,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                 try:
                     test = float(ww.window_text())
                     # 如果股票市值为0, 要多试一下!
-                    if (key == "股票市值" and abs(test) < 0.0001 and count < 2):
+                    if (key == "股票市值" and abs(test) < 0.0001 and count < 4):
                         time.sleep(0.05)
                         count += 1
                         continue
