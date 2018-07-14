@@ -493,7 +493,7 @@ class ClientTrader(IClientTrader):
             time.sleep(0.1)
 
     def _bring_main_foreground(self):
-        self._main.Minimize()
+#         self._main.Minimize()
         self._main.Restore()
         shell = win32com.client.Dispatch("WScript.Shell")
         shell.SendKeys('%')
