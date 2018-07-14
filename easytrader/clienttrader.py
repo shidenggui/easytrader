@@ -450,7 +450,7 @@ class ClientTrader(IClientTrader):
         
             
     def _wait_price_showup(self):
-        pwindow = self.main_.window(class_name='#32770', control_id=59649)
+        pwindow = self._main.window(class_name='#32770', control_id=59649)
         flag = False
         for c in range(20):
             for i in pwindow.Children():
