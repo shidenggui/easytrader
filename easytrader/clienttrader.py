@@ -474,6 +474,7 @@ class ClientTrader(IClientTrader):
                 self._left_treeview.wait("ready", 2)
                 return
             except:
+                print('_left_treeview.wait Exception')
                 self._bring_main_foreground()
                 self._check_top_window()
                 time.sleep(0.05)
@@ -486,6 +487,7 @@ class ClientTrader(IClientTrader):
             try:
                 self._left_treeview.Select(path) 
             except Exception:
+                print('switch_left_menus Exception')
                 self._bring_main_foreground()
                 self._left_treeview.Select(path) 
             time.sleep(0.1)
