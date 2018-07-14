@@ -447,15 +447,23 @@ class ClientTrader(IClientTrader):
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         
         self._wait_price_showup()
-
+        
+            
     def _wait_price_showup(self):
-        ww = self._main.window(control_id=self._config.TRADE_SECURITY_HIGH_LIMIT, class_name="Static")
+        pwindow = self.main_.window(class_name='#32770', control_id=59649)
+        flag = False
         for c in range(20):
-            try:
-                test = float(ww.window_text())
+            for i in pwindow.Children():
+                condition =  ( 
+                    i.control_id() == self._config.TRADE_SECURITY_NAME_ID and 
+                    i.class_name() == "Static" and 
+                    len(i.window_text()) > 1 
+                )
+                if condition:
+                    flag = True
+                    break
+            if flag:
                 break
-            except Exception:
-                time.sleep(0.05)
                 
     def _get_grid_data(self, control_id):
         return self._grid_data_get_strategy.get(control_id)
