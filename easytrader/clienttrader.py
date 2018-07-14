@@ -6,6 +6,8 @@ import sys
 import time
 import pandas as pd
 import easyutils
+import pywinauto
+import win32gui, win32com.client
 
 from . import grid_data_get_strategy
 from . import helpers
@@ -472,6 +474,9 @@ class ClientTrader(IClientTrader):
                 self._left_treeview.wait("ready", 2)
                 return
             except:
+                shell = win32com.client.Dispatch("WScript.Shell")
+                shell.SendKeys('%')
+                pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())
                 self._check_top_window()
                 time.sleep(0.05)
             
@@ -480,6 +485,9 @@ class ClientTrader(IClientTrader):
         c = 0
         while c < 20 and (not self._left_treeview.IsSelected(path)):
             c += 1
+            shell = win32com.client.Dispatch("WScript.Shell")
+            shell.SendKeys('%')
+            pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())
             self._left_treeview.Select(path) 
             time.sleep(0.1)
 
