@@ -474,6 +474,8 @@ class ClientTrader(IClientTrader):
                 self._left_treeview.wait("ready", 2)
                 return
             except:
+                self._main.Minimize()
+                self._main.Restore()
                 shell = win32com.client.Dispatch("WScript.Shell")
                 shell.SendKeys('%')
                 pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())
@@ -485,6 +487,8 @@ class ClientTrader(IClientTrader):
         c = 0
         while c < 20 and (not self._left_treeview.IsSelected(path)):
             c += 1
+            self._main.Minimize()
+            self._main.Restore()
             shell = win32com.client.Dispatch("WScript.Shell")
             shell.SendKeys('%')
             pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())
