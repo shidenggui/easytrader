@@ -22,7 +22,19 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                 for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
                     pywinauto.Application().connect(handle=i).kill()  
                 
-            
+    def re_login(self, user, password, exe_path, comm_password=None, **kwargs):
+        # 至多尝试3次
+        for i in range(3):
+            try:
+                for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
+                    pywinauto.Application().connect(handle=i).kill() 
+                for i in pywinauto.findwindows.find_windows(title_re = r'网上股票交易系统', class_name='#32770'):
+                    pywinauto.Application().connect(handle=i).kill() 
+                self.login_basic(user, password, exe_path, comm_password, **kwargs)
+                break
+            except Exception:
+                print('login again')
+        
     def login_basic(self, user, password, exe_path, comm_password=None, **kwargs):
         """
         :param user: 用户名
@@ -39,10 +51,6 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=1
             )
-           # 关闭其它窗口
-            for w in self._app.windows(class_name="#32770"):
-                if w.is_visible() and ('股票交易系统' not in w.window_text()):
-                    w.close()
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
             
@@ -73,14 +81,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             logie.wait_not('exists', timeout=30, retry_interval=None)
             time.sleep(0.1)
             
-            # 关闭其它窗口
-            for w in self._app.windows(class_name="#32770"):
-                if w.is_visible() and ('股票交易系统' not in w.window_text()):
-                    w.close()
-            time.sleep(0.1)    
-            
             # 重连客户端
-            time.sleep(0.1)
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
             )
@@ -93,9 +94,12 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32") 
         self._left_treeview.wait('exists enabled visible ready')
         
+        # 等待一切就绪
         self._get_balance_after_login()
-        
 
+        # 关闭其它窗口
+        self._check_top_window()
+        
     @property
     def balance(self):
         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
