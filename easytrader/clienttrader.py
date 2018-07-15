@@ -540,7 +540,7 @@ class ClientTrader(IClientTrader):
                 print('switch_left_menus Exception')
                 self._bring_main_foreground()
                 self._left_treeview.Select(path) 
-            time.sleep(0.1)
+            time.sleep(0.05)
 
     def _bring_main_foreground(self):
 #         self._main.Minimize()
