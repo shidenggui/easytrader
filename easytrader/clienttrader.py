@@ -233,7 +233,7 @@ class ClientTrader(IClientTrader):
     def cancel_entrust(self, entrust_no):
         """entrust_no: str"""
         self._refresh()
-        test = self.cancel_entrusts()
+        test = self.cancel_entrusts
         for i, entrust in enumerate(test):
             if (
                 entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD]
