@@ -296,8 +296,7 @@ class ClientTrader(IClientTrader):
         :return: {'entrust_no': '委托单号'}
         """
         self._set_market_trade_params(security, amount)
-        if ttype is not None:
-            self._set_market_trade_type(ttype)
+        self._set_market_trade_type(ttype)
         self._submit_trade()
 
         return self._handle_pop_dialogs(
@@ -306,10 +305,16 @@ class ClientTrader(IClientTrader):
 
     def _set_market_trade_type(self, ttype):
         """根据选择的市价交易类型选择对应的下拉选项"""
-        selects = self._main.window(
-            control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
-            class_name="ComboBox",
-        )
+        # 确认市价交易类型选项出现!
+        for c in range(20):
+            selects = self._main.window(
+                control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
+                class_name="ComboBox",
+            )    
+            if len(selects.texts()) > 2:
+                break
+            time.sleep(0.03)
+            
         ttype = ttype.replace(u"即时", "")
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
@@ -320,18 +325,11 @@ class ClientTrader(IClientTrader):
                 selects.select(i - 1)
                 break
         else:
-            print("不支持对应的市价类型: {}".format(ttype), "将默认采用**最优五档成交剩余撤销**方式!")
-            for i, text in enumerate(selects.texts()):
-                # skip 0 index, because 0 index is current select index
-                if i == 0:
-                    continue
-                text = text.replace(u"即时", "")
-                if text == '最优五档成交剩余撤销':
-                    selects.select(i - 1)
-                    break
+            print("不支持对应的市价类型: {}".format(ttype), "将采用默认方式!")
+            pass
 
+        
     def auto_ipo(self):
-
         for c in range(10):
             self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
@@ -446,7 +444,7 @@ class ClientTrader(IClientTrader):
         
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         
-        self._wait_price_showup()
+        self._wait_target_showup(self._config.TRADE_SECURITY_NAME_ID)
 
 
     def _set_market_trade_params(self, security, amount):
@@ -456,16 +454,16 @@ class ClientTrader(IClientTrader):
 
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         
-        self._wait_price_showup()
+        self._wait_target_showup(self._config.TRADE_SECURITY_NAME_ID)
         
             
-    def _wait_price_showup(self):
+    def _wait_target_showup(self, control_id):
         pwindow = self._main.window(class_name='#32770', control_id=59649)
         flag = False
         for c in range(20):
             for i in pwindow.Children():
                 condition =  ( 
-                    i.control_id() == self._config.TRADE_SECURITY_NAME_ID and 
+                    i.control_id() == control_id and 
                     i.class_name() == "Static" and 
                     len(i.window_text()) > 1 
                 )
