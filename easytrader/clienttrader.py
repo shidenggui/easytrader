@@ -333,8 +333,9 @@ class ClientTrader(IClientTrader):
                     break
             if flag:
                 break
-        
-        ttype = ttype.replace(u"即时", "")
+                
+        if isinstance(ttype, str): 
+            ttype = ttype.replace(u"即时", "")
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
             if i == 0:
