@@ -487,7 +487,8 @@ class ClientTrader(IClientTrader):
     def _wait_target_showup(self, control_id):
         pwindow = self._main.window(class_name='#32770', control_id=59649)
         flag = False
-        for c in range(20):
+        for c in range(100):   # 最大等待5s
+            sss = time.time()
             for i in pwindow.Children():
                 condition =  ( 
                     i.control_id() == control_id and 
@@ -498,8 +499,13 @@ class ClientTrader(IClientTrader):
                     print('showup target', i.window_text())
                     flag = True
                     break
+                    
             if flag:
                 break
+            gaps = time.time() - sss
+            if gaps < 0.05:
+                time.sleep(0.05-gaps)
+
                 
     def _get_grid_data(self, control_id):
         return self._grid_data_get_strategy.get(control_id)
