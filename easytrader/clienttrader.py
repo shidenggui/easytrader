@@ -320,7 +320,15 @@ class ClientTrader(IClientTrader):
                 selects.select(i - 1)
                 break
         else:
-            raise TypeError("不支持对应的市价类型: {}".format(ttype))
+            print("不支持对应的市价类型: {}".format(ttype), "将默认采用**最优五档成交剩余撤销**方式!")
+            for i, text in enumerate(selects.texts()):
+                # skip 0 index, because 0 index is current select index
+                if i == 0:
+                    continue
+                text = text.replace(u"即时", "")
+                if text == '最优五档成交剩余撤销':
+                    selects.select(i - 1)
+                    break
 
     def auto_ipo(self):
 
