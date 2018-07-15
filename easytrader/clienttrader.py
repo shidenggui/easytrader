@@ -445,9 +445,10 @@ class ClientTrader(IClientTrader):
             )    
             account = selects.texts()
             if isinstance(account, list) and len(account) > 1 and len(account[0]) > 0:
+                print('showup account', account)
                 break
-            time.sleep(0.02)
-            
+                
+        time.sleep(0.05)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
@@ -495,6 +496,7 @@ class ClientTrader(IClientTrader):
                     len(i.window_text()) > 1 
                 )
                 if condition:
+                    print('showup target', i.window_text())
                     flag = True
                     break
             if flag:
