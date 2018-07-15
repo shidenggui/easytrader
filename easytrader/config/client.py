@@ -14,7 +14,8 @@ def create(broker):
 class CommonConfig:
     DEFAULT_EXE_PATH = None
     TITLE = "网上股票交易系统5.0"
-
+    
+    TRADE_ACCOUNT_CONTROL_ID = 1004
     TRADE_SECURITY_CONTROL_ID = 1032
     TRADE_PRICE_CONTROL_ID = 1033
     TRADE_AMOUNT_CONTROL_ID = 1034
