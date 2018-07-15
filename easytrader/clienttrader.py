@@ -254,7 +254,7 @@ class ClientTrader(IClientTrader):
 
         return self.trade(security, price, amount)
 
-    def market_buy(self, security, amount, ttype=u'最优五档成交剩余撤销', sleep=0.1, **kwargs):
+    def market_buy(self, security, amount, ttype=u'最优五档成交剩余撤销', **kwargs):
         """
         市价买入
         :param security: 六位证券代码
@@ -267,9 +267,9 @@ class ClientTrader(IClientTrader):
         """
         self._switch_left_menus(["市价委托", "买入"])
 
-        return self.market_trade(security, amount, ttype, sleep)
+        return self.market_trade(security, amount, ttype)
 
-    def market_sell(self, security, amount, ttype=u'最优五档成交剩余撤销', sleep=0.1, **kwargs):
+    def market_sell(self, security, amount, ttype=u'最优五档成交剩余撤销', **kwargs):
         """
         市价卖出
         :param security: 六位证券代码
@@ -282,9 +282,9 @@ class ClientTrader(IClientTrader):
         """
         self._switch_left_menus(["市价委托", "卖出"])
 
-        return self.market_trade(security, amount, ttype, sleep)
+        return self.market_trade(security, amount, ttype)
 
-    def market_trade(self, security, amount, ttype=None, sleep=0.1, **kwargs):
+    def market_trade(self, security, amount, ttype=None, **kwargs):
         """
         市价交易
         :param security: 六位证券代码
@@ -297,8 +297,6 @@ class ClientTrader(IClientTrader):
         """
         self._set_market_trade_params(security, amount)
         self._set_market_trade_type(ttype)
-        #### 貌似要等待一下?
-        time.sleep(sleep)
         self._submit_trade()
 
         return self._handle_pop_dialogs(
