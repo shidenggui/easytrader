@@ -254,7 +254,7 @@ class ClientTrader(IClientTrader):
 
         return self.trade(security, price, amount)
 
-    def market_buy(self, security, amount, ttype=u'最优五档成交剩余撤销', **kwargs):
+    def market_buy(self, security, amount, ttype=u'最优五档成交剩余撤销', sleep=0.1, **kwargs):
         """
         市价买入
         :param security: 六位证券代码
@@ -267,9 +267,9 @@ class ClientTrader(IClientTrader):
         """
         self._switch_left_menus(["市价委托", "买入"])
 
-        return self.market_trade(security, amount, ttype)
+        return self.market_trade(security, amount, ttype, sleep)
 
-    def market_sell(self, security, amount, ttype=u'最优五档成交剩余撤销', **kwargs):
+    def market_sell(self, security, amount, ttype=u'最优五档成交剩余撤销', sleep=0.1, **kwargs):
         """
         市价卖出
         :param security: 六位证券代码
@@ -282,7 +282,7 @@ class ClientTrader(IClientTrader):
         """
         self._switch_left_menus(["市价委托", "卖出"])
 
-        return self.market_trade(security, amount, ttype)
+        return self.market_trade(security, amount, ttype, sleep)
 
     def market_trade(self, security, amount, ttype=None, sleep=0.1, **kwargs):
         """
@@ -314,25 +314,23 @@ class ClientTrader(IClientTrader):
                 class_name="ComboBox",
             )    
             if len(selects.texts()) > 2:
-                print('showup', selects.texts())
+                print('showup 市价交易类型', selects.texts())
                 break
-            time.sleep(0.03)
+            else:
+                time.sleep(0.03)
+                
         # 确认市价交易的价格出现!
-        pwindow = self._main.window(class_name='#32770', control_id=59649)
-        flag = False
         for c in range(20):
-            for i in pwindow.Children():
-                condition =  ( 
-                    i.control_id() == self._config.TRADE_PRICE_CONTROL_ID and 
-                    i.class_name() == "Edit" and 
-                    len(i.window_text()) > 1 
-                )
-                if condition:
-                    print('showup', i.window_text())
-                    flag = True
-                    break
-            if flag:
+            selects = self._main.window(
+                control_id=self._config.TRADE_PRICE_CONTROL_ID,
+                class_name="Edit",  
+            )
+            s_texts = selects.texts()
+            if isinstance(s_texts, list) and s_texts[0] not in ['0', '']:
+                print('showup price', s_texts)
                 break
+            else:
+                time.sleep(0.03)
                 
         if isinstance(ttype, str): 
             ttype = ttype.replace(u"即时", "")
