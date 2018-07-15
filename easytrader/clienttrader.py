@@ -420,7 +420,7 @@ class ClientTrader(IClientTrader):
         ).click()
 
     def _submit_trade(self):
-#         time.sleep(0.05)
+        time.sleep(0.03)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
