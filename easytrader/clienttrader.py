@@ -312,9 +312,26 @@ class ClientTrader(IClientTrader):
                 class_name="ComboBox",
             )    
             if len(selects.texts()) > 2:
+                print('showup', selects.texts())
                 break
             time.sleep(0.03)
-            
+        # 确认市价交易的价格出现!
+        pwindow = self._main.window(class_name='#32770', control_id=59649)
+        flag = False
+        for c in range(20):
+            for i in pwindow.Children():
+                condition =  ( 
+                    i.control_id() == self._config.TRADE_PRICE_CONTROL_ID and 
+                    i.class_name() == "Edit" and 
+                    len(i.window_text()) > 1 
+                )
+                if condition:
+                    print('showup', i.window_text())
+                    flag = True
+                    break
+            if flag:
+                break
+        
         ttype = ttype.replace(u"即时", "")
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
