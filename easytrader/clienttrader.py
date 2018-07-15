@@ -306,7 +306,23 @@ class ClientTrader(IClientTrader):
         )
 
     def _set_market_trade_type(self, ttype):
-        """根据选择的市价交易类型选择对应的下拉选项"""
+        """根据选择的市价交易类型选择对应的下拉选项"""     
+        if isinstance(ttype, str): 
+            ttype = ttype.replace(u"即时", "")
+            
+        # 确认市价交易的价格出现!
+        for c in range(20):
+            p_selects = self._main.window(
+                control_id=self._config.TRADE_PRICE_CONTROL_ID,
+                class_name="Edit",  
+            )
+            p_texts = p_selects.texts()
+            if isinstance(p_texts, list) and p_texts[0] not in ['0', '']:
+                print('showup price', p_texts)
+                break
+            else:
+                time.sleep(0.05)
+                
         # 确认市价交易类型选项出现!
         for c in range(20):
             selects = self._main.window(
@@ -317,23 +333,8 @@ class ClientTrader(IClientTrader):
                 print('showup 市价交易类型', selects.texts())
                 break
             else:
-                time.sleep(0.03)
+                time.sleep(0.05)
                 
-        # 确认市价交易的价格出现!
-        for c in range(20):
-            selects = self._main.window(
-                control_id=self._config.TRADE_PRICE_CONTROL_ID,
-                class_name="Edit",  
-            )
-            s_texts = selects.texts()
-            if isinstance(s_texts, list) and s_texts[0] not in ['0', '']:
-                print('showup price', s_texts)
-                break
-            else:
-                time.sleep(0.03)
-                
-        if isinstance(ttype, str): 
-            ttype = ttype.replace(u"即时", "")
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
             if i == 0:
