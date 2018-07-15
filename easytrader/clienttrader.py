@@ -254,7 +254,7 @@ class ClientTrader(IClientTrader):
 
         return self.trade(security, price, amount)
 
-    def market_buy(self, security, amount, ttype=None, **kwargs):
+    def market_buy(self, security, amount, ttype=u'最优五档成交剩余撤销', **kwargs):
         """
         市价买入
         :param security: 六位证券代码
@@ -269,7 +269,7 @@ class ClientTrader(IClientTrader):
 
         return self.market_trade(security, amount, ttype)
 
-    def market_sell(self, security, amount, ttype=None, **kwargs):
+    def market_sell(self, security, amount, ttype=u'最优五档成交剩余撤销', **kwargs):
         """
         市价卖出
         :param security: 六位证券代码
