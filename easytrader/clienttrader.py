@@ -445,7 +445,7 @@ class ClientTrader(IClientTrader):
                 class_name="ComboBox",
             )    
             account = selects.texts()
-            if isinstance(account, list) and len(account) > 1 and len(account[0]) > 0:
+            if isinstance(account, list) and len(account[0]) > 0:
                 print('showup account', account)
                 break
                 
