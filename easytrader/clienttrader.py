@@ -448,7 +448,6 @@ class ClientTrader(IClientTrader):
                 print('showup account', account)
                 break
                 
-        time.sleep(0.05)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
