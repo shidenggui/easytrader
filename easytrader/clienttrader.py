@@ -284,7 +284,7 @@ class ClientTrader(IClientTrader):
 
         return self.market_trade(security, amount, ttype)
 
-    def market_trade(self, security, amount, ttype=None, **kwargs):
+    def market_trade(self, security, amount, ttype=None, sleep=0.1, **kwargs):
         """
         市价交易
         :param security: 六位证券代码
@@ -297,6 +297,8 @@ class ClientTrader(IClientTrader):
         """
         self._set_market_trade_params(security, amount)
         self._set_market_trade_type(ttype)
+        #### 貌似要等待一下?
+        time.sleep(sleep)
         self._submit_trade()
 
         return self._handle_pop_dialogs(
