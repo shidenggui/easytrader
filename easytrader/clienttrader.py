@@ -563,7 +563,7 @@ class ClientTrader(IClientTrader):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
         y = (
             self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT
-            + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
+            + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * (row + 1)
         )
         self._app.top_window().window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
