@@ -65,7 +65,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             logie.wait('ready', timeout=30, retry_interval=None)
             
             # wait login window ready
-            for c in range(20)
+            for c in range(20):
                 try:
                     logie.Edit1.wait("ready")
                     break
