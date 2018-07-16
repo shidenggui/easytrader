@@ -406,6 +406,7 @@ class ClientTrader(IClientTrader):
             else:
                 """没弹出，再试几下"""
                 time.sleep(0.05)  # wait dialog display
+        print('弹窗仍未出现!!!')
         return False
 
     def _run_exe_path(self, exe_path):
@@ -456,11 +457,10 @@ class ClientTrader(IClientTrader):
         ).click()
 
     def _get_pop_dialog_title(self):
-        return (
-            self._app.top_window()
-            .window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-            .window_text()
-        )
+        topw = self._app.top_window()
+        test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+        test.wait("exists ready", 5)
+        return test.window_text()
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
