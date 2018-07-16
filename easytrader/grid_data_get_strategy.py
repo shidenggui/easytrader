@@ -48,6 +48,7 @@ class CopyStrategy(BaseStrategy):
         grid.SetFocus()
         count_1 = 0
         count_2 = 0
+        count_3 = 0
         while True:
             content = ''
             try:
@@ -66,10 +67,11 @@ class CopyStrategy(BaseStrategy):
                     time.sleep(0.05)
                     count_2 += 1
             except Exception as e:
+                count_3 += 1
                 log.warning("{}, retry ......".format(e))  
                 
             # 只有读取成功两次或失败两次才跳出循环
-            if count_1 == 2 or count_2 == 2:
+            if count_1 == 2 or count_2 == 2 or count_3 == 2:
                 break 
                 
         if content == '':
