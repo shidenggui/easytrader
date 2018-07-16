@@ -516,15 +516,19 @@ class ClientTrader(IClientTrader):
         test = self._main.window(
             control_id=control_id, class_name="Edit"
         )
-        test.SetEditText('')
-        test.SetEditText(text)
+        test.wait("exists ready")
+        for c in range(10):
+            if test[0] != text:
+                test.SetEditText(text)
+            else:
+                break
         
     @functools.lru_cache()
     def _get_left_treeview_ready(self):
-        while True:
+        for c in range(10):
             try:
                 self._left_treeview.wait("ready", 2)
-                return
+                break
             except:
                 print('_left_treeview.wait Exception')
                 self._bring_main_foreground()
