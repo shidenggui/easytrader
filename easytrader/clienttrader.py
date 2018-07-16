@@ -518,8 +518,9 @@ class ClientTrader(IClientTrader):
         )
         test.wait("exists ready")
         for c in range(10):
-            if test[0] != text:
+            if test.texts()[0] != text:
                 test.SetEditText(text)
+                time.sleep(0.02)
             else:
                 break
         
