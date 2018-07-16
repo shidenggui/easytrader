@@ -546,14 +546,18 @@ class ClientTrader(IClientTrader):
                 print('switch_left_menus Exception')
                 self._bring_main_foreground()
                 self._left_treeview.Select(path) 
-            time.sleep(0.05)
+        time.sleep(0.05)
 
     def _bring_main_foreground(self):
 #         self._main.Minimize()
         self._main.Restore()
+        time.sleep(0.01)
         shell = win32com.client.Dispatch("WScript.Shell")
+        time.sleep(0.01)
         shell.SendKeys('%')
-        pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())    
+        time.sleep(0.01)
+        pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())  
+        time.sleep(0.01)
         
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
