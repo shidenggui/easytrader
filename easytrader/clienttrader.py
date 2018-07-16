@@ -139,7 +139,7 @@ class ClientTrader(IClientTrader):
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             ww = self._main.window(control_id=control_id, class_name="Static")
             count = 0
-            while True:
+            for c in range(100):
                 try:
                     test = float(ww.window_text())
                     # 如果股票市值为0, 要多试一下!
