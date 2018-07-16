@@ -65,11 +65,12 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             logie.wait('ready', timeout=30, retry_interval=None)
             
             # wait login window ready
-            while True:
+            for c in range(20)
                 try:
                     logie.Edit1.wait("ready")
                     break
                 except RuntimeError:
+                    time.sleep(1)
                     pass
             # 输入用户名
             logie.Edit1.SetEditText('')
