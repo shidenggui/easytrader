@@ -31,7 +31,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             try:
                 for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
                     pywinauto.Application().connect(handle=i).kill() 
-                for i in pywinauto.findwindows.find_windows(title_re = r'网上股票交易系统', class_name='#32770'):
+                for i in pywinauto.findwindows.find_windows(title_re = r'网上股票交易系统'):
                     pywinauto.Application().connect(handle=i).kill() 
                 self.login_basic(user, password, exe_path, comm_password, **kwargs)
                 re = True
