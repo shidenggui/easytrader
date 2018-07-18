@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import tempfile
-
+import time
 import pywinauto
 
 from . import clienttrader
