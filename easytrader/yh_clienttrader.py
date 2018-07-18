@@ -88,6 +88,9 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                     logie.wait_not('exists visible', timeout=30, retry_interval=None)
                     break
                 except:
+                    for w in self._app.windows(class_name="#32770"):
+                        if w.is_visible() and w.window_text() != '用户登录':
+                            w.close()
                     time.sleep(0.1)
             # 重连客户端
             self._app = pywinauto.Application().connect(
@@ -134,6 +137,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         for i in test.children():
             if i.control_id()==1499:
                 i.click()
+                time.sleep(2)
                 i.draw_outline()
                 break
         pos = i.Rectangle()
