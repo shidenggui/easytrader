@@ -93,11 +93,16 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
             )
-            
-        self._main = self._app.window_(title_re="网上股票交易系统")
-        self._main.wait('exists enabled visible ready')
-        
-        self._main_handle = self._main.handle
+        for c in range(10):
+            self._close_prompt_windows()   
+            self._main = self._app.window_(title_re="网上股票交易系统")
+            try:
+                self._main.wait('exists enabled visible ready', 2)
+                self._main_handle = self._main.handle
+                break
+            except:
+                self._switch_window_to_normal_mode()
+                time.sleep(3)
         
         self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32") 
         self._left_treeview.wait('exists enabled visible ready')
@@ -150,6 +155,22 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
 
     @property
     def balance(self):
-        self._switch_left_menus(self._config.BALANCE_MENU_PATH)
+        for c in range(10):
+            self._switch_left_menus(["查询[F4]", "资金股份"])
+            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            if isinstance(test, pd.DataFrame):
+                break
+                
+        if isinstance(test, pd.DataFrame):
+            if len(test) > 0:
+                test = test.to_dict("records")
+            else:
+                test = []
+        else:
+            print('读取balance失败...')
+            test = []
+            
+        return test
+#         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
 
-        return self._get_grid_data(self._config.BALANCE_GRID_CONTROL_ID)
+#         return self._get_grid_data(self._config.BALANCE_GRID_CONTROL_ID)
