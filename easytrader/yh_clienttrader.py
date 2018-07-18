@@ -124,8 +124,8 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             control_id=32812, class_name="Button"
         ).click()
 
-    def _handle_verify_code(self):
-        control = self._app.top_window().window(control_id=1499)
+    def _handle_verify_code(self, logie):
+        control = logie.window(control_id=22202)
         control.click()
         control.draw_outline()
 
