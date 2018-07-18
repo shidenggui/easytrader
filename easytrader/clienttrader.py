@@ -525,7 +525,7 @@ class ClientTrader(IClientTrader):
         
     @functools.lru_cache()
     def _get_left_treeview_ready(self):
-        for c in range(10):
+        for c in range(20):
             try:
                 self._left_treeview.wait("ready", 2)
                 break
@@ -536,19 +536,30 @@ class ClientTrader(IClientTrader):
                 time.sleep(0.05)
             
     def _switch_left_menus(self, path, sleep=0.2):
-        self._get_left_treeview_ready()
-        c = 0
-        while c < 20 and (not self._left_treeview.IsSelected(path)):
-            c += 1
+        for c in range(20):
             try:
-                self._left_treeview.Select(path) 
+                self._get_left_treeview_ready()
+                if not self._left_treeview.IsSelected(path):
+                    self._left_treeview.Select(path) 
+                break
             except Exception:
                 print('switch_left_menus Exception')
-                self._bring_main_foreground()
+                self._bring_main_foreground()                
+        time.sleep(0.05)  
+        
+#         self._get_left_treeview_ready()
+#         c = 0
+#         while c < 20 and (not self._left_treeview.IsSelected(path)):
+#             c += 1
+#             try:
+#                 self._left_treeview.Select(path) 
+#             except Exception:
+#                 print('switch_left_menus Exception')
+#                 self._bring_main_foreground()
                 
-                self._get_left_treeview_ready()
-                self._left_treeview.Select(path) 
-            time.sleep(0.05)
+#                 self._get_left_treeview_ready()
+#                 self._left_treeview.Select(path) 
+#             time.sleep(0.05)
 
     def _bring_main_foreground(self):
         self._main.Minimize()
