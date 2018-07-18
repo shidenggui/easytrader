@@ -78,7 +78,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
 
             # 输入验证码
             for c in range(30):
-                verify_code = self._handle_verify_code()
+                verify_code = self._handle_verify_code(logie)
                 logie.Edit3.SetEditText('')
                 logie.Edit3.SetEditText(verify_code)
                 # 点击确定
@@ -125,14 +125,28 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         ).click()
 
     def _handle_verify_code(self, logie):
-        control = logie.window(control_id=22202)
-        control.click()
-        control.draw_outline()
-
+        test = logie.wrapper_object()
+        for i in test.children():
+            if i.control_id()==1499:
+                i.click()
+                i.draw_outline()
+                break
+        pos = i.Rectangle()
+        pos.right = int(pos.left + (pos.right-pos.left)*4/3)
         file_path = tempfile.mktemp()
-        control.capture_as_image().save(file_path, "jpeg")
+        test.capture_as_image(pos).save(file_path, "jpeg")
+
         verify_code = helpers.recognize_verify_code(file_path, "yh_client")
-        return "".join(re.findall("\d+", verify_code))
+        return "".join(re.findall("\d+", verify_code))     
+
+#         control = logie.window(control_id=22202)
+#         control.click()
+#         control.draw_outline()
+
+#         file_path = tempfile.mktemp()
+#         control.capture_as_image().save(file_path, "jpeg")
+#         verify_code = helpers.recognize_verify_code(file_path, "yh_client")
+#         return "".join(re.findall("\d+", verify_code))
 
     @property
     def balance(self):
