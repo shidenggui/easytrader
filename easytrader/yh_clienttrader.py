@@ -138,7 +138,6 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             if i.control_id()==1499:
                 i.click()
                 time.sleep(2)
-                i.draw_outline()
                 break
         pos = i.Rectangle()
         pos.right = int(pos.left + (pos.right-pos.left)*4/3)
@@ -146,7 +145,9 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         test.capture_as_image(pos).save(file_path, "jpeg")
 
         verify_code = helpers.recognize_verify_code(file_path, "yh_client")
-        return "".join(re.findall("\d+", verify_code))     
+        res = "".join(re.findall("\d+", verify_code))
+        print('识别验证码', res)
+        return res
 
 #         control = logie.window(control_id=22202)
 #         control.click()
