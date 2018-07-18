@@ -558,9 +558,8 @@ class ClientTrader(IClientTrader):
         shell = win32com.client.Dispatch("WScript.Shell")
         time.sleep(0.02)
         shell.SendKeys('%')
-        time.sleep(0.02)
+        time.sleep(0.01)
         pywinauto.win32functions.SetForegroundWindow(self._main.wrapper_object())  
-        time.sleep(0.02)
         
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
         self._app.top_window().type_keys(shortcut)
