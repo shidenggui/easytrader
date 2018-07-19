@@ -162,7 +162,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
     def balance(self):
         for c in range(10):
             self._switch_left_menus(["查询[F4]", "资金股份"])
-            test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+            test = self._get_grid_data(self._config.BALANCE_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
                 break
                 
