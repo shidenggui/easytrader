@@ -34,12 +34,17 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                 break
             except Exception:
                 print('login again')
+                self.close_all()
                 time.sleep(0.5)
-                for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
-                    pywinauto.Application().connect(handle=i).kill()  
                 re = False
         return re
     
+    def close_all():
+        for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
+            pywinauto.Application().connect(handle=i).kill()  
+        for i in pywinauto.findwindows.find_windows(title_re = r'网上股票交易系统'):
+            pywinauto.Application().connect(handle=i).kill() 
+
     def login_basic(self, user, password, exe_path, comm_password=None, **kwargs):
         """
         登陆客户端
@@ -168,14 +173,19 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                 
         if isinstance(test, pd.DataFrame):
             if len(test) > 0:
-                test = test.to_dict("records")
+                test = test.to_dict("records")[0]
+                bala = {}
+                bala['total_value'] = test['总资产']
+                bala['stock_value'] = test['总市值']
+                bala['ky_cash'] = test['可用金额']
+                bala['kq_cash'] = test['资金余额']
             else:
-                test = []
+                bala = {}
         else:
             print('读取balance失败...')
-            test = []
+            bala = {}
             
-        return test
+        return bala
 #         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
 
 #         return self._get_grid_data(self._config.BALANCE_GRID_CONTROL_ID)
