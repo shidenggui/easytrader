@@ -555,54 +555,7 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def _refresh(self):
-        self._switch_left_menus(["买入[F1]"], sleep=0.05)
-
-
-    def _is_exist_pop_dialog(self):
-        # 最多等待10秒
-        for c in range(200):
-            sss = time.time()
-            
-            try:
-                test = self._app.top_window()
-                test.wait("exists ready")
-                test_handle = test.wrapper_object().handle
-                if test_handle != self._main_handle:
-                    """弹出窗口"""
-                    return True
-                else:
-                    """没弹出，再试几下"""
-                    pass
-            except Exception as e:
-                print('_is_exist_pop_dialog', e)
-                
-            zzz = time.time()
-            if (zzz-sss) < 0.05:
-                time.sleep(0.05-(zzz-sss))  
-                
-        print('弹窗仍未出现!!!')
-        return False        
-        
-    def _get_pop_dialog_title(self):
-        for c in range(50):
-            try:
-                a = time.time()
-                topw = self._app.top_window()
-                test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                test.wait("exists ready")
-                if len(test.window_text()) > 0:
-                    return test.window_text()
-                else:
-                    print('get_pop_dialog_title retry')
-                    costa = time.time()
-                    if (costa - a) < 0.05:
-                        time.sleep(0.05-(costa-a))
-            except Exception as e:
-                print('get_pop_dialog_title exception', e)
-                pass
-        
-        return test.window_text()
-        
+        self._switch_left_menus(["买入[F1]"], sleep=0.05)  
         
     def _handle_pop_dialogs(
         self, handler_class=pop_dialog_handler.PopDialogHandler
@@ -650,7 +603,52 @@ class ClientTrader(IClientTrader):
 #                 return result
 #         return {"success???": "不应该出现这里"}
 
-
+#     def _is_exist_pop_dialog(self):
+#         # 最多等待10秒
+#         for c in range(200):
+#             sss = time.time()
+            
+#             try:
+#                 test = self._app.top_window()
+#                 test.wait("exists ready")
+#                 test_handle = test.wrapper_object().handle
+#                 if test_handle != self._main_handle:
+#                     """弹出窗口"""
+#                     return True
+#                 else:
+#                     """没弹出，再试几下"""
+#                     pass
+#             except Exception as e:
+#                 print('_is_exist_pop_dialog', e)
+                
+#             zzz = time.time()
+#             if (zzz-sss) < 0.05:
+#                 time.sleep(0.05-(zzz-sss))  
+                
+#         print('弹窗仍未出现!!!')
+#         return False        
+        
+#     def _get_pop_dialog_title(self):
+#         for c in range(50):
+#             try:
+#                 a = time.time()
+#                 topw = self._app.top_window()
+#                 test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+#                 test.wait("exists ready")
+#                 if len(test.window_text()) > 0:
+#                     return test.window_text()
+#                 else:
+#                     print('get_pop_dialog_title retry')
+#                     costa = time.time()
+#                     if (costa - a) < 0.05:
+#                         time.sleep(0.05-(costa-a))
+#             except Exception as e:
+#                 print('get_pop_dialog_title exception', e)
+#                 pass
+        
+#         return test.window_text()
+    
+    
 class BaseLoginClientTrader(ClientTrader):
     @abc.abstractmethod
     def login(self, user, password, exe_path, comm_password=None, **kwargs):
