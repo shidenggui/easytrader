@@ -3,7 +3,7 @@ import re
 import tempfile
 import time
 import pywinauto
-
+import pandas as pd
 from . import clienttrader
 from . import grid_data_get_strategy
 from . import helpers
