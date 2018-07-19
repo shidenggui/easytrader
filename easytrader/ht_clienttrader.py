@@ -129,7 +129,13 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except Exception:
                     time.sleep(0.05)
-        return result
+        bala = {}
+        if result:
+            bala['total_value'] = result['总资产']
+            bala['stock_value'] = result['股票市值']
+            bala['ky_cash'] = result['可用金额']
+            bala['kq_cash'] = result['可取金额']
+        return bala
     
     def _get_balance_after_login(self):
         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
@@ -149,7 +155,13 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except Exception:
                     time.sleep(0.05)
-        return result
+        bala = {}
+        if result:
+            bala['total_value'] = result['总资产']
+            bala['stock_value'] = result['股票市值']
+            bala['ky_cash'] = result['可用金额']
+            bala['kq_cash'] = result['可取金额']
+        return bala
     
     def gz_nhg(self, security, price, amount, **kwargs):
         """131810：amount 必须为10的倍数"""
