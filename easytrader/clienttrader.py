@@ -482,30 +482,34 @@ class ClientTrader(IClientTrader):
 
     def _wait_trade_showup(self, control_id, class_name):
         """class_name: "Static", "Edit", "ComboBox" """
-        # 交易子窗口
-        pwindow = self._main.window(class_name='#32770', control_id=59649)
         flag = False
         for c in range(100):   # 最大等待5s
-            sss = time.time()
-            for i in pwindow.Children():
-                condition =  ( 
-                    i.control_id() == control_id and 
-                    i.class_name() == class_name and 
-                    len(i.window_text()) > 1 
-                )
-                if condition and class_name != "ComboBox":
-                    flag = True
-                    print('showup target', i.window_text())
-                    break      
-                elif condition and class_name == "ComboBox" and '最优五档' in ''.join(i.texts()):
-                    flag = True
-                    print('showup target', i.window_text())
-                    return i  
-            if flag:
-                break
-            gaps = time.time() - sss
-            if gaps < 0.05:
-                time.sleep(0.05-gaps)
+            try:
+                sss = time.time()
+                # 交易子窗口
+                pwindow = self._main.window(class_name='#32770', control_id=59649)
+                pwindow.wait("exists ready")
+                for i in pwindow.Children():
+                    condition =  ( 
+                        i.control_id() == control_id and 
+                        i.class_name() == class_name and 
+                        len(i.window_text()) > 1 
+                    )
+                    if condition and class_name != "ComboBox":
+                        flag = True
+                        print('showup target', i.window_text())
+                        return i     
+                    elif condition and class_name == "ComboBox" and '最优五档' in ''.join(i.texts()):
+                        flag = True
+                        print('showup target', i.window_text())
+                        return i  
+                if flag:
+                    break
+                gaps = time.time() - sss
+                if gaps < 0.05:
+                    time.sleep(0.05-gaps)
+            except Exception as e:
+                print('_wait_trade_showup', e)
                 
     def _get_grid_data(self, control_id):
         return self._grid_data_get_strategy.get(control_id)
