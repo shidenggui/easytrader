@@ -111,7 +111,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         self._left_treeview.wait('exists enabled visible ready')
         
         # 等待一切就绪
-        self._get_balance_after_login()
+        print(self.balance)
 
         # 关闭其它窗口
         self._check_top_window()
