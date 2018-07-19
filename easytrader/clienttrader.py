@@ -378,15 +378,25 @@ class ClientTrader(IClientTrader):
     def _is_exist_pop_dialog(self):
         # 最多等待10秒
         for c in range(200):
-            test = self._app.top_window()
-            test_handle = test.wrapper_object().handle
-            if test_handle != self._main_handle:
-                """弹出窗口"""
-                test.wait("exists enabled visible ready")
-                return True
-            else:
-                """没弹出，再试几下"""
-                time.sleep(0.05)  # wait dialog display
+            sss = time.time()
+            
+            try:
+                test = self._app.top_window()
+                test.wait("exists ready")
+                test_handle = test.wrapper_object().handle
+                if test_handle != self._main_handle:
+                    """弹出窗口"""
+                    return True
+                else:
+                    """没弹出，再试几下"""
+                    pass
+            except Exception as e:
+                print('_is_exist_pop_dialog', e)
+                
+            zzz = time.time()
+            if (zzz-sss) < 0.05:
+                time.sleep(0.05-(zzz-sss))  
+                
         print('弹窗仍未出现!!!')
         return False
 
