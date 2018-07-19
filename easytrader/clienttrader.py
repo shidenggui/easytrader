@@ -584,21 +584,24 @@ class ClientTrader(IClientTrader):
         return (False, 0)      
         
     def _get_pop_dialog_title(self, pop_dialog):
-        for c in range(50):
+        for c in range(10):
             try:
                 a = time.time()
-#                 topw = self._app.top_window()
                 test = pop_dialog.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
                 test.wait("exists ready")
                 if len(test.window_text()) > 0:
                     return test.window_text()
                 else:
                     print('get_pop_dialog_title retry')
+                    pop_dialog = self._app.top_window()
+                    pop_dialog.wait("exists ready")
                     costa = time.time()
                     if (costa - a) < 0.05:
                         time.sleep(0.05-(costa-a))
             except Exception as e:
                 print('get_pop_dialog_title exception', e)
+                pop_dialog = self._app.top_window()
+                pop_dialog.wait("exists ready")
                 pass
         
         return test.window_text()
