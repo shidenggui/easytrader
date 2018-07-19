@@ -309,17 +309,8 @@ class ClientTrader(IClientTrader):
             ttype = ttype.replace(u"即时", "")
  
         # 确认市价交易类型选项出现!
-        for c in range(20):
-            selects = self._main.window(
-                control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
-                class_name="ComboBox",
-            )    
-            if len(selects.texts()) > 2:
-                print('showup 市价交易类型', selects.texts())
-                break
-            else:
-                time.sleep(0.03)
-                
+        selects = self._wait_trade_showup(self._config.TRADE_MARKET_TYPE_CONTROL_ID, "ComboBox")
+                 
         # 选择对应的下拉选项   
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
@@ -330,17 +321,7 @@ class ClientTrader(IClientTrader):
                     selects.select(i - 1)
                     
                 # 确认市价交易的价格出现!
-                for c in range(30):
-                    p_selects = self._main.window(
-                        control_id=self._config.TRADE_PRICE_CONTROL_ID,
-                        class_name="Edit",  
-                    )
-                    p_texts = p_selects.texts()
-                    if isinstance(p_texts, list) and p_texts[0] not in ['0', '']:
-                        print('showup price', p_texts)
-                        break
-                    time.sleep(0.03)
-                    
+                self._wait_trade_showup(self._config.TRADE_PRICE_CONTROL_ID, "Edit") 
                 break
         else:
             print("不支持对应的市价类型: {}".format(ttype), "将采用默认方式!")
@@ -487,7 +468,7 @@ class ClientTrader(IClientTrader):
         
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         
-        self._wait_target_showup(self._config.TRADE_SECURITY_NAME_ID)
+        self._wait_trade_showup(self._config.TRADE_SECURITY_NAME_ID, "Static")
 
 
     def _set_market_trade_params(self, security, amount):
@@ -497,30 +478,7 @@ class ClientTrader(IClientTrader):
 
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         
-        self._wait_target_showup(self._config.TRADE_SECURITY_NAME_ID)
-        
-            
-    def _wait_target_showup(self, control_id):
-        pwindow = self._main.window(class_name='#32770', control_id=59649)
-        flag = False
-        for c in range(100):   # 最大等待5s
-            sss = time.time()
-            for i in pwindow.Children():
-                condition =  ( 
-                    i.control_id() == control_id and 
-                    i.class_name() == "Static" and 
-                    len(i.window_text()) > 1 
-                )
-                if condition:
-                    print('showup target', i.window_text())
-                    flag = True
-                    break
-                    
-            if flag:
-                break
-            gaps = time.time() - sss
-            if gaps < 0.05:
-                time.sleep(0.05-gaps)
+        self._wait_trade_showup(self._config.TRADE_SECURITY_NAME_ID, "Static")
 
     def _wait_trade_showup(self, control_id, class_name):
         """class_name: "Static", "Edit", "ComboBox" """
@@ -538,11 +496,11 @@ class ClientTrader(IClientTrader):
                 if condition and class_name != "ComboBox":
                     flag = True
                     print('showup target', i.window_text())
-                    break            
+                    break      
                 elif condition and class_name == "ComboBox" and '最优五档' in ''.join(i.texts()):
                     flag = True
                     print('showup target', i.window_text())
-                    break 
+                    return i  
             if flag:
                 break
             gaps = time.time() - sss
