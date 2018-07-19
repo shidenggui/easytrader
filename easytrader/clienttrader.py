@@ -535,10 +535,14 @@ class ClientTrader(IClientTrader):
                     i.class_name() == class_name and 
                     len(i.window_text()) > 1 
                 )
-                if condition:
-                    print('showup target', i.window_text())
+                if condition and class_name != "ComboBox":
                     flag = True
-                    break
+                    print('showup target', i.window_text())
+                    break            
+                elif condition and class_name == "ComboBox" and '最优五档' in ''.join(i.texts()):
+                    flag = True
+                    print('showup target', i.window_text())
+                    break 
             if flag:
                 break
             gaps = time.time() - sss
