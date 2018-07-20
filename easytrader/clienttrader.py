@@ -496,7 +496,6 @@ class ClientTrader(IClientTrader):
                 test = self._main.window(
                     control_id=control_id, class_name="Edit"
                 )
-                test.wait("exists visible enabled", 0.05)
                 if test.texts()[0] != text:
                     test.SetEditText(text)
                 else:
