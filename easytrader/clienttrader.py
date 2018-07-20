@@ -450,12 +450,12 @@ class ClientTrader(IClientTrader):
     def _wait_trade_showup(self, control_id, class_name):
         """class_name: "Static", "Edit", "ComboBox" """
         flag = False
-        for c in range(100):   # 最大等待5s
+        for c in range(200):   # 最大等待10s
             try:
                 sss = time.time()
                 # 交易子窗口
                 pwindow = self._main.window(class_name='#32770', control_id=59649)
-                pwindow.wait("exists ready")
+                # pwindow.wait("exists ready")
                 for i in pwindow.Children():
                     condition =  ( 
                         i.control_id() == control_id and 
@@ -472,11 +472,12 @@ class ClientTrader(IClientTrader):
                         return i  
                 if flag:
                     break
-                gaps = time.time() - sss
-                if gaps < 0.05:
-                    time.sleep(0.05-gaps)
             except Exception as e:
                 print('_wait_trade_showup', e)
+                
+            gaps = time.time() - sss
+            if gaps < 0.05:
+                time.sleep(0.05-gaps)
                 
     def _get_grid_data(self, control_id):
         return self._grid_data_get_strategy.get(control_id)
