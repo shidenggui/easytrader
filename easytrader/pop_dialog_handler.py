@@ -24,7 +24,19 @@ class PopDialogHandler:
             return {"message": "unknown message: {}".format(content)}
 
     def _extract_content(self):
-        return self._app.top_window().Static.window_text()
+        for c in range(20):
+            sss = time.time()
+            try:
+                test = self._app.top_window()
+                test.wait("exists visible enabled", 0.05)
+                return test.Static.window_text()
+            except Exception as e:
+                print('_extract_content', e)
+            zzz = time.time()
+            if (zzz-sss) < 0.05:
+                time.sleep(0.05-(zzz-sss))
+                
+        return test.Static.window_text()
 
     def _extract_entrust_id(self, content):
         return re.search(r"\d+", content).group()
