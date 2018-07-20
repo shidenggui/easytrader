@@ -620,6 +620,7 @@ class ClientTrader(IClientTrader):
             else:
                 pop_dialog = test[1]
                 title = self._get_pop_dialog_title(pop_dialog)
+                print('title is:', title)
                 result = handler.handle(title)
                 if result:
                     return result
