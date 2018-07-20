@@ -592,7 +592,7 @@ class ClientTrader(IClientTrader):
             try:
                 a = time.time()
                 test = pop_dialog.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                # test.wait("exists visible enabled", 0.5)
+                test.wait("exists visible enabled", 0.05)
                 if len(test.window_text()) > 0:
                     return test.window_text()
                 else:
