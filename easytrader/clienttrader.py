@@ -491,11 +491,11 @@ class ClientTrader(IClientTrader):
         return self._grid_data_get_strategy.get(control_id)
 
     def _type_keys(self, control_id, text):
-        test = self._main.window(
-            control_id=control_id, class_name="Edit"
-        )
         for c in range(50):
             try:
+                test = self._main.window(
+                    control_id=control_id, class_name="Edit"
+                )
                 test.wait("exists visible enabled", 0.05)
                 if test.texts()[0] != text:
                     test.SetEditText(text)
