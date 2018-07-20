@@ -508,13 +508,12 @@ class ClientTrader(IClientTrader):
     def _get_left_treeview_ready(self):
         for c in range(20):
             try:
-                self._left_treeview.wait("ready", 2)
+                self._left_treeview.wait("ready", 1)
                 break
             except:
                 print('_left_treeview.wait Exception')
                 self._bring_main_foreground()
                 self._check_top_window()
-                time.sleep(0.05)
             
     def _switch_left_menus(self, path, sleep=0.2):
         for c in range(20):
@@ -526,7 +525,6 @@ class ClientTrader(IClientTrader):
             except Exception:
                 print('switch_left_menus Exception')
                 self._bring_main_foreground()                
-        time.sleep(0.05)  
         
 #         self._get_left_treeview_ready()
 #         c = 0
