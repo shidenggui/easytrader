@@ -569,8 +569,8 @@ class ClientTrader(IClientTrader):
                 test_handle = test.wrapper_object().handle
                 if test_handle != self._main_handle:
                     """弹出窗口"""
-                    test.wait("exists visible enabled", 0.1)
-                    time.sleep(0.1)
+                    # test.wait("exists visible enabled", 0.1)
+                    # time.sleep(0.1)
                     return (True, test)
                 else:
                     """没弹出，再试几下"""
@@ -587,26 +587,25 @@ class ClientTrader(IClientTrader):
         return (False, 0)      
         
     def _get_pop_dialog_title(self, pop_dialog):
-        for c in range(10):
+        for c in range(200):
             try:
                 a = time.time()
                 test = pop_dialog.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                test.wait("exists visible enabled", 0.5)
+                # test.wait("exists visible enabled", 0.5)
                 if len(test.window_text()) > 0:
                     return test.window_text()
                 else:
                     print('get_pop_dialog_title retry')
-                    pop_dialog = self._app.top_window()
-                    pop_dialog.wait("exists visible enabled", 0.5)
-                    costa = time.time()
-                    if (costa - a) < 0.05:
-                        time.sleep(0.05-(costa-a))  
+
             except Exception as e:
                 print('get_pop_dialog_title exception', e)
-                pop_dialog = self._app.top_window()
-                pop_dialog.wait("exists visible enabled", 0.5)
-                pass
-             
+
+            pop_dialog = self._app.top_window()
+            # pop_dialog.wait("exists visible enabled", 0.5)
+            costa = time.time()
+            if (costa - a) < 0.05:
+                time.sleep(0.05-(costa-a))  
+
         return test.window_text()
         
     def _handle_pop_dialogs(
