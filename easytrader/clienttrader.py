@@ -410,16 +410,23 @@ class ClientTrader(IClientTrader):
     def _submit_trade(self):
         # 等待股东账号出现!
         for c in range(20):
-            selects = self._main.window(
-                control_id=self._config.TRADE_ACCOUNT_CONTROL_ID,
-                class_name="ComboBox",
-            )   
-            selects.wait("exise", 0.05)
-            account = selects.texts()
-            if isinstance(account, list) and len(account[0]) > 0:
-                print('showup account', account)
-                break
-                
+            try:
+                sss = time.time()
+                selects = self._main.window(
+                    control_id=self._config.TRADE_ACCOUNT_CONTROL_ID,
+                    class_name="ComboBox",
+                )   
+                selects.wait("exists visible enabled", 0.05)
+                account = selects.texts()
+                if isinstance(account, list) and len(account[0]) > 0:
+                    print('showup account', account)
+                    break
+            except Exception as e:
+                print('等待股东账号出现', e)
+            zzz = time.time()
+            if (zzz-sss) < 0.05:
+                time.sleep(0.05-(zzz-sss))
+                 
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
