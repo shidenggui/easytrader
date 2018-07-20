@@ -49,6 +49,7 @@ class TradePopDialogHandler(PopDialogHandler):
     def handle(self, title):
         if title == "委托确认":
             self._submit_by_shortcut_yes()
+            time.sleep(0.1)
 
         elif title == "提示信息":
             content = self._extract_content()
@@ -60,6 +61,7 @@ class TradePopDialogHandler(PopDialogHandler):
                 return {"failure": content}
             else:
                 self._submit_by_shortcut_yes()
+                time.sleep(0.1)
 
         elif title == "提示":
             content = self._extract_content()
