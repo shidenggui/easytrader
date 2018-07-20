@@ -495,11 +495,14 @@ class ClientTrader(IClientTrader):
             control_id=control_id, class_name="Edit"
         )
         for c in range(50):
-            if test.texts()[0] != text:
-                test.SetEditText(text)
-                time.sleep(0.02)
-            else:
-                break
+            try:
+                test.wait("exists visible enabled", 0.05)
+                if test.texts()[0] != text:
+                    test.SetEditText(text)
+                else:
+                    break
+            except Exception as e:
+                print('type:', text, e)
         
     @functools.lru_cache()
     def _get_left_treeview_ready(self):
