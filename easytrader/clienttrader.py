@@ -413,7 +413,8 @@ class ClientTrader(IClientTrader):
             selects = self._main.window(
                 control_id=self._config.TRADE_ACCOUNT_CONTROL_ID,
                 class_name="ComboBox",
-            )    
+            )   
+            selects.wait("exise", 0.05)
             account = selects.texts()
             if isinstance(account, list) and len(account[0]) > 0:
                 print('showup account', account)
