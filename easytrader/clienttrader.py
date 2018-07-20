@@ -561,17 +561,16 @@ class ClientTrader(IClientTrader):
         self._switch_left_menus(["买入[F1]"], sleep=0.05)  
 
     def _is_exist_pop_dialog(self):
-        # 最多等待10秒
-        for c in range(200):
+        # 最多等待5秒
+        for c in range(50):
             sss = time.time()
             
             try:
                 test = self._app.top_window()
+                time.sleep(0.05)
                 test_handle = test.wrapper_object().handle
                 if test_handle != self._main_handle:
                     """弹出窗口"""
-                    # test.wait("exists visible enabled", 0.1)
-                    # time.sleep(0.1)
                     return (True, test)
                 else:
                     """没弹出，再试几下"""
@@ -580,8 +579,8 @@ class ClientTrader(IClientTrader):
                 print('_is_exist_pop_dialog', e)
                 
             zzz = time.time()
-            if (zzz-sss) < 0.05:
-                time.sleep(0.05-(zzz-sss))  
+            if (zzz-sss) < 0.1:
+                time.sleep(0.1-(zzz-sss))  
                 
         print('弹窗仍未出现!!!')
         
@@ -602,10 +601,10 @@ class ClientTrader(IClientTrader):
                 print('get_pop_dialog_title exception', e)
 
             pop_dialog = self._app.top_window()
-            # pop_dialog.wait("exists visible enabled", 0.5)
+            # pop_dialog.wait("exists visible enabled", 0.05)
             costa = time.time()
-            if (costa - a) < 0.05:
-                time.sleep(0.05-(costa-a))  
+            if (costa - a) < 0.1:
+                time.sleep(0.1-(costa-a))  
 
         return test.window_text()
         
