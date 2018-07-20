@@ -564,10 +564,9 @@ class ClientTrader(IClientTrader):
         # 最多等待5秒
         for c in range(50):
             sss = time.time()
-            
             try:
                 test = self._app.top_window()
-                time.sleep(0.05)
+                test.wait("exists visible enabled", 0.05)
                 test_handle = test.wrapper_object().handle
                 if test_handle != self._main_handle:
                     """弹出窗口"""
@@ -587,7 +586,7 @@ class ClientTrader(IClientTrader):
         return (False, 0)      
         
     def _get_pop_dialog_title(self, pop_dialog):
-        for c in range(200):
+        for c in range(50):
             try:
                 a = time.time()
                 test = pop_dialog.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
