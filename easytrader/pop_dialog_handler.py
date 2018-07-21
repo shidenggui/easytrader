@@ -1,3 +1,8 @@
+# coding:utf-8
+import re
+import time
+from . import exceptions
+
 class PopDialogHandler:
     def __init__(self, app, top_window=None):
         self._app = app
