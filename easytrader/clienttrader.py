@@ -404,7 +404,8 @@ class ClientTrader(IClientTrader):
         )
 
     def _click(self, control_id):
-        self._app.top_window().window(
+#         self._check_top_window()
+        self._main.window(
             control_id=control_id, class_name="Button"
         ).click()
 
