@@ -214,7 +214,7 @@ class ClientTrader(IClientTrader):
     @property
     def cancel_entrusts(self):
         self._refresh()
-        for c in range(10):
+        for c in range(3):
             self._switch_left_menus(["撤单[F3]"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
