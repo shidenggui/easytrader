@@ -372,7 +372,8 @@ class ClientTrader(IClientTrader):
             self._config.COMMON_GRID_FIRST_ROW_HEIGHT
             + self._config.COMMON_GRID_ROW_HEIGHT * row
         )
-        self._app.top_window().window(
+#         self._check_top_window()
+        self._main.window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
             class_name="CVirtualGridCtrl",
         ).click(coords=(x, y))
@@ -560,7 +561,7 @@ class ClientTrader(IClientTrader):
             self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT
             + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * (row + 1)
         )
-        self._app.top_window().window(
+        self._main.window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
             class_name="CVirtualGridCtrl",
         ).double_click(coords=(x, y))
