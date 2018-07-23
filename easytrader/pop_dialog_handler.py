@@ -29,11 +29,11 @@ class PopDialogHandler:
         for c in range(20):
             sss = time.time()
             try:
-                time.sleep(0.05)
                 self._top_window.wait("exists visible enabled", 0.1)
                 return self._top_window.Static.window_text()
             except Exception as e:
                 print('_extract_content', e)
+                self._top_window = self._app.top_window()
             zzz = time.time()
             if (zzz-sss) < 0.1:
                 time.sleep(0.1-(zzz-sss))
@@ -45,12 +45,13 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                time.sleep(0.05)
+                self._top_window.wait("exists visible enabled", 0.1)
                 self._top_window["确定"].click()
                 self._top_window.wait_not("exists", 0.1)
                 break
             except Exception as e:
                 print('PopDialog _submit_by_click', e)
+                self._top_window = self._app.top_window()
             zzz = time.time()
             if((zzz-sss)<0.1):
                 time.sleep(0.1-(zzz-sss))
@@ -59,12 +60,13 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                time.sleep(0.05)
+                self._top_window.wait("exists visible enabled", 0.1)
                 self._top_window.type_keys("%Y")
                 self._top_window.wait_not("exists", 0.1)
                 break
             except Exception as e:
                 print('PopDialog _submit_by_shortcut', e)
+                self._top_window = self._app.top_window()
             zzz = time.time()
             if((zzz-sss)<0.1):
                 time.sleep(0.1-(zzz-sss))
@@ -73,12 +75,13 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                time.sleep(0.05)
+                self._top_window.wait("exists visible enabled", 0.1)
                 self._top_window.type_keys("%Y")
                 self._top_window.wait_not("exists", 0.1)
                 break
             except Exception as e:
                 print('PopDialog _submit_by_shortcut_yes', e)
+                self._top_window = self._app.top_window()
             zzz = time.time()
             if((zzz-sss)<0.1):
                 time.sleep(0.1-(zzz-sss))
@@ -87,12 +90,13 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                time.sleep(0.05)
+                self._top_window.wait("exists visible enabled", 0.1)
                 self._top_window.type_keys("%N")
                 self._top_window.wait_not("exists", 0.1)
                 break
             except Exception as e:
                 print('PopDialog _submit_by_shortcut_no', e)
+                self._top_window = self._app.top_window()
             zzz = time.time()
             if((zzz-sss)<0.1):
                 time.sleep(0.1-(zzz-sss))
@@ -101,12 +105,13 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                time.sleep(0.05)
+                self._top_window.wait("exists visible enabled", 0.1)
                 self._top_window.close()
                 self._top_window.wait_not("exists", 0.1)
                 break
             except Exception as e:
                 print('PopDialog _close', e)
+                self._top_window = self._app.top_window()
             zzz = time.time()
             if((zzz-sss)<0.1):
                 time.sleep(0.1-(zzz-sss))     
