@@ -651,6 +651,7 @@ class ClientTrader(IClientTrader):
                 print('bbbbbbbbbbbbbbbbbbbbbbbb')
                 if topw_handle != self._main_handle:
                     """弹出窗口"""
+                    time.sleep(0.05)
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
                     test.wait("exists visible enabled", 0.1)
                     print('ccccccccccccccccccccccccccccccc')
