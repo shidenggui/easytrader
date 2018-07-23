@@ -522,7 +522,7 @@ class ClientTrader(IClientTrader):
                 self._get_left_treeview_ready()
                 self._left_treeview.Select(path)
                 if not self._left_treeview.IsSelected(path):
-                    self._left_treeview.Select(path) 
+                    raise NameError('HiThere')
                 break
             except Exception:
                 print('switch_left_menus Exception')
