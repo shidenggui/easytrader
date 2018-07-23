@@ -520,6 +520,7 @@ class ClientTrader(IClientTrader):
         for c in range(20):
             try:
                 self._get_left_treeview_ready()
+                self._left_treeview.Select(path)
                 if not self._left_treeview.IsSelected(path):
                     self._left_treeview.Select(path) 
                 break
