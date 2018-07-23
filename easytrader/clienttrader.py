@@ -645,12 +645,16 @@ class ClientTrader(IClientTrader):
             try:
                 topw = self._app.top_window()
                 topw.wait("exists visible enabled", 0.1)
+                print('aaaaaaaaaaaaaaaaaaaaaaaa')
                 topw_handle = topw.wrapper_object().handle
+                print('bbbbbbbbbbbbbbbbbbbbbbbb')
                 if topw_handle != self._main_handle:
                     """弹出窗口"""
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                    test.wait("exists visible enabled", 0.05)
+                    test.wait("exists visible enabled", 0.1)
+                    print('ccccccccccccccccccccccccccccccc')
                     title = test.window_text()
+                    print('dddddddddddddddddddddddddddddddd')
                     if len(title) > 0:
                         handler = handler_class(self._app, topw)
                         result = handler.handle(title)
