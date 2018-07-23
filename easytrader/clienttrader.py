@@ -520,10 +520,12 @@ class ClientTrader(IClientTrader):
         for c in range(20):
             try:
                 self._get_left_treeview_ready()
-                self._left_treeview.Select(path)
+                
                 if not self._left_treeview.IsSelected(path):
-                    raise NameError('HiThere')
-                break
+                    self._left_treeview.Select(path)
+                    # raise NameError('HiThere')
+                else:
+                    break
             except Exception:
                 print('switch_left_menus Exception')
                 self._bring_main_foreground()                
@@ -645,14 +647,14 @@ class ClientTrader(IClientTrader):
             sss = time.time()
             try:
                 topw = self._app.top_window()
-                topw.wait("exists visible enabled", 0.2)
+                topw.wait("exists visible enabled", 0.1)
                 print('aaaaaaaaaaaaaaaaaaaaaaaa')
                 topw_handle = topw.wrapper_object().handle
                 print('bbbbbbbbbbbbbbbbbbbbbbbb')
                 if topw_handle != self._main_handle:
                     """弹出窗口"""
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                    test.wait("exists visible enabled", 0.2)
+                    test.wait("exists visible enabled", 0.1)
                     print('ccccccccccccccccccccccccccccccc')
                     title = test.window_text()
                     print('dddddddddddddddddddddddddddddddd')
@@ -671,8 +673,8 @@ class ClientTrader(IClientTrader):
                 
             # 循环计时结束 
             zzz = time.time()
-            if (zzz-sss) < 0.2:
-                time.sleep(0.2-(zzz-sss))  
+            if (zzz-sss) < 0.1:
+                time.sleep(0.1-(zzz-sss))  
                 
         return {"success???": "不应该出现这里"}          
 
