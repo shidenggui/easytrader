@@ -644,8 +644,9 @@ class ClientTrader(IClientTrader):
         # 最多等待10秒
         for c in range(100):
             # 循环计时开始
-            sss = time.time()
+#             sss = time.time()
             try:
+                time.sleep(0.1)
                 topw = self._app.top_window()
                 topw.wait("exists visible enabled", 0.1)
                 print('aaaaaaaaaaaaaaaaaaaaaaaa')
@@ -667,14 +668,15 @@ class ClientTrader(IClientTrader):
                         print('get_pop_dialog_title retry')              
                 else:
                     """没弹出，再试几下"""
+                    print('没弹出窗口')
                     pass
             except Exception as e:
                 print('pop_dialog', e)
                 
             # 循环计时结束 
-            zzz = time.time()
-            if (zzz-sss) < 0.1:
-                time.sleep(0.1-(zzz-sss))  
+#             zzz = time.time()
+#             if (zzz-sss) < 0.1:
+#                 time.sleep(0.1-(zzz-sss))  
                 
         return {"success???": "不应该出现这里"}          
 
