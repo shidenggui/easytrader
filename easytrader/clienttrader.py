@@ -672,6 +672,7 @@ class ClientTrader(IClientTrader):
                     pass
             except Exception as e:
                 print('pop_dialog', e)
+                time.sleep(0.2)
                 
             # 循环计时结束 
 #             zzz = time.time()
