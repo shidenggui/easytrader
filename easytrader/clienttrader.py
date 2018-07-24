@@ -214,7 +214,7 @@ class ClientTrader(IClientTrader):
     @property
     def cancel_entrusts(self):
         self._refresh()
-        for c in range(10):
+        for c in range(3):
             self._switch_left_menus(["撤单[F3]"])
             test = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
             if isinstance(test, pd.DataFrame):
@@ -372,7 +372,8 @@ class ClientTrader(IClientTrader):
             self._config.COMMON_GRID_FIRST_ROW_HEIGHT
             + self._config.COMMON_GRID_ROW_HEIGHT * row
         )
-        self._app.top_window().window(
+#         self._check_top_window()
+        self._main.window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
             class_name="CVirtualGridCtrl",
         ).click(coords=(x, y))
@@ -403,7 +404,8 @@ class ClientTrader(IClientTrader):
         )
 
     def _click(self, control_id):
-        self._app.top_window().window(
+#         self._check_top_window()
+        self._main.window(
             control_id=control_id, class_name="Button"
         ).click()
 
@@ -518,9 +520,12 @@ class ClientTrader(IClientTrader):
         for c in range(20):
             try:
                 self._get_left_treeview_ready()
+                
                 if not self._left_treeview.IsSelected(path):
-                    self._left_treeview.Select(path) 
-                break
+                    self._left_treeview.Select(path)
+                    # raise NameError('HiThere')
+                else:
+                    break
             except Exception:
                 print('switch_left_menus Exception')
                 self._bring_main_foreground()                
@@ -560,7 +565,7 @@ class ClientTrader(IClientTrader):
             self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT
             + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * (row + 1)
         )
-        self._app.top_window().window(
+        self._main.window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
             class_name="CVirtualGridCtrl",
         ).double_click(coords=(x, y))
@@ -569,114 +574,112 @@ class ClientTrader(IClientTrader):
         self._switch_left_menus(["买入[F1]"], sleep=0.05)  
         
         
-    def _is_exist_pop_dialog(self):
-        # 最多等待5秒
-        for c in range(50):
-            sss = time.time()
-            try:
-                test = self._app.top_window()
-                test.wait("exists visible enabled", 0.05)
-                test_handle = test.wrapper_object().handle
-                if test_handle != self._main_handle:
-                    """弹出窗口"""
-                    return (True, test)
-                else:
-                    """没弹出，再试几下"""
-                    pass
-            except Exception as e:
-                print('_is_exist_pop_dialog', e)
-                
-            zzz = time.time()
-            if (zzz-sss) < 0.1:
-                time.sleep(0.1-(zzz-sss))  
-                
-        print('弹窗仍未出现!!!')
-        
-        return (False, 0)      
-        
-    def _get_pop_dialog_title(self, pop_dialog):
-        for c in range(50):
-            try:
-                a = time.time()
-                test = pop_dialog.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                test.wait("exists visible enabled", 0.05)
-                if len(test.window_text()) > 0:
-                    return test.window_text()
-                else:
-                    print('get_pop_dialog_title retry')
-
-            except Exception as e:
-                print('get_pop_dialog_title exception', e)
-
-            pop_dialog = self._app.top_window()
-            # pop_dialog.wait("exists visible enabled", 0.05)
-            costa = time.time()
-            if (costa - a) < 0.1:
-                time.sleep(0.1-(costa-a))  
-
-        return test.window_text()
-        
-    def _handle_pop_dialogs(
-        self, handler_class=pop_dialog_handler.PopDialogHandler
-    ):
-        handler = handler_class(self._app)
-        while True:
-            test = self._is_exist_pop_dialog()
-            if test[0] is False:
-                break
-            else:
-                pop_dialog = test[1]
-                title = self._get_pop_dialog_title(pop_dialog)
-                print('title is:', title)
-                result = handler.handle(title)
-                if result:
-                    return result
-        return {"success???": "不应该出现这里"}
-                
-                
-#         while self._is_exist_pop_dialog():
-#             title = self._get_pop_dialog_title()
-#             result = handler.handle(title)
-#             if result:
-#                 return result
-#         return {"success???": "不应该出现这里"}
-    
-    
-#         # 最多等待10秒
-#         title = ''
-#         for c in range(200):
+#     def _is_exist_pop_dialog(self):
+#         # 最多等待5秒
+#         for c in range(50):
 #             sss = time.time()
 #             try:
 #                 test = self._app.top_window()
-#                 test.wait("exists ready")
+#                 test.wait("exists visible enabled", 0.05)
 #                 test_handle = test.wrapper_object().handle
 #                 if test_handle != self._main_handle:
 #                     """弹出窗口"""
-#                     test2 = test.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-#                     test2.wait("exists ready")
-#                     if len(test2.window_text()) > 0:
-#                         title = test2.window_text()
-#                         result = handler.handle(title)
-#                         if result:
-#                             return result
-#                         break
+#                     return (True, test)
 #                 else:
 #                     """没弹出，再试几下"""
 #                     pass
 #             except Exception as e:
-#                 print('_pop_dialog有问题', e)
-
+#                 print('_is_exist_pop_dialog', e)
+                
 #             zzz = time.time()
-#             if (zzz-sss) < 0.05:
-#                 time.sleep(0.05-(zzz-sss))  
-#         else:
-#             print('弹窗仍未出现!!!')
-  
+#             if (zzz-sss) < 0.1:
+#                 time.sleep(0.1-(zzz-sss))  
+                
+#         print('弹窗仍未出现!!!')
         
-#         if result:
-#             return result
-#         else:
-#             return {"success???": "不应该出现这里"}
+#         return (False, 0)      
+        
+#     def _get_pop_dialog_title(self, pop_dialog):
+#         for c in range(50):
+#             try:
+#                 a = time.time()
+#                 test = pop_dialog.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+#                 test.wait("exists visible enabled", 0.05)
+#                 if len(test.window_text()) > 0:
+#                     return test.window_text()
+#                 else:
+#                     print('get_pop_dialog_title retry')
+
+#             except Exception as e:
+#                 print('get_pop_dialog_title exception', e)
+
+#             pop_dialog = self._app.top_window()
+#             # pop_dialog.wait("exists visible enabled", 0.05)
+#             costa = time.time()
+#             if (costa - a) < 0.1:
+#                 time.sleep(0.1-(costa-a))  
+
+#         return test.window_text()
+        
+#     def _handle_pop_dialogs(
+#         self, handler_class=pop_dialog_handler.PopDialogHandler
+#     ):
+#         handler = handler_class(self._app)
+#         while True:
+#             test = self._is_exist_pop_dialog()
+#             if test[0] is False:
+#                 break
+#             else:
+#                 pop_dialog = test[1]
+#                 title = self._get_pop_dialog_title(pop_dialog)
+#                 print('title is:', title)
+#                 result = handler.handle(title)
+#                 if result:
+#                     return result
+#         return {"success???": "不应该出现这里"}
+                
+    def _handle_pop_dialogs(
+        self, handler_class=pop_dialog_handler.PopDialogHandler
+    ):
+        # 最多等待10秒
+        for c in range(100):
+            # 循环计时开始
+#             sss = time.time()
+            try:
+                time.sleep(0.1)
+                topw = self._app.top_window()
+                topw.wait("exists visible enabled", 0.1)
+                print('aaaaaaaaaaaaaaaaaaaaaaaa')
+                topw_handle = topw.wrapper_object().handle
+                print('bbbbbbbbbbbbbbbbbbbbbbbb')
+                if topw_handle != self._main_handle:
+                    """弹出窗口"""
+                    test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+                    test.wait("exists visible enabled", 0.1)
+                    print('ccccccccccccccccccccccccccccccc')
+                    title = test.window_text()
+                    print('dddddddddddddddddddddddddddddddd')
+                    if len(title) > 0:
+                        handler = handler_class(self._app, topw)
+                        result = handler.handle(title)
+                        if result:
+                            return result
+                    else:
+                        print('get_pop_dialog_title retry')              
+                else:
+                    """没弹出，再试几下"""
+                    print('没弹出窗口')
+                    pass
+            except Exception as e:
+                print('pop_dialog', e)
+                time.sleep(0.2)
+                
+            # 循环计时结束 
+#             zzz = time.time()
+#             if (zzz-sss) < 0.1:
+#                 time.sleep(0.1-(zzz-sss))  
+                
+        return {"success???": "不应该出现这里"}          
 
     
     
