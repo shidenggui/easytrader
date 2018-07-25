@@ -671,6 +671,8 @@ class ClientTrader(IClientTrader):
                         result = handler.handle(title)
                         if result:
                             return result
+                        else:
+                            time.sleep(0.1)
                     else:
                         print('get_pop_dialog_title retry')              
                 else:
