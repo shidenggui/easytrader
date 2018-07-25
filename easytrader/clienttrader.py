@@ -404,10 +404,16 @@ class ClientTrader(IClientTrader):
         )
 
     def _click(self, control_id):
-#         self._check_top_window()
-        self._main.window(
-            control_id=control_id, class_name="Button"
-        ).click()
+        for c in range(5):
+            try:
+                test = self._main.window(control_id=control_id, class_name="Button")
+                test.wait("exists visible enabled", 0.05)
+                test.click()
+                break
+            except Exception as e:
+                print("_click", e)
+                self._check_top_window()
+                time.sleep(0.1)
 
     def _submit_trade(self):
         # 等待股东账号出现!
@@ -428,11 +434,12 @@ class ClientTrader(IClientTrader):
             zzz = time.time()
             if (zzz-sss) < 0.05:
                 time.sleep(0.05-(zzz-sss))
-                 
-        self._main.window(
-            control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
-            class_name="Button",
-        ).click()
+        
+        self._click(control_id=self._config.TRADE_SUBMIT_CONTROL_ID)
+#         self._main.window(
+#             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
+#             class_name="Button",
+#         ).click()
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
