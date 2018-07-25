@@ -653,7 +653,7 @@ class ClientTrader(IClientTrader):
             # 循环计时开始
 #             sss = time.time()
             try:
-                time.sleep(0.1)
+                time.sleep(0.2)
                 topw = self._app.top_window()
                 topw.wait("exists visible enabled", 0.1)
                 print('aaaaaaaaaaaaaaaaaaaaaaaa')
@@ -671,8 +671,6 @@ class ClientTrader(IClientTrader):
                         result = handler.handle(title)
                         if result:
                             return result
-                        else:
-                            time.sleep(0.1)
                     else:
                         print('get_pop_dialog_title retry')              
                 else:
