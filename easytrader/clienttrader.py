@@ -527,7 +527,6 @@ class ClientTrader(IClientTrader):
         for c in range(20):
             try:
                 self._get_left_treeview_ready()
-                
                 if not self._left_treeview.IsSelected(path):
                     self._left_treeview.Select(path)
                     # raise NameError('HiThere')
@@ -606,6 +605,8 @@ class ClientTrader(IClientTrader):
                         print('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', b-a)
                         if result:
                             return result
+                        else:
+                            time.sleep(0.2)
                     else:
                         print('get_pop_dialog_title retry')              
                 else:
