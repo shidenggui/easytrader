@@ -594,7 +594,7 @@ class ClientTrader(IClientTrader):
 #                 topw_handle = topw.wrapper_object().handle
 #                 print('bbbbbbbbbbbbbbbbbbbbbbbb')
 #                 if topw_handle != self._main_handle:
-                time.sleep(0.1)
+                time.sleep(0.2)
                 topw_handle = self._main.PopupWindow()  
                 print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                 if topw_handle != 0:
