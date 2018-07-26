@@ -659,7 +659,8 @@ class ClientTrader(IClientTrader):
 #                 print('bbbbbbbbbbbbbbbbbbbbbbbb')
 #                 if topw_handle != self._main_handle:
                 time.sleep(0.1)
-                topw_handle = self._main.PopupWindow()    
+                topw_handle = self._main.PopupWindow()  
+                print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                 if topw_handle != 0:
                     topw = self._main.window(handle=topw_handle)
                     topw.wait("exists visible enabled", 0.1)
