@@ -407,7 +407,7 @@ class ClientTrader(IClientTrader):
         for c in range(5):
             try:
                 test = self._main.window(control_id=control_id, class_name="Button")
-                test.wait("exists visible enabled", 0.05)
+                # test.wait("exists visible enabled", 0.05)
                 test.click()
                 break
             except Exception as e:
