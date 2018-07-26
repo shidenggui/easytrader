@@ -427,13 +427,14 @@ class ClientTrader(IClientTrader):
                 selects.wait("exists visible enabled", 0.05)
                 account = selects.texts()
                 if isinstance(account, list) and len(account[0]) > 0:
-                    print('showup account', account)
+                    print('showup account', account, time.time()-sss)
                     break
             except Exception as e:
                 print('等待股东账号出现', e)
             zzz = time.time()
             if (zzz-sss) < 0.05:
                 time.sleep(0.05-(zzz-sss))
+                print("retry 等待股东账号出现")
         
         self._click(control_id=self._config.TRADE_SUBMIT_CONTROL_ID)
 #         self._main.window(
@@ -481,14 +482,16 @@ class ClientTrader(IClientTrader):
                     )
                     if condition and class_name != "ComboBox":
                         flag = True
-                        print('showup target', i.window_text())
+                        print('showup target', i.window_text(), time.time()-sss)
                         return i     
                     elif condition and class_name == "ComboBox" and '最优五档' in ''.join(i.texts()):
                         flag = True
-                        print('showup target', i.window_text())
+                        print('showup target', i.window_text(), time.time()-sss)
                         return i  
                 if flag:
                     break
+                else:
+                    print('retry _wait_trade_showup')
             except Exception as e:
                 print('_wait_trade_showup', e)
                 
