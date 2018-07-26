@@ -589,14 +589,12 @@ class ClientTrader(IClientTrader):
             try:
                 a = time.time()
                 topw_handle = self._main.PopupWindow() 
-                b = time.time()
-                print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', b-a)
-                a = time.time()
                 if topw_handle != 0:
+                    b = time.time()
+                    print('*****aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', b-a)
+                    a = time.time()
                     topw = self._main.window(handle=topw_handle)
-                    # topw.wait("exists visible enabled", 0.1)
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                    # test.wait("exists visible enabled", 0.1)
                     title = test.window_text()
                     b = time.time()
                     print('dddddddddddddddddddddddddddddddd', b-a)
