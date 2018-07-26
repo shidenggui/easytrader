@@ -29,8 +29,9 @@ class PopDialogHandler:
         for c in range(20):
             sss = time.time()
             try:
-                self._top_window.wait("exists visible enabled", 0.1)
-                return self._top_window.Static.window_text()
+                test = self._top_window.window(control_id=self._config.TISHI_CONTENT_CONTROL_ID, class_name='Static')
+                test.wait("exists visible enabled", 0.1)
+                return test.window_text()
             except Exception as e:
                 print('_extract_content', e)
                 self._top_window = self._app.top_window()
