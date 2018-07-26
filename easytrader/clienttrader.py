@@ -589,16 +589,10 @@ class ClientTrader(IClientTrader):
                 a = time.time()
                 topw_handle = self._main.PopupWindow() 
                 if topw_handle != 0:
-                    b = time.time()
-                    print('*****aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', b-a)
-                    a = time.time()
                     topw = self._main.window(handle=topw_handle)
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
                     title = test.window_text()
-                    b = time.time()
-                    print('dddddddddddddddddddddddddddddddd', b-a)
                     if len(title) > 0:
-                        a = time.time()
                         handler = handler_class(self._app, topw)
                         result = handler.handle(title)
                         b = time.time()
