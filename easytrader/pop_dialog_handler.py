@@ -29,11 +29,8 @@ class PopDialogHandler:
         for c in range(20):
             sss = time.time()
             try:
-                a = time.time()
                 test = self._top_window.window(control_id=1004, class_name='Static')
                 res = test.window_text()
-                b = time.time()
-                print("self._top_window.window(1004)--window_text()", b-a)
                 return res
             except Exception as e:
                 print('_extract_content', e)
@@ -46,15 +43,13 @@ class PopDialogHandler:
         return re.search(r"\d+", content).group()
 
     def _submit_by_click(self):
+        """用快捷键ENTER"""
         for c in range(10):
             sss = time.time()
             try:
-                a = time.time()
                 # test = self._top_window.window(title='确定', class_name='Button')
                 # test.click()
                 self._top_window.TypeKeys("{ENTER}")
-                b = time.time()
-                print("self._top_window.window()--click", b-a)
                 break
             except Exception as e:
                 print('PopDialog _submit_by_click', e)
