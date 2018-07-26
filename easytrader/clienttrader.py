@@ -650,17 +650,20 @@ class ClientTrader(IClientTrader):
     ):
         # 最多等待10秒
         for c in range(100):
-            # 循环计时开始
-#             sss = time.time()
             try:
-                time.sleep(0.2)
-                topw = self._app.top_window()
-                topw.wait("exists visible enabled", 0.1)
-                print('aaaaaaaaaaaaaaaaaaaaaaaa')
-                topw_handle = topw.wrapper_object().handle
-                print('bbbbbbbbbbbbbbbbbbbbbbbb')
-                if topw_handle != self._main_handle:
-                    """弹出窗口"""
+#                 time.sleep(0.2)
+#                 topw = self._app.top_window()
+#                 topw.wait("exists visible enabled", 0.1)
+#                 print('aaaaaaaaaaaaaaaaaaaaaaaa')
+#                 topw_handle = topw.wrapper_object().handle
+#                 print('bbbbbbbbbbbbbbbbbbbbbbbb')
+#                 if topw_handle != self._main_handle:
+                time.sleep(0.1)
+                topw_handle = self._main.PopupWindow()    
+                if topw_handle != 0:
+                    topw = self._main.window(handle=topw_handle)
+                    topw.wait("exists visible enabled", 0.1)
+                    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
                     test.wait("exists visible enabled", 0.1)
                     print('ccccccccccccccccccccccccccccccc')
