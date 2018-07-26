@@ -45,8 +45,9 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                self._top_window.wait("exists visible enabled", 0.1)
-                self._top_window["确定"].click()
+                test = self._top_window.window(title_re='确定', class_name='Button')
+                test.wait("exists visible enabled", 0.1)
+                test.click()
                 self._top_window.wait_not("exists", 0.1)
                 break
             except Exception as e:
