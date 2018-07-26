@@ -585,30 +585,34 @@ class ClientTrader(IClientTrader):
         self, handler_class=pop_dialog_handler.PopDialogHandler
     ):
         # 最多等待10秒
-        for c in range(100):
+        for c in range(50):
             try:
-#                 time.sleep(0.2)
-#                 topw = self._app.top_window()
-#                 topw.wait("exists visible enabled", 0.1)
-#                 print('aaaaaaaaaaaaaaaaaaaaaaaa')
-#                 topw_handle = topw.wrapper_object().handle
-#                 print('bbbbbbbbbbbbbbbbbbbbbbbb')
-#                 if topw_handle != self._main_handle:
+                a = time.time()
                 time.sleep(0.2)
-                topw_handle = self._main.PopupWindow()  
-                print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+                topw_handle = self._main.PopupWindow() 
+                b = time.time()
+                print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', b-a)
+                a = time.time()
                 if topw_handle != 0:
                     topw = self._main.window(handle=topw_handle)
                     topw.wait("exists visible enabled", 0.1)
-                    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')
+                    b = time.time()
+                    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb', b-a)
+                    a = time.time()
                     test = topw.window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
                     test.wait("exists visible enabled", 0.1)
-                    print('ccccccccccccccccccccccccccccccc')
+                    b = time.time()
+                    print('ccccccccccccccccccccccccccccccc', b-a)
+                    a = time.time()
                     title = test.window_text()
-                    print('dddddddddddddddddddddddddddddddd')
+                    b = time.time()
+                    print('dddddddddddddddddddddddddddddddd', b-a)
                     if len(title) > 0:
+                        a = time.time()
                         handler = handler_class(self._app, topw)
                         result = handler.handle(title)
+                        b = time.time()
+                        print('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', b-a)
                         if result:
                             return result
                     else:
@@ -620,11 +624,6 @@ class ClientTrader(IClientTrader):
             except Exception as e:
                 print('pop_dialog', e)
                 time.sleep(0.2)
-                
-            # 循环计时结束 
-#             zzz = time.time()
-#             if (zzz-sss) < 0.1:
-#                 time.sleep(0.1-(zzz-sss))  
                 
         return {"success???": "不应该出现这里"}          
 
