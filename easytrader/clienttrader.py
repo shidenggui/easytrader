@@ -588,7 +588,6 @@ class ClientTrader(IClientTrader):
         for c in range(50):
             try:
                 a = time.time()
-                time.sleep(0.2)
                 topw_handle = self._main.PopupWindow() 
                 b = time.time()
                 print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', b-a)
@@ -614,6 +613,7 @@ class ClientTrader(IClientTrader):
                 else:
                     """没弹出，再试几下"""
                     print('没弹出窗口')
+                    time.sleep(0.2)
                     pass
             except Exception as e:
                 print('pop_dialog', e)
