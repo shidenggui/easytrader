@@ -5,6 +5,7 @@ import tempfile
 import time
 import pandas as pd
 import pywinauto.clipboard
+from pywinauto.keyboard import SendKeys
 from .log import log
 
 class IGridDataGetStrategy(abc.ABC):
