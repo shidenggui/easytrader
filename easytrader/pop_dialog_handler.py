@@ -29,9 +29,19 @@ class PopDialogHandler:
         for c in range(20):
             sss = time.time()
             try:
+                a = time.time()
                 test = self._top_window.window(control_id=1004, class_name='Static')
+                b = time.time()
+                print("self._top_window.window(1004)", b-a)
+                a = time.time()
                 test.wait("exists visible enabled", 0.1)
-                return test.window_text()
+                b = time.time()
+                print("self._top_window.window(1004)--wait", b-a)
+                a = time.time()
+                res = test.window_text()
+                b = time.time()
+                print("self._top_window.window(1004)--window_text()", b-a)
+                return res
             except Exception as e:
                 print('_extract_content', e)
                 self._top_window = self._app.top_window()
@@ -46,10 +56,22 @@ class PopDialogHandler:
         for c in range(10):
             sss = time.time()
             try:
-                test = self._top_window.window(title_re='确定', class_name='Button')
+                a = time.time()
+                test = self._top_window.window(title='确定', class_name='Button')
+                b = time.time()
+                print("self._top_window.window()", b-a)
+                a = time.time()
                 test.wait("exists visible enabled", 0.1)
+                b = time.time()
+                print("self._top_window.window()--wait", b-a)
+                a = time.time()
                 test.click()
+                b = time.time()
+                print("self._top_window.window()--click", b-a)
+                a = time.time()
                 self._top_window.wait_not("exists", 0.1)
+                b = time.time()
+                print("self._top_window.window()--wait not", b-a)
                 break
             except Exception as e:
                 print('PopDialog _submit_by_click', e)
