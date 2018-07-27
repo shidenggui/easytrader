@@ -421,12 +421,15 @@ class ClientTrader(IClientTrader):
             try:
                 sss = time.time()
                 selects = self._main.window(
+                    control_id=self._config.TOP_TOOLBAR_CONTROL_ID,
+                    class_name="ToolbarWindow32",
+                ).window(
                     control_id=self._config.TRADE_ACCOUNT_CONTROL_ID,
                     class_name="ComboBox",
-                )   
-                selects.wait("exists visible enabled", 0.05)
-                account = selects.texts()
-                if isinstance(account, list) and len(account[0]) > 0:
+                )
+                # selects.wait("exists visible enabled", 0.05)
+                account = selects.window_text()
+                if len(account) > 5:
                     print('showup account', account, time.time()-sss)
                     break
             except Exception as e:
