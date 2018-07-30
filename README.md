@@ -4,6 +4,8 @@
 [![Travis](https://img.shields.io/travis/shidenggui/easytrader.svg)](https://travis-ci.org/shidenggui/easytrader)
 [![License](https://img.shields.io/github/license/shidenggui/easytrader.svg)](https://github.com/shidenggui/easytrader/blob/master/LICENSE)
 
+基于easytrader的二次开发，目标：可用于实战的无人值守全自动交易
+取消 委托前弹窗和撤单前弹窗，可加快速度!
 * 进行自动的程序化股票交易
 * 支持跟踪 `joinquant`, `ricequant` 的模拟交易
 * 支持跟踪 雪球组合 调仓
