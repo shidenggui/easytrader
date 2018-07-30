@@ -295,13 +295,23 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
+        a = time.time()
         self._set_market_trade_params(security, amount)
+        print('aaa ..._set_market_trade_params', time.time()-a)
+        
+        a = time.time()
         self._set_market_trade_type(ttype)
+        print('bbb ..._set_market_trade_type', time.time()-a)
+        
+        a = time.time()
         self._submit_trade()
+        print('ccc ..._submit_trade', time.time()-a)
+        
+        a = time.time()
+        test = self._handle_pop_dialogs(handler_class=pop_dialog_handler.TradePopDialogHandler)
+        print('ccc ..._handle_pop_dialogs', time.time()-a)
 
-        return self._handle_pop_dialogs(
-            handler_class=pop_dialog_handler.TradePopDialogHandler
-        )
+        return test
 
     def _set_market_trade_type(self, ttype):
         """根据选择的市价交易类型选择对应的下拉选项"""     
@@ -592,7 +602,6 @@ class ClientTrader(IClientTrader):
         # 最多等待10秒
         for c in range(50):
             try:
-                a = time.time()
                 topw_handle = self._main.PopupWindow() 
                 if topw_handle != 0:
                     topw = self._main.window(handle=topw_handle)
@@ -601,8 +610,6 @@ class ClientTrader(IClientTrader):
                     if len(title) > 0:
                         handler = handler_class(self._app, topw)
                         result = handler.handle(title)
-                        b = time.time()
-                        print('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee', b-a)
                         if result:
                             return result
                         else:
