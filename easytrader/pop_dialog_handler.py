@@ -25,11 +25,11 @@ class PopDialogHandler:
             self._close()
             return {"message": "unknown message: {}".format(content)}
 
-    def _extract_content(self):
+    def _extract_content(self, control_id):
         for c in range(20):
             sss = time.time()
             try:
-                test = self._top_window.window(control_id=1004, class_name='Static')
+                test = self._top_window.window(control_id=control_id, class_name='Static')
                 res = test.window_text()
                 return res
             except Exception as e:
@@ -117,7 +117,7 @@ class TradePopDialogHandler(PopDialogHandler):
             self._submit_by_shortcut_yes()
 
         elif title == "提示信息":
-            content = self._extract_content()
+            content = self._extract_content(control_id=1040)
             if "超出涨跌停" in content:
                 self._submit_by_shortcut_no()
                 return {"failure": content}
@@ -128,7 +128,7 @@ class TradePopDialogHandler(PopDialogHandler):
                 self._submit_by_shortcut_yes()
 
         elif title == "提示":
-            content = self._extract_content()
+            content = self._extract_content(control_id=1004)
             if "成功" in content:
                 entrust_no = self._extract_entrust_id(content)
                 self._submit_by_click()
