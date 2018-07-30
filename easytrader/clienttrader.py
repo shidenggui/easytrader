@@ -454,7 +454,7 @@ class ClientTrader(IClientTrader):
                 # selects.wait("exists visible enabled", 0.05)
                 account = selects.window_text()
                 if len(account) > 5:
-                    print('showup account', account, time.time()-sss)
+                    print('----> showup account', account, time.time()-sss)
                     break
             except Exception as e:
                 print('等待股东账号出现', e)
@@ -509,11 +509,11 @@ class ClientTrader(IClientTrader):
                     )
                     if condition and class_name != "ComboBox":
                         flag = True
-                        print('showup target', i.window_text(), time.time()-sss)
+                        print('----> showup target', i.window_text(), time.time()-sss)
                         return i     
                     elif condition and class_name == "ComboBox" and '最优五档' in ''.join(i.texts()):
                         flag = True
-                        print('showup target', i.window_text(), time.time()-sss)
+                        print('----> showup target', i.window_text(), time.time()-sss)
                         return i  
                 if flag:
                     break
