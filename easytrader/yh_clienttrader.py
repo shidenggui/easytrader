@@ -39,7 +39,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                 re = False
         return re
     
-    def close_all():
+    def close_all(self):
         for i in pywinauto.findwindows.find_windows(title_re = r'用户登录', class_name='#32770'):
             pywinauto.Application().connect(handle=i).kill()  
         for i in pywinauto.findwindows.find_windows(title_re = r'网上股票交易系统'):
