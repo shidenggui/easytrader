@@ -509,10 +509,11 @@ class ClientTrader(IClientTrader):
         test = self._main.window(control_id=control_id, class_name="Edit")
         for c in range(50):
             try:
-                if test.window_text() != text:
-                    test.SetEditText(text)
-                else:
+                test.SetEditText(text)
+                if test.window_text() == text:
                     break
+                else:
+                    continue
             except Exception as e:
                 print('type:', text, e)
         
