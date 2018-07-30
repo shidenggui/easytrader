@@ -621,6 +621,7 @@ class ClientTrader(IClientTrader):
         self, handler_class=pop_dialog_handler.PopDialogHandler
     ):
         # 最多等待10秒
+        time.sleep(0.2)
         for c in range(50):
             try:
                 topw_handle = self._main.PopupWindow() 
