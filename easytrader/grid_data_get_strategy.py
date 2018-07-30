@@ -45,16 +45,15 @@ class CopyStrategy(BaseStrategy):
     """
     def get(self, control_id: int):
         grid = self._get_grid(control_id)
-        grid.wait('ready')
-        grid.SetFocus()
         count_1 = 0
         count_2 = 0
         count_3 = 0
         while True:
             content = ''
             try:
-                grid.type_keys("^A")
-                grid.type_keys("^C")
+                grid.wait('ready', 0.2)
+                grid.TypeKeys(r"^a")
+                grid.TypeKeys(r"^c")
                 time.sleep(0.05)
                 content = pywinauto.clipboard.GetData()
                 if '\n' in content:    # 读取成功, 直接跳出
