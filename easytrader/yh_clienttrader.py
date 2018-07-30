@@ -114,6 +114,9 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         
         self._left_treeview = self._main.window_(control_id=129, class_name="SysTreeView32") 
         self._left_treeview.wait('exists enabled visible ready')
+
+        self._pwindow = self._main.window(control_id=59649, class_name='#32770')
+        self._pwindow.wait('exists enabled visible ready')
         
         # 等待一切就绪
         print(self.balance)
