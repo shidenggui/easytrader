@@ -71,6 +71,7 @@ class ClientTrader(IClientTrader):
         self._main = None
         self._main_handle = None
         self._left_treeview = None
+        self._pwindow = None
         self.grid_data_get_strategy = grid_data_get_strategy.CopyStrategy
 
     @property
@@ -465,8 +466,7 @@ class ClientTrader(IClientTrader):
         
         for c in range(5):
             try:
-                pwindow = self._main.window(class_name='#32770', control_id=59649)
-                test = pwindow.window(control_id=self._config.TRADE_SUBMIT_CONTROL_ID, class_name="Button")
+                test = self._pwindow.window(control_id=self._config.TRADE_SUBMIT_CONTROL_ID, class_name="Button")
                 # test.wait("exists visible enabled", 0.05)
                 test.click()
                 break
@@ -505,9 +505,7 @@ class ClientTrader(IClientTrader):
             try:
                 sss = time.time()
                 # 交易子窗口
-                pwindow = self._main.window(class_name='#32770', control_id=59649)
-                # pwindow.wait("exists ready")
-                for i in pwindow.Children():
+                for i in self._pwindow.Children():
                     condition =  ( 
                         i.control_id() == control_id and 
                         i.class_name() == class_name and 
@@ -536,8 +534,7 @@ class ClientTrader(IClientTrader):
         return self._grid_data_get_strategy.get(control_id)
 
     def _type_keys(self, control_id, text):
-        pwindow = self._main.window(class_name='#32770', control_id=59649)
-        test = pwindow.window(control_id=control_id, class_name="Edit")
+        test = self._pwindow.window(control_id=control_id, class_name="Edit")
         for c in range(50):
             try:
                 test.SetEditText(text)
