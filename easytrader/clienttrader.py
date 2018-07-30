@@ -317,7 +317,7 @@ class ClientTrader(IClientTrader):
         
         a = time.time()
         test = self._handle_pop_dialogs(handler_class=pop_dialog_handler.TradePopDialogHandler)
-        print('ccc ..._handle_pop_dialogs', time.time()-a)
+        print('ddd ..._handle_pop_dialogs', time.time()-a)
 
         return test
 
@@ -530,7 +530,8 @@ class ClientTrader(IClientTrader):
         return self._grid_data_get_strategy.get(control_id)
 
     def _type_keys(self, control_id, text):
-        test = self._main.window(control_id=control_id, class_name="Edit")
+        pwindow = self._main.window(class_name='#32770', control_id=59649)
+        test = pwindow.window(control_id=control_id, class_name="Edit")
         for c in range(50):
             try:
                 test.SetEditText(text)
