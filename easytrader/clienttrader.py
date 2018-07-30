@@ -245,12 +245,16 @@ class ClientTrader(IClientTrader):
             return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
     def buy(self, security, price, amount, **kwargs):
+        a = time.time()
         self._switch_left_menus(["买入[F1]"])
+        print('000 ..._switch_left_menus', time.time()-a)
 
         return self.trade(security, price, amount)
 
     def sell(self, security, price, amount, **kwargs):
+        a = time.time()
         self._switch_left_menus(["卖出[F2]"])
+        print('000 ..._switch_left_menus', time.time()-a)
 
         return self.trade(security, price, amount)
 
@@ -265,7 +269,9 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
+        a = time.time()
         self._switch_left_menus(["市价委托", "买入"])
+        print('000 ..._switch_left_menus', time.time()-a)
 
         return self.market_trade(security, amount, ttype)
 
@@ -280,7 +286,9 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
+        a = time.time()
         self._switch_left_menus(["市价委托", "卖出"])
+        print('000 ..._switch_left_menus', time.time()-a)
 
         return self.market_trade(security, amount, ttype)
 
@@ -405,13 +413,19 @@ class ClientTrader(IClientTrader):
         self.wait(1)
 
     def trade(self, security, price, amount):
+        a = time.time()
         self._set_trade_params(security, price, amount)
-
+        print('aaa ..._set_trade_params', time.time()-a)
+        
+        a = time.time()
         self._submit_trade()
+        print('bbb ..._submit_trade', time.time()-a)
+        
+        a = time.time()
+        test = self._handle_pop_dialogs(handler_class=pop_dialog_handler.TradePopDialogHandler)
+        print('ccc ..._handle_pop_dialogs', time.time()-a)
 
-        return self._handle_pop_dialogs(
-            handler_class=pop_dialog_handler.TradePopDialogHandler
-        )
+        return test
 
     def _click(self, control_id):
         for c in range(5):
