@@ -16,14 +16,14 @@ class PopDialogHandler:
             self._submit_by_shortcut()
 
         elif "提示" in title:
-            content = self._extract_content()
+            content = self._extract_content(control_id=1004)
             self._submit_by_click()
             return {"message": content}
 
         else:
-            content = self._extract_content()
+            # content = self._extract_content()
             self._close()
-            return {"message": "unknown message: {}".format(content)}
+            return {"message": "unknown message"}
 
     def _extract_content(self, control_id):
         for c in range(20):
