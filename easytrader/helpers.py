@@ -1,30 +1,12 @@
 # -*- coding: utf-8 -*-
 import datetime
 import json
+import random
 import re
-import ssl
-import uuid
 
 import requests
-import six
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.poolmanager import PoolManager
-from six.moves import input
 
 from . import exceptions
-
-if six.PY2:
-    from io import open
-
-
-class Ssl3HttpAdapter(HTTPAdapter):
-    def init_poolmanager(self, connections, maxsize, block=False):
-        self.poolmanager = PoolManager(
-            num_pools=connections,
-            maxsize=maxsize,
-            block=block,
-            ssl_version=ssl.PROTOCOL_TLSv1,
-        )
 
 
 def parse_cookies_str(cookies):
@@ -71,20 +53,6 @@ def get_stock_type(stock_code):
     return "sz"
 
 
-def ht_verify_code_new(image_path):
-    """显示图片，人肉读取，手工输入"""
-
-    from PIL import Image
-
-    img = Image.open(image_path)
-    img.show()
-
-    # 关闭图片后输入答案
-    s = input("input the pics answer :")
-
-    return s
-
-
 def recognize_verify_code(image_path, broker="ht"):
     """识别验证码，返回识别后的字符串，使用 tesseract 实现
     :param image_path: 图片路径
@@ -93,7 +61,7 @@ def recognize_verify_code(image_path, broker="ht"):
 
     if broker == "gf":
         return detect_gf_result(image_path)
-    elif broker in ["yh_client", "gj_client"]:
+    if broker in ["yh_client", "gj_client"]:
         return detect_yh_client_result(image_path)
     # 调用 tesseract 识别
     return default_verify_code_detect(image_path)
@@ -162,16 +130,6 @@ def invoke_tesseract_to_recognize(img):
     return "".join(valid_chars)
 
 
-def get_mac():
-    # 获取mac地址 link: http://stackoverflow.com/questions/28927958/python-get-mac-address
-    return (
-        "".join(
-            c + "-" if i % 2 else c
-            for i, c in enumerate(hex(uuid.getnode())[2:].zfill(12))
-        )[:-1]
-    ).upper()
-
-
 def grep_comma(num_str):
     return num_str.replace(",", "")
 
@@ -199,11 +157,6 @@ def get_today_ipo_data():
     :return: 今日可申购新股列表 apply_code申购代码 price发行价格
     """
 
-    import random
-    import json
-    import datetime
-    import requests
-
     agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.11; rv:43.0) Gecko/20100101 Firefox/43.0"
     send_headers = {
         "Host": "xueqiu.com",
@@ -217,13 +170,13 @@ def get_today_ipo_data():
         "Connection": "keep-alive",
     }
 
-    sj = random.randint(1000000000000, 9999999999999)
+    timestamp = random.randint(1000000000000, 9999999999999)
     home_page_url = "https://xueqiu.com"
     ipo_data_url = (
         "https://xueqiu.com/proipo/query.json?column=symbol,name,onl_subcode,onl_subbegdate,actissqty,onl"
         "_actissqty,onl_submaxqty,iss_price,onl_lotwiner_stpub_date,onl_lotwinrt,onl_lotwin_amount,stock_"
         "income&orderBy=onl_subbegdate&order=desc&stockType=&page=1&size=30&_=%s"
-        % (str(sj))
+        % (str(timestamp))
     )
 
     session = requests.session()

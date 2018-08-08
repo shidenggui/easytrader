@@ -1,7 +1,7 @@
 # coding: utf-8
 import unittest
 
-from easytrader import XueQiuTrader
+from easytrader.xqtrader import XueQiuTrader
 
 
 class TestXueQiuTrader(unittest.TestCase):

@@ -1,0 +1,7 @@
+[run]
+branch = True
+include = src/*
+omit = tests/*
+
+[report]
+fail_under = -1 

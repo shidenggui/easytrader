@@ -4,9 +4,7 @@ import tempfile
 
 import pywinauto
 
-from . import clienttrader
-from . import grid_data_get_strategy
-from . import helpers
+from . import clienttrader, grid_data_get_strategy, helpers
 
 
 class YHClientTrader(clienttrader.BaseLoginClientTrader):
@@ -30,8 +28,8 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         登陆客户端
         :param user: 账号
         :param password: 明文密码
-        :param exe_path: 客户端路径类似 r'C:\中国银河证券双子星3.2\Binarystar.exe',
-            默认 r'C:\中国银河证券双子星3.2\Binarystar.exe'
+        :param exe_path: 客户端路径类似 'C:\\中国银河证券双子星3.2\\Binarystar.exe',
+            默认 'C:\\中国银河证券双子星3.2\\Binarystar.exe'
         :param comm_password: 通讯密码, 华泰需要，可不设
         :return:
         """
@@ -39,6 +37,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=1
             )
+        # pylint: disable=broad-except
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
 
@@ -64,7 +63,8 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                 try:
                     self._app.top_window().wait_not("exists visible", 10)
                     break
-                except:
+                # pylint: disable=broad-except
+                except Exception:
                     pass
 
             self._app = pywinauto.Application().connect(
@@ -76,7 +76,8 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             self._main.window(control_id=129, class_name="SysTreeView32").wait(
                 "ready", 2
             )
-        except:
+        # pylint: disable=broad-except
+        except Exception:
             self.wait(2)
             self._switch_window_to_normal_mode()
 
@@ -93,7 +94,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         file_path = tempfile.mktemp()
         control.capture_as_image().save(file_path, "jpeg")
         verify_code = helpers.recognize_verify_code(file_path, "yh_client")
-        return "".join(re.findall("\d+", verify_code))
+        return "".join(re.findall(r"\d+", verify_code))
 
     @property
     def balance(self):

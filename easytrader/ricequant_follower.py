@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals
 
 from datetime import datetime
 from threading import Thread
@@ -9,7 +8,11 @@ from .log import log
 
 
 class RiceQuantFollower(BaseFollower):
-    def login(self, user, password, **kwargs):
+    def __init__(self):
+        super().__init__()
+        self.client = None
+
+    def login(self, user=None, password=None, **kwargs):
         from rqopen_client import RQOpenClient
 
         self.client = RQOpenClient(user, password, logger=log)
@@ -34,7 +37,7 @@ class RiceQuantFollower(BaseFollower):
         :param send_interval: 交易发送间隔， 默认为0s。调大可防止卖出买入时卖出单没有及时成交导致的买入金额不足
         """
         users = self.warp_list(users)
-        run_id_list = self.warp_list(run_id)
+        run_ids = self.warp_list(run_id)
 
         if cmd_cache:
             self.load_expired_cmd_cache()
@@ -44,16 +47,16 @@ class RiceQuantFollower(BaseFollower):
         )
 
         workers = []
-        for run_id in run_id_list:
-            strategy_name = self.extract_strategy_name(run_id)
+        for id_ in run_ids:
+            strategy_name = self.extract_strategy_name(id_)
             strategy_worker = Thread(
                 target=self.track_strategy_worker,
-                args=[run_id, strategy_name],
+                args=[id_, strategy_name],
                 kwargs={"interval": track_interval},
             )
             strategy_worker.start()
             workers.append(strategy_worker)
-            log.info("开始跟踪策略: {}".format(strategy_name))
+            log.info("开始跟踪策略: %s", strategy_name)
         for worker in workers:
             worker.join()
 
@@ -61,9 +64,9 @@ class RiceQuantFollower(BaseFollower):
         ret_json = self.client.get_positions(run_id)
         if ret_json["code"] != 200:
             log.error(
-                "fetch data from run_id {} fail, msg {}".format(
-                    run_id, ret_json["msg"]
-                )
+                "fetch data from run_id %s fail, msg %s",
+                run_id,
+                ret_json["msg"],
             )
             raise RuntimeError(ret_json["msg"])
         return ret_json["resp"]["name"]
@@ -72,9 +75,9 @@ class RiceQuantFollower(BaseFollower):
         ret_json = self.client.get_day_trades(run_id)
         if ret_json["code"] != 200:
             log.error(
-                "fetch day trades from run_id {} fail, msg {}".format(
-                    run_id, ret_json["msg"]
-                )
+                "fetch day trades from run_id %s fail, msg %s",
+                run_id,
+                ret_json["msg"],
             )
             raise RuntimeError(ret_json["msg"])
         return ret_json["resp"]["trades"]
@@ -92,23 +95,25 @@ class RiceQuantFollower(BaseFollower):
         code = stock[:6]
         if stock.find("XSHG") != -1:
             return "sh" + code
-        elif stock.find("XSHE") != -1:
+        if stock.find("XSHE") != -1:
             return "sz" + code
         raise TypeError("not valid stock code: {}".format(code))
 
     def project_transactions(self, transactions, **kwargs):
         new_transactions = []
-        for t in transactions:
-            trans = {}
-            trans["price"] = t["price"]
-            trans["amount"] = int(abs(t["quantity"]))
-            trans["datetime"] = datetime.strptime(
-                t["time"], "%Y-%m-%d %H:%M:%S"
+        for transaction in transactions:
+            new_transaction = {}
+            new_transaction["price"] = transaction["price"]
+            new_transaction["amount"] = int(abs(transaction["quantity"]))
+            new_transaction["datetime"] = datetime.strptime(
+                transaction["time"], "%Y-%m-%d %H:%M:%S"
             )
-            trans["stock_code"] = self.stock_shuffle_to_prefix(
-                t["order_book_id"]
+            new_transaction["stock_code"] = self.stock_shuffle_to_prefix(
+                transaction["order_book_id"]
             )
-            trans["action"] = "buy" if t["quantity"] > 0 else "sell"
-            new_transactions.append(trans)
+            new_transaction["action"] = (
+                "buy" if transaction["quantity"] > 0 else "sell"
+            )
+            new_transactions.append(new_transaction)
 
         return new_transactions

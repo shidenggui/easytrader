@@ -67,7 +67,7 @@ class JoinQuantFollower(BaseFollower):
                 strategy_id = self.extract_strategy_id(strategy_url)
                 strategy_name = self.extract_strategy_name(strategy_url)
             except:
-                log.error("抽取交易id和策略名失败, 无效的模拟交易url: {}".format(strategy_url))
+                log.error("抽取交易id和策略名失败, 无效的模拟交易url: %s", strategy_url)
                 raise
             strategy_worker = Thread(
                 target=self.track_strategy_worker,
@@ -76,7 +76,7 @@ class JoinQuantFollower(BaseFollower):
             )
             strategy_worker.start()
             workers.append(strategy_worker)
-            log.info("开始跟踪策略: {}".format(strategy_name))
+            log.info("开始跟踪策略: %s", strategy_name)
         for worker in workers:
             worker.join()
 
@@ -107,18 +107,25 @@ class JoinQuantFollower(BaseFollower):
         code = stock[:6]
         if stock.find("XSHG") != -1:
             return "sh" + code
-        elif stock.find("XSHE") != -1:
+
+        if stock.find("XSHE") != -1:
             return "sz" + code
         raise TypeError("not valid stock code: {}".format(code))
 
     def project_transactions(self, transactions, **kwargs):
-        for t in transactions:
-            t["amount"] = self.re_find("\d+", t["amount"], dtype=int)
+        for transaction in transactions:
+            transaction["amount"] = self.re_find(
+                r"\d+", transaction["amount"], dtype=int
+            )
 
-            time_str = "{} {}".format(t["date"], t["time"])
-            t["datetime"] = datetime.strptime(time_str, "%Y-%m-%d %H:%M")
+            time_str = "{} {}".format(transaction["date"], transaction["time"])
+            transaction["datetime"] = datetime.strptime(
+                time_str, "%Y-%m-%d %H:%M"
+            )
 
-            stock = self.re_find(r"\d{6}\.\w{4}", t["stock"])
-            t["stock_code"] = self.stock_shuffle_to_prefix(stock)
+            stock = self.re_find(r"\d{6}\.\w{4}", transaction["stock"])
+            transaction["stock_code"] = self.stock_shuffle_to_prefix(stock)
 
-            t["action"] = "buy" if t["transaction"] == "买" else "sell"
+            transaction["action"] = (
+                "buy" if transaction["transaction"] == "买" else "sell"
+            )

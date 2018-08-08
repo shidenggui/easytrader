@@ -7,9 +7,7 @@ import time
 
 import requests
 
-from . import exceptions
-from . import helpers
-from . import webtrader
+from . import exceptions, helpers, webtrader
 from .log import log
 
 
@@ -181,7 +179,8 @@ class XueQiuTrader(webtrader.WebTrader):
         try:
             local_time = time.localtime(time_stamp / 1000)
             return time.strftime("%Y-%m-%d %H:%M:%S", local_time)
-        except:
+        # pylint: disable=broad-except
+        except Exception:
             return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
     def get_position(self):
@@ -248,14 +247,6 @@ class XueQiuTrader(webtrader.WebTrader):
             else:
                 status = "已成"
             for entrust in xq_entrusts["rebalancing_histories"]:
-                volume = (
-                    abs(
-                        entrust["target_weight"]
-                        - replace_none(entrust["prev_weight"])
-                    )
-                    * self.multiple
-                    / 10000
-                )
                 price = entrust["price"]
                 entrust_list.append(
                     {
@@ -291,7 +282,7 @@ class XueQiuTrader(webtrader.WebTrader):
             for entrust in xq_entrusts["rebalancing_histories"]:
                 if entrust["id"] == entrust_no and status == "pending":
                     is_have = True
-                    bs = (
+                    buy_or_sell = (
                         "buy"
                         if entrust["target_weight"] < entrust["weight"]
                         else "sell"
@@ -310,7 +301,7 @@ class XueQiuTrader(webtrader.WebTrader):
                     r = self._trade(
                         security=entrust["stock_symbol"],
                         volume=volume,
-                        entrust_bs=bs,
+                        entrust_bs=buy_or_sell,
                     )
                     if len(r) > 0 and "error_info" in r[0]:
                         raise exceptions.TradeError(
@@ -373,7 +364,7 @@ class XueQiuTrader(webtrader.WebTrader):
 
         remain_weight = 100 - sum(i.get("weight") for i in position_list)
         cash = round(remain_weight, 2)
-        log.debug("调仓比例:%f, 剩余持仓 :%f" % (weight, remain_weight))
+        log.debug("调仓比例:%f, 剩余持仓 :%f", weight, remain_weight)
         data = {
             "cash": cash,
             "holdings": str(json.dumps(position_list)),
@@ -384,22 +375,22 @@ class XueQiuTrader(webtrader.WebTrader):
 
         try:
             resp = self.s.post(self.config["rebalance_url"], data=data)
+        # pylint: disable=broad-except
         except Exception as e:
-            log.warn("调仓失败: %s " % e)
-            return
-        else:
-            log.debug("调仓 %s: 持仓比例%d" % (stock["name"], weight))
-            resp_json = json.loads(resp.text)
-            if "error_description" in resp_json and resp.status_code != 200:
-                log.error("调仓错误: %s" % (resp_json["error_description"]))
-                return [
-                    {
-                        "error_no": resp_json["error_code"],
-                        "error_info": resp_json["error_description"],
-                    }
-                ]
-            else:
-                log.debug("调仓成功 %s: 持仓比例%d" % (stock["name"], weight))
+            log.warning("调仓失败: %s ", e)
+            return None
+        log.debug("调仓 %s: 持仓比例%d", stock["name"], weight)
+        resp_json = json.loads(resp.text)
+        if "error_description" in resp_json and resp.status_code != 200:
+            log.error("调仓错误: %s", resp_json["error_description"])
+            return [
+                {
+                    "error_no": resp_json["error_code"],
+                    "error_info": resp_json["error_description"],
+                }
+            ]
+        log.debug("调仓成功 %s: 持仓比例%d", stock["name"], weight)
+        return None
 
     def _trade(self, security, price=0, amount=0, volume=0, entrust_bs="buy"):
         """
@@ -487,7 +478,7 @@ class XueQiuTrader(webtrader.WebTrader):
                 * 100
             )
         cash = round(cash, 2)
-        log.debug("weight:%f, cash:%f" % (weight, cash))
+        log.debug("weight:%f, cash:%f", weight, cash)
 
         data = {
             "cash": cash,
@@ -499,43 +490,41 @@ class XueQiuTrader(webtrader.WebTrader):
 
         try:
             resp = self.s.post(self.config["rebalance_url"], data=data)
+        # pylint: disable=broad-except
         except Exception as e:
-            log.warn("调仓失败: %s " % e)
-            return
+            log.warning("调仓失败: %s ", e)
+            return None
         else:
             log.debug(
-                "调仓 %s%s: %d" % (entrust_bs, stock["name"], resp.status_code)
+                "调仓 %s%s: %d", entrust_bs, stock["name"], resp.status_code
             )
             resp_json = json.loads(resp.text)
             if "error_description" in resp_json and resp.status_code != 200:
-                log.error("调仓错误: %s" % (resp_json["error_description"]))
+                log.error("调仓错误: %s", resp_json["error_description"])
                 return [
                     {
                         "error_no": resp_json["error_code"],
                         "error_info": resp_json["error_description"],
                     }
                 ]
-            else:
-                return [
-                    {
-                        "entrust_no": resp_json["id"],
-                        "init_date": self._time_strftime(
-                            resp_json["created_at"]
-                        ),
-                        "batch_no": "委托批号",
-                        "report_no": "申报号",
-                        "seat_no": "席位编号",
-                        "entrust_time": self._time_strftime(
-                            resp_json["updated_at"]
-                        ),
-                        "entrust_price": price,
-                        "entrust_amount": amount,
-                        "stock_code": security,
-                        "entrust_bs": "买入",
-                        "entrust_type": "雪球虚拟委托",
-                        "entrust_status": "-",
-                    }
-                ]
+            return [
+                {
+                    "entrust_no": resp_json["id"],
+                    "init_date": self._time_strftime(resp_json["created_at"]),
+                    "batch_no": "委托批号",
+                    "report_no": "申报号",
+                    "seat_no": "席位编号",
+                    "entrust_time": self._time_strftime(
+                        resp_json["updated_at"]
+                    ),
+                    "entrust_price": price,
+                    "entrust_amount": amount,
+                    "stock_code": security,
+                    "entrust_bs": "买入",
+                    "entrust_type": "雪球虚拟委托",
+                    "entrust_status": "-",
+                }
+            ]
 
     def buy(self, security, price=0, amount=0, volume=0, entrust_prop=0):
         """买入卖出股票

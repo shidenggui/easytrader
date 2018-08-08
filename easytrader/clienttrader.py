@@ -7,9 +7,7 @@ import time
 
 import easyutils
 
-from . import grid_data_get_strategy
-from . import helpers
-from . import pop_dialog_handler
+from . import grid_data_get_strategy, helpers, pop_dialog_handler
 from .config import client
 
 if not sys.platform.startswith("darwin"):
@@ -41,7 +39,7 @@ class IClientTrader(abc.ABC):
         """Wait for operation return"""
         pass
 
-    @property
+    @property  # type: ignore
     @abc.abstractmethod
     def grid_data_get_strategy(self):
         """
@@ -50,7 +48,7 @@ class IClientTrader(abc.ABC):
         """
         pass
 
-    @grid_data_get_strategy.setter
+    @grid_data_get_strategy.setter  # type: ignore
     @abc.abstractmethod
     def grid_data_get_strategy(self, strategy_cls):
         """
@@ -67,7 +65,7 @@ class ClientTrader(IClientTrader):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
-        self.grid_data_get_strategy = grid_data_get_strategy.CopyStrategy
+        self._grid_data_get_strategy = grid_data_get_strategy.CopyStrategy
 
     @property
     def app(self):
@@ -167,8 +165,7 @@ class ClientTrader(IClientTrader):
             ):
                 self._cancel_entrust_by_double_click(i)
                 return self._handle_pop_dialogs()
-        else:
-            return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
+        return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
     def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(["买入[F1]"])
@@ -301,9 +298,9 @@ class ClientTrader(IClientTrader):
 
     def _close_prompt_windows(self):
         self.wait(1)
-        for w in self._app.windows(class_name="#32770"):
-            if w.window_text() != self._config.TITLE:
-                w.close()
+        for window in self._app.windows(class_name="#32770"):
+            if window.window_text() != self._config.TITLE:
+                window.close()
         self.wait(1)
 
     def trade(self, security, price, amount):
@@ -384,7 +381,8 @@ class ClientTrader(IClientTrader):
                 # sometime can't find handle ready, must retry
                 handle.wait("ready", 2)
                 return handle
-            except:
+            # pylint: disable=broad-except
+            except Exception:
                 pass
 
     def _cancel_entrust_by_double_click(self, row):

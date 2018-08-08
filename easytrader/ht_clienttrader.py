@@ -26,6 +26,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=1
             )
+        # pylint: disable=broad-except
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
 
