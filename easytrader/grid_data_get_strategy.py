@@ -64,8 +64,9 @@ class CopyStrategy(BaseStrategy):
         while True:
             try:
                 return pywinauto.clipboard.GetData()
+            # pylint: disable=broad-except
             except Exception as e:
-                log.warning("{}, retry ......".format(e))
+                log.warning("%s, retry ......", e)
 
 
 class XlsStrategy(BaseStrategy):

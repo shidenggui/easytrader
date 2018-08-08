@@ -1,6 +1,6 @@
 import functools
 
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify, request
 
 from . import api
 from .log import log
@@ -10,11 +10,12 @@ app = Flask(__name__)
 global_store = {}
 
 
-def error_handle(f):
-    @functools.wraps(f)
+def error_handle(func):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         try:
-            return f(*args, **kwargs)
+            return func(*args, **kwargs)
+        # pylint: disable=broad-except
         except Exception as e:
             log.exception("server error")
             message = "{}: {}".format(e.__class__, e)

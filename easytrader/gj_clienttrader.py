@@ -6,8 +6,7 @@ import time
 import pywinauto
 import pywinauto.clipboard
 
-from . import clienttrader
-from . import helpers
+from . import clienttrader, helpers
 
 
 class GJClientTrader(clienttrader.BaseLoginClientTrader):
@@ -18,9 +17,11 @@ class GJClientTrader(clienttrader.BaseLoginClientTrader):
     def login(self, user, password, exe_path, comm_password=None, **kwargs):
         """
         登陆客户端
+
         :param user: 账号
         :param password: 明文密码
-        :param exe_path: 客户端路径类似 r'C:\中国银河证券双子星3.2\Binarystar.exe', 默认 r'C:\中国银河证券双子星3.2\Binarystar.exe'
+        :param exe_path: 客户端路径类似 'C:\\中国银河证券双子星3.2\\Binarystar.exe',
+            默认 'C:\\中国银河证券双子星3.2\\Binarystar.exe'
         :param comm_password: 通讯密码, 华泰需要，可不设
         :return:
         """
@@ -28,6 +29,7 @@ class GJClientTrader(clienttrader.BaseLoginClientTrader):
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=1
             )
+        # pylint: disable=broad-except
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
 
@@ -52,10 +54,13 @@ class GJClientTrader(clienttrader.BaseLoginClientTrader):
                     try:
                         self._app.top_window().wait_not("exists", 5)
                         break
-                    except:
+
+                    # pylint: disable=broad-except
+                    except Exception:
                         self._app.top_window()["确定"].click()
-                        pass
-                except Exception as e:
+
+                # pylint: disable=broad-except
+                except Exception:
                     pass
 
             self._app = pywinauto.Application().connect(

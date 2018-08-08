@@ -2,17 +2,17 @@
 def create(broker):
     if broker == "yh":
         return YH
-    elif broker == "ht":
+    if broker == "ht":
         return HT
-    elif broker == "gj":
+    if broker == "gj":
         return GJ
-    elif broker == "ths":
+    if broker == "ths":
         return CommonConfig
-    raise NotImplemented
+    raise NotImplementedError
 
 
 class CommonConfig:
-    DEFAULT_EXE_PATH = None
+    DEFAULT_EXE_PATH: str = ""
     TITLE = "网上股票交易系统5.0"
 
     TRADE_SECURITY_CONTROL_ID = 1032

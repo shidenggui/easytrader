@@ -2,7 +2,7 @@
 import unittest
 from unittest import mock
 
-from easytrader import XueQiuFollower
+from easytrader.xq_follower import XueQiuFollower
 
 
 class TestXueQiuTrader(unittest.TestCase):

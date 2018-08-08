@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
+import abc
 import datetime
 import os
 import pickle
+import queue
 import re
 import threading
 import time
+from typing import List
 
 import requests
-
-# noinspection PyUnresolvedReferences
-from six.moves.queue import Queue
 
 from . import exceptions
 from .log import log
 
 
-class BaseFollower(object):
+class BaseFollower(metaclass=abc.ABCMeta):
     LOGIN_PAGE = ""
     LOGIN_API = ""
     TRANSACTION_API = ""
@@ -24,7 +24,7 @@ class BaseFollower(object):
     WEB_ORIGIN = ""
 
     def __init__(self):
-        self.trade_queue = Queue()
+        self.trade_queue = queue.Queue()
         self.expired_cmds = set()
 
         self.s = requests.Session()
@@ -71,13 +71,13 @@ class BaseFollower(object):
         :raise 如果登录失败应该抛出 NotLoginError """
         pass
 
-    def create_login_params(self, user, password, **kwargs):
+    def create_login_params(self, user, password, **kwargs) -> dict:
         """生成 post 登录接口的参数
         :param user: 用户名
         :param password: 密码
         :return dict 登录参数的字典
         """
-        pass
+        return {}
 
     def follow(
         self,
@@ -159,30 +159,30 @@ class BaseFollower(object):
                 transactions = self.query_strategy_transaction(
                     strategy, **kwargs
                 )
+            # pylint: disable=broad-except
             except Exception as e:
-                log.warning("无法获取策略 {} 调仓信息, 错误: {}, 跳过此次调仓查询".format(name, e))
+                log.warning("无法获取策略 %s 调仓信息, 错误: %s, 跳过此次调仓查询", name, e)
                 continue
-            for t in transactions:
+            for transaction in transactions:
                 trade_cmd = {
                     "strategy": strategy,
                     "strategy_name": name,
-                    "action": t["action"],
-                    "stock_code": t["stock_code"],
-                    "amount": t["amount"],
-                    "price": t["price"],
-                    "datetime": t["datetime"],
+                    "action": transaction["action"],
+                    "stock_code": transaction["stock_code"],
+                    "amount": transaction["amount"],
+                    "price": transaction["price"],
+                    "datetime": transaction["datetime"],
                 }
                 if self.is_cmd_expired(trade_cmd):
                     continue
                 log.info(
-                    "策略 [{}] 发送指令到交易队列, 股票: {} 动作: {} 数量: {} 价格: {} 信号产生时间: {}".format(
-                        name,
-                        trade_cmd["stock_code"],
-                        trade_cmd["action"],
-                        trade_cmd["amount"],
-                        trade_cmd["price"],
-                        trade_cmd["datetime"],
-                    )
+                    "策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
+                    name,
+                    trade_cmd["stock_code"],
+                    trade_cmd["action"],
+                    trade_cmd["amount"],
+                    trade_cmd["price"],
+                    trade_cmd["datetime"],
                 )
                 self.trade_queue.put(trade_cmd)
                 self.add_cmd_to_expired_cmds(trade_cmd)
@@ -240,16 +240,15 @@ class BaseFollower(object):
             expire = (now - trade_cmd["datetime"]).total_seconds()
             if expire > expire_seconds:
                 log.warning(
-                    "策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 超过设置的最大过期时间 {} 秒, 被丢弃".format(
-                        trade_cmd["strategy_name"],
-                        trade_cmd["stock_code"],
-                        trade_cmd["action"],
-                        trade_cmd["amount"],
-                        trade_cmd["price"],
-                        trade_cmd["datetime"],
-                        now,
-                        expire_seconds,
-                    )
+                    "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 超过设置的最大过期时间 %s 秒, 被丢弃",
+                    trade_cmd["strategy_name"],
+                    trade_cmd["stock_code"],
+                    trade_cmd["action"],
+                    trade_cmd["amount"],
+                    trade_cmd["price"],
+                    trade_cmd["datetime"],
+                    now,
+                    expire_seconds,
                 )
                 break
 
@@ -257,30 +256,28 @@ class BaseFollower(object):
             price = trade_cmd["price"]
             if not self._is_number(price) or price <= 0:
                 log.warning(
-                    "策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 价格无效 , 被丢弃".format(
-                        trade_cmd["strategy_name"],
-                        trade_cmd["stock_code"],
-                        trade_cmd["action"],
-                        trade_cmd["amount"],
-                        trade_cmd["price"],
-                        trade_cmd["datetime"],
-                        now,
-                    )
+                    "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 价格无效 , 被丢弃",
+                    trade_cmd["strategy_name"],
+                    trade_cmd["stock_code"],
+                    trade_cmd["action"],
+                    trade_cmd["amount"],
+                    trade_cmd["price"],
+                    trade_cmd["datetime"],
+                    now,
                 )
                 break
 
             # check amount
             if trade_cmd["amount"] <= 0:
                 log.warning(
-                    "策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {})超时，指令产生时间: {} 当前时间: {}, 买入股数无效 , 被丢弃".format(
-                        trade_cmd["strategy_name"],
-                        trade_cmd["stock_code"],
-                        trade_cmd["action"],
-                        trade_cmd["amount"],
-                        trade_cmd["price"],
-                        trade_cmd["datetime"],
-                        now,
-                    )
+                    "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 买入股数无效 , 被丢弃",
+                    trade_cmd["strategy_name"],
+                    trade_cmd["stock_code"],
+                    trade_cmd["action"],
+                    trade_cmd["amount"],
+                    trade_cmd["price"],
+                    trade_cmd["datetime"],
+                    now,
                 )
                 break
 
@@ -296,28 +293,26 @@ class BaseFollower(object):
                 trader_name = type(user).__name__
                 err_msg = "{}: {}".format(type(e).__name__, e.args)
                 log.error(
-                    "{} 执行 策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 失败, 错误信息: {}".format(
-                        trader_name,
-                        trade_cmd["strategy_name"],
-                        trade_cmd["stock_code"],
-                        trade_cmd["action"],
-                        trade_cmd["amount"],
-                        trade_cmd["price"],
-                        trade_cmd["datetime"],
-                        err_msg,
-                    )
+                    "%s 执行 策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s 指令产生时间: %s) 失败, 错误信息: %s",
+                    trader_name,
+                    trade_cmd["strategy_name"],
+                    trade_cmd["stock_code"],
+                    trade_cmd["action"],
+                    trade_cmd["amount"],
+                    trade_cmd["price"],
+                    trade_cmd["datetime"],
+                    err_msg,
                 )
             else:
                 log.info(
-                    "策略 [{}] 指令(股票: {} 动作: {} 数量: {} 价格: {} 指令产生时间: {}) 执行成功, 返回: {}".format(
-                        trade_cmd["strategy_name"],
-                        trade_cmd["stock_code"],
-                        trade_cmd["action"],
-                        trade_cmd["amount"],
-                        trade_cmd["price"],
-                        trade_cmd["datetime"],
-                        response,
-                    )
+                    "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s 指令产生时间: %s) 执行成功, 返回: %s",
+                    trade_cmd["strategy_name"],
+                    trade_cmd["stock_code"],
+                    trade_cmd["action"],
+                    trade_cmd["amount"],
+                    trade_cmd["price"],
+                    trade_cmd["datetime"],
+                    response,
                 )
 
     def trade_worker(
@@ -343,21 +338,21 @@ class BaseFollower(object):
         self.project_transactions(transactions, **kwargs)
         return self.order_transactions_sell_first(transactions)
 
-    def extract_transactions(self, history):
+    def extract_transactions(self, history) -> List[str]:
         """
         抽取接口返回中的调仓记录列表
         :param history: 调仓接口返回信息的字典对象
         :return: [] 调参历史记录的列表
         """
-        pass
+        return []
 
-    def create_query_transaction_params(self, strategy):
+    def create_query_transaction_params(self, strategy) -> dict:
         """
         生成用于查询调参记录的参数
         :param strategy: 策略 id
         :return: dict 调参记录参数
         """
-        pass
+        return {}
 
     @staticmethod
     def re_find(pattern, string, dtype=str):
@@ -374,9 +369,9 @@ class BaseFollower(object):
     def order_transactions_sell_first(self, transactions):
         # 调整调仓记录的顺序为先卖再买
         sell_first_transactions = []
-        for t in transactions:
-            if t["action"] == "sell":
-                sell_first_transactions.insert(0, t)
+        for transaction in transactions:
+            if transaction["action"] == "sell":
+                sell_first_transactions.insert(0, transaction)
             else:
-                sell_first_transactions.append(t)
+                sell_first_transactions.append(transaction)
         return sell_first_transactions

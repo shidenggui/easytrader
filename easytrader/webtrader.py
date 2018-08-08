@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import abc
 import logging
 import os
 import re
@@ -6,14 +7,14 @@ import time
 from threading import Thread
 
 import requests
+import requests.exceptions
 
-from . import exceptions
-from . import helpers
+from . import exceptions, helpers
 from .log import log
 
 
 # noinspection PyIncorrectDocstring
-class WebTrader(object):
+class WebTrader(metaclass=abc.ABCMeta):
     global_config_path = os.path.dirname(__file__) + "/config/global.json"
     config_path = ""
 
@@ -32,9 +33,9 @@ class WebTrader(object):
             self.account_config = helpers.file2dict(path)
         except ValueError:
             log.error("配置文件格式有误，请勿使用记事本编辑，推荐 sublime text")
-        for v in self.account_config:
-            if type(v) is int:
-                log.warn("配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题")
+        for value in self.account_config:
+            if isinstance(value, int):
+                log.warning("配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题")
 
     def prepare(self, config_file=None, user=None, password=None, **kwargs):
         """登录的统一接口
@@ -94,9 +95,9 @@ class WebTrader(object):
             self.check_account_live(response)
         except requests.exceptions.ConnectionError:
             pass
-        except Exception as e:
+        except requests.exceptions.RequestException as e:
             log.setLevel(self.log_level)
-            log.error("心跳线程发现账户出现错误: {} {}, 尝试重新登陆".format(e.__class__, e))
+            log.error("心跳线程发现账户出现错误: %s %s, 尝试重新登陆", e.__class__, e)
             self.autologin()
         finally:
             log.setLevel(self.log_level)
@@ -186,7 +187,8 @@ class WebTrader(object):
         response_data = self.request(request_params)
         try:
             format_json_data = self.format_response_data(response_data)
-        except:
+        # pylint: disable=broad-except
+        except Exception:
             # Caused by server force logged out
             return None
         return_data = self.fix_error_data(format_json_data)
@@ -196,19 +198,19 @@ class WebTrader(object):
             self.autologin()
         return return_data
 
-    def create_basic_params(self):
+    def create_basic_params(self) -> dict:
         """生成基本的参数"""
-        pass
+        return {}
 
-    def request(self, params):
+    def request(self, params) -> dict:
         """请求并获取 JSON 数据
         :param params: Get 参数"""
-        pass
+        return {}
 
     def format_response_data(self, data):
         """格式化返回的 json 数据
         :param data: 请求返回的数据 """
-        pass
+        return data
 
     def fix_error_data(self, data):
         """若是返回错误移除外层的列表
@@ -219,7 +221,9 @@ class WebTrader(object):
         """格式化返回的值为正确的类型
         :param response_data: 返回的数据
         """
-        if type(response_data) is not list:
+        if isinstance(response_data, list) and not isinstance(
+            response_data, str
+        ):
             return response_data
 
         int_match_str = "|".join(self.config["response_format"]["int"])

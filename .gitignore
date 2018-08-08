@@ -1,3 +1,7 @@
+bak
+.mypy_cache
+.pyre
+.pytest_cache
 yjb_account.json
 htt.json
 gft.json

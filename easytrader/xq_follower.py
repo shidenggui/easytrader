@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import unicode_literals, print_function, division
+from __future__ import division, print_function, unicode_literals
 
 import json
 import re
@@ -20,7 +20,9 @@ class XueQiuFollower(BaseFollower):
     WEB_REFERER = 'https://www.xueqiu.com'
 
     def __init__(self):
-        super(XueQiuFollower, self).__init__()
+        super().__init__()
+        self._adjust_sell = None
+        self._users = None
 
     def login(self, user=None, password=None, **kwargs):
         """
@@ -73,8 +75,7 @@ class XueQiuFollower(BaseFollower):
         """
         self._adjust_sell = adjust_sell
 
-        users = self.warp_list(users)
-        self._users = users
+        self._users = self.warp_list(users)
 
         strategies = self.warp_list(strategies)
         total_assets = self.warp_list(total_assets)
@@ -83,7 +84,7 @@ class XueQiuFollower(BaseFollower):
         if cmd_cache:
             self.load_expired_cmd_cache()
 
-        self.start_trader_thread(users, trade_cmd_expire_seconds)
+        self.start_trader_thread(self._users, trade_cmd_expire_seconds)
 
         for strategy_url, strategy_total_assets, strategy_initial_assets in zip(
                 strategies, total_assets, initial_assets):
@@ -93,7 +94,7 @@ class XueQiuFollower(BaseFollower):
                 strategy_id = self.extract_strategy_id(strategy_url)
                 strategy_name = self.extract_strategy_name(strategy_url)
             except:
-                log.error('抽取交易id和策略名失败, 无效模拟交易url: {}'.format(strategy_url))
+                log.error('抽取交易id和策略名失败, 无效模拟交易url: %s', strategy_url)
                 raise
             strategy_worker = Thread(
                 target=self.track_strategy_worker,
@@ -103,7 +104,7 @@ class XueQiuFollower(BaseFollower):
                     'assets': assets
                 })
             strategy_worker.start()
-            log.info('开始跟踪策略: {}'.format(strategy_name))
+            log.info('开始跟踪策略: %s', strategy_name)
 
     def calculate_assets(self,
                          strategy_url,
@@ -147,27 +148,30 @@ class XueQiuFollower(BaseFollower):
     def none_to_zero(self, data):
         if data is None:
             return 0
-        else:
-            return data
+        return data
 
     # noinspection PyMethodOverriding
     def project_transactions(self, transactions, assets):
-        for t in transactions:
-            weight_diff = self.none_to_zero(t['weight']) - self.none_to_zero(
-                t['prev_weight'])
+        for transaction in transactions:
+            weight_diff = self.none_to_zero(
+                transaction['weight']) - self.none_to_zero(
+                transaction['prev_weight'])
 
-            initial_amount = abs(weight_diff) / 100 * assets / t['price']
+            initial_amount = abs(weight_diff) / 100 * assets / transaction[
+                'price']
 
-            t['datetime'] = datetime.fromtimestamp(t['created_at'] // 1000)
+            transaction['datetime'] = datetime.fromtimestamp(
+                transaction['created_at'] // 1000)
 
-            t['stock_code'] = t['stock_symbol'].lower()
+            transaction['stock_code'] = transaction['stock_symbol'].lower()
 
-            t['action'] = 'buy' if weight_diff > 0 else 'sell'
+            transaction['action'] = 'buy' if weight_diff > 0 else 'sell'
 
-            t['amount'] = int(round(initial_amount, -2))
+            transaction['amount'] = int(round(initial_amount, -2))
             if self._adjust_sell:
-                t['amount'] = self._adjust_sell_amount(t['stock_code'],
-                                                       t['amount'])
+                transaction['amount'] = self._adjust_sell_amount(
+                    transaction['stock_code'],
+                    transaction['amount'])
 
     def _adjust_sell_amount(self, stock_code, amount):
         """
@@ -189,8 +193,8 @@ class XueQiuFollower(BaseFollower):
         try:
             stock = next(s for s in position if s['证券代码'] == stock_code)
         except StopIteration:
-            log.info('根据持仓调整 {} 卖出额，发现未持有股票 {}, 不做任何调整'.format(
-                stock_code, stock_code))
+            log.info('根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整',
+                stock_code, stock_code)
             return amount
 
         available_amount = stock['可用余额']
@@ -198,8 +202,8 @@ class XueQiuFollower(BaseFollower):
             return amount
 
         adjust_amount = available_amount // 100 * 100
-        log.info('股票 {} 实际可用余额 {}, 指令卖出股数为 {}, 调整为 {}'.format(
-            stock_code, available_amount, amount, adjust_amount))
+        log.info('股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 调整为 %s',
+                 stock_code, available_amount, amount, adjust_amount)
         return adjust_amount
 
     def _get_portfolio_info(self, portfolio_code):

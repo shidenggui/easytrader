@@ -1,6 +1,7 @@
 # coding:utf-8
 import re
 import time
+from typing import Optional
 
 from . import exceptions
 
@@ -12,16 +13,16 @@ class PopDialogHandler:
     def handle(self, title):
         if any(s in title for s in {"提示信息", "委托确认", "网上交易用户协议"}):
             self._submit_by_shortcut()
+            return None
 
-        elif "提示" in title:
+        if "提示" in title:
             content = self._extract_content()
             self._submit_by_click()
             return {"message": content}
 
-        else:
-            content = self._extract_content()
-            self._close()
-            return {"message": "unknown message: {}".format(content)}
+        content = self._extract_content()
+        self._close()
+        return {"message": "unknown message: {}".format(content)}
 
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
@@ -40,26 +41,32 @@ class PopDialogHandler:
 
 
 class TradePopDialogHandler(PopDialogHandler):
-    def handle(self, title):
+    def handle(self, title) -> Optional[dict]:
         if title == "委托确认":
             self._submit_by_shortcut()
+            return None
 
-        elif title == "提示信息":
+        if title == "提示信息":
             content = self._extract_content()
             if "超出涨跌停" in content:
                 self._submit_by_shortcut()
-            elif "委托价格的小数价格应为" in content:
-                self._submit_by_shortcut()
+                return None
 
-        elif title == "提示":
+            if "委托价格的小数价格应为" in content:
+                self._submit_by_shortcut()
+                return None
+
+            return None
+
+        if title == "提示":
             content = self._extract_content()
             if "成功" in content:
                 entrust_no = self._extract_entrust_id(content)
                 self._submit_by_click()
                 return {"entrust_no": entrust_no}
-            else:
-                self._submit_by_click()
-                time.sleep(0.05)
-                raise exceptions.TradeError(content)
-        else:
-            self._close()
+
+            self._submit_by_click()
+            time.sleep(0.05)
+            raise exceptions.TradeError(content)
+        self._close()
+        return None

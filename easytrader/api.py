@@ -28,24 +28,26 @@ def use(broker, debug=True, **kwargs):
     """
     if not debug:
         log.setLevel(logging.INFO)
-    elif broker.lower() in ["xq", "雪球"]:
+    if broker.lower() in ["xq", "雪球"]:
         return XueQiuTrader(**kwargs)
-    elif broker.lower() in ["yh_client", "银河客户端"]:
+    if broker.lower() in ["yh_client", "银河客户端"]:
         from .yh_clienttrader import YHClientTrader
 
         return YHClientTrader()
-    elif broker.lower() in ["ht_client", "华泰客户端"]:
+    if broker.lower() in ["ht_client", "华泰客户端"]:
         from .ht_clienttrader import HTClientTrader
 
         return HTClientTrader()
-    elif broker.lower() in ["gj_client", "国金客户端"]:
+    if broker.lower() in ["gj_client", "国金客户端"]:
         from .gj_clienttrader import GJClientTrader
 
         return GJClientTrader()
-    elif broker.lower() in ["ths", "同花顺客户端"]:
+    if broker.lower() in ["ths", "同花顺客户端"]:
         from .clienttrader import ClientTrader
 
         return ClientTrader()
+
+    raise NotImplementedError
 
 
 def follower(platform, **kwargs):
@@ -72,3 +74,4 @@ def follower(platform, **kwargs):
         return JoinQuantFollower()
     if platform.lower() in ["xq", "xueqiu", "雪球"]:
         return XueQiuFollower(**kwargs)
+    raise NotImplementedError
