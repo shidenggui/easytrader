@@ -1,14 +1,11 @@
 language: python
 
 python:
-  - "3.5"
   - "3.6"
 
-env:
-  - PROJ=${PWD##*/}
-
 install:
-  - pip install -r test-requirements.txt
+  - pip install pipenv
+  - pipenv install --dev --system
 
 script:
-  - pytest --cov=$PROJ -v tests
+  - pipenv run test
