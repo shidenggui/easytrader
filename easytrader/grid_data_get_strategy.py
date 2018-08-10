@@ -90,6 +90,8 @@ class XlsStrategy(BaseStrategy):
 
         # alt+s保存，alt+y替换已存在的文件
         self._trader.app.top_window().type_keys("%{s}%{y}")
+        # Wait until file save complete otherwise pandas can not find file
+        self._trader.wait(0.3)
         return self._format_grid_data(temp_path)
 
     def _format_grid_data(self, data: str) -> dict:
