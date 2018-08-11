@@ -51,21 +51,20 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
 
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
-
             while True:
                 self._app.top_window().Edit3.type_keys(
                     self._handle_verify_code()
                 )
-
-                self._app.top_window()["登录"].click()
+                self._app.top_window()["确定"].click()
 
                 # detect login is success or not
                 try:
-                    self._app.top_window().wait_not("exists visible", 10)
+                    self._app.top_window().wait_not("exists visible", 3)
                     break
                 # pylint: disable=broad-except
                 except Exception:
-                    pass
+                    # self._app.top_window().draw_outline()
+                    self._app.top_window()["确定"].click()
 
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
@@ -87,12 +86,14 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         ).click()
 
     def _handle_verify_code(self):
-        control = self._app.top_window().window(control_id=22202)
+        control = self._app.top_window().window(control_id=1499)
         control.click()
         control.draw_outline()
 
         file_path = tempfile.mktemp()
-        control.capture_as_image().save(file_path, "jpeg")
+        rect=control.element_info.rectangle
+        rect.right=round(rect.right+(rect.right-rect.left)*0.3)#扩展验证码控件截图范围为4个字符
+        control.capture_as_image(rect).save(file_path, "jpeg")
         verify_code = helpers.recognize_verify_code(file_path, "yh_client")
         return "".join(re.findall(r"\d+", verify_code))
 
