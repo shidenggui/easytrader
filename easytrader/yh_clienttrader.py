@@ -59,7 +59,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
 
                 # detect login is success or not
                 try:
-                    self._app.top_window().wait_not("exists visible", 3)
+                    self._app.top_window().wait_not("exists visible", 10)
                     break
                 # pylint: disable=broad-except
                 except Exception:
