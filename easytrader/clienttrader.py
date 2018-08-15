@@ -39,6 +39,11 @@ class IClientTrader(abc.ABC):
         """Wait for operation return"""
         pass
 
+    @abc.abstractmethod
+    def refresh(self):
+        """Refresh data"""
+        pass
+
     @property  # type: ignore
     @abc.abstractmethod
     def grid_data_get_strategy(self):
@@ -151,13 +156,13 @@ class ClientTrader(IClientTrader):
 
     @property
     def cancel_entrusts(self):
-        self._refresh()
+        self.refresh()
         self._switch_left_menus(["撤单[F3]"])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     def cancel_entrust(self, entrust_no):
-        self._refresh()
+        self.refresh()
         for i, entrust in enumerate(self.cancel_entrusts):
             if (
                 entrust[self._config.CANCEL_ENTRUST_ENTRUST_FIELD]
@@ -396,7 +401,7 @@ class ClientTrader(IClientTrader):
             class_name="CVirtualGridCtrl",
         ).double_click(coords=(x, y))
 
-    def _refresh(self):
+    def refresh(self):
         self._switch_left_menus(["买入[F1]"], sleep=0.05)
 
     def _handle_pop_dialogs(
