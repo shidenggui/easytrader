@@ -40,7 +40,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         # pylint: disable=broad-except
         except Exception:
             self._app = pywinauto.Application().start(exe_path)
-            is_xiadan=True if 'xiadan.exe' in exe_path else False
+            is_xiadan = True if "xiadan.exe" in exe_path else False
             # wait login window ready
             while True:
                 try:
@@ -55,7 +55,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                 self._app.top_window().Edit3.type_keys(
                     self._handle_verify_code(is_xiadan)
                 )
-                self._app.top_window()["确定" if is_xiadan else "登陆"].click()
+                self._app.top_window()["确定" if is_xiadan else "登录"].click()
 
                 # detect login is success or not
                 try:
@@ -63,7 +63,8 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 # pylint: disable=broad-except
                 except Exception:
-                    is_xiadan and self._app.top_window()["确定"].click()
+                    if is_xiadan:
+                        self._app.top_window()["确定"].click()
 
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
@@ -84,15 +85,19 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             control_id=32812, class_name="Button"
         ).click()
 
-    def _handle_verify_code(self,is_xiadan):
-        control = self._app.top_window().window(control_id=1499 if is_xiadan else 22202)
+    def _handle_verify_code(self, is_xiadan):
+        control = self._app.top_window().window(
+            control_id=1499 if is_xiadan else 22202
+        )
         control.click()
         control.draw_outline()
 
         file_path = tempfile.mktemp()
         if is_xiadan:
-            rect=control.element_info.rectangle
-            rect.right=round(rect.right+(rect.right-rect.left)*0.3)#扩展验证码控件截图范围为4个字符
+            rect = control.element_info.rectangle
+            rect.right = round(
+                rect.right + (rect.right - rect.left) * 0.3
+            )  # 扩展验证码控件截图范围为4个字符
             control.capture_as_image(rect).save(file_path, "jpeg")
         else:
             control.capture_as_image().save(file_path, "jpeg")
