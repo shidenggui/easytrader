@@ -77,7 +77,7 @@ return::
 
 setup(
     name="easytrader",
-    version="0.15.2",
+    version="0.16.0",
     description="A utility for China Stock Trade",
     long_description=long_desc,
     author="shidenggui",
