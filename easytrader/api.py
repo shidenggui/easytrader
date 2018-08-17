@@ -10,7 +10,7 @@ from .xq_follower import XueQiuFollower
 from .xqtrader import XueQiuTrader
 
 if six.PY2:
-    raise TypeError("不支持 Python2，请升级 Python3 ")
+    raise TypeError("不支持 Python2，请升级 Python3")
 
 
 def use(broker, debug=True, **kwargs):

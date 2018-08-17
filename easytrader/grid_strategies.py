@@ -2,56 +2,61 @@
 import abc
 import io
 import tempfile
+from typing import TYPE_CHECKING, Dict, List
 
 import pandas as pd
 import pywinauto.clipboard
 
 from .log import log
 
+if TYPE_CHECKING:
+    # pylint: disable=unused-import
+    from . import clienttrader
 
-class IGridDataGetStrategy(abc.ABC):
+
+class IGridStrategy(abc.ABC):
     @abc.abstractmethod
-    def get(self, control_id: int):
+    def get(self, control_id: int) -> List[Dict]:
         """
+        获取 gird 数据并格式化返回
+
         :param control_id: grid 的 control id
         :return: grid 数据
-        :rtype: List[Dict]
         """
         pass
 
 
-class BaseStrategy(IGridDataGetStrategy):
-    def __init__(self, trader):
+class BaseStrategy(IGridStrategy):
+    def __init__(self, trader: "clienttrader.IClientTrader") -> None:
         self._trader = trader
 
     @abc.abstractmethod
-    def get(self, control_id: int):
+    def get(self, control_id: int) -> List[Dict]:
         """
         :param control_id: grid 的 control id
         :return: grid 数据
-        :rtype: list[dict]
         """
         pass
 
-    def _get_grid(self, control_id):
+    def _get_grid(self, control_id: int):
         grid = self._trader.main.window(
             control_id=control_id, class_name="CVirtualGridCtrl"
         )
         return grid
 
 
-class CopyStrategy(BaseStrategy):
+class Copy(BaseStrategy):
     """
     通过复制 grid 内容到剪切板z再读取来获取 grid 内容
     """
 
-    def get(self, control_id: int):
+    def get(self, control_id: int) -> List[Dict]:
         grid = self._get_grid(control_id)
         grid.type_keys("^A^C")
         content = self._get_clipboard_data()
         return self._format_grid_data(content)
 
-    def _format_grid_data(self, data: str) -> dict:
+    def _format_grid_data(self, data: str) -> List[Dict]:
         df = pd.read_csv(
             io.StringIO(data),
             delimiter="\t",
@@ -69,13 +74,13 @@ class CopyStrategy(BaseStrategy):
                 log.warning("%s, retry ......", e)
 
 
-class XlsStrategy(BaseStrategy):
+class Xls(BaseStrategy):
     """
     通过将 Grid 另存为 xls 文件再读取的方式获取 grid 内容，
     用于绕过一些客户端不允许复制的限制
     """
 
-    def get(self, control_id: int):
+    def get(self, control_id: int) -> List[Dict]:
         grid = self._get_grid(control_id)
 
         # ctrl+s 保存 grid 内容为 xls 文件
@@ -94,7 +99,7 @@ class XlsStrategy(BaseStrategy):
         self._trader.wait(0.2)
         return self._format_grid_data(temp_path)
 
-    def _format_grid_data(self, data: str) -> dict:
+    def _format_grid_data(self, data: str) -> List[Dict]:
         df = pd.read_csv(
             data,
             encoding="gbk",

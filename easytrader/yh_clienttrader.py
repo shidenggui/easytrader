@@ -4,20 +4,19 @@ import tempfile
 
 import pywinauto
 
-from . import clienttrader, grid_data_get_strategy, helpers
+from . import clienttrader, grid_strategies, helpers
 
 
 class YHClientTrader(clienttrader.BaseLoginClientTrader):
-    def __init__(self):
-        """
-        Changelog:
+    """
+    Changelog:
 
-        2018.07.01:
-            银河客户端 2018.5.11 更新后不再支持通过剪切板复制获取 Grid 内容，
-            改为使用保存为 Xls 再读取的方式获取
-        """
-        super().__init__()
-        self.grid_data_get_strategy = grid_data_get_strategy.XlsStrategy
+    2018.07.01:
+        银河客户端 2018.5.11 更新后不再支持通过剪切板复制获取 Grid 内容，
+        改为使用保存为 Xls 再读取的方式获取
+    """
+
+    grid_strategy = grid_strategies.Xls
 
     @property
     def broker_type(self):

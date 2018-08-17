@@ -4,10 +4,11 @@ import functools
 import os
 import sys
 import time
+from typing import Type
 
 import easyutils
 
-from . import grid_data_get_strategy, helpers, pop_dialog_handler
+from . import grid_strategies, helpers, pop_dialog_handler
 from .config import client
 
 if not sys.platform.startswith("darwin"):
@@ -35,7 +36,7 @@ class IClientTrader(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def wait(self, seconds: int):
+    def wait(self, seconds: float):
         """Wait for operation return"""
         pass
 
@@ -44,33 +45,15 @@ class IClientTrader(abc.ABC):
         """Refresh data"""
         pass
 
-    @property  # type: ignore
-    @abc.abstractmethod
-    def grid_data_get_strategy(self):
-        """
-        :return: Implement class of IGridDataGetStrategy
-        :rtype: grid_data.get_strategy.IGridDataGetStrategy
-        """
-        pass
-
-    @grid_data_get_strategy.setter  # type: ignore
-    @abc.abstractmethod
-    def grid_data_get_strategy(self, strategy_cls):
-        """
-        :param strategy_cls: Grid data get strategy
-        :type strategy_cls: grid_data.get_strategy.IGridDataGetStrategy
-        :return: formatted grid data
-        :rtype: list[dict]
-        """
-        pass
-
 
 class ClientTrader(IClientTrader):
+    # The strategy to use for getting grid data
+    grid_strategy: Type[grid_strategies.IGridStrategy] = grid_strategies.Copy
+
     def __init__(self):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
-        self._grid_data_get_strategy = grid_data_get_strategy.CopyStrategy
 
     @property
     def app(self):
@@ -83,20 +66,6 @@ class ClientTrader(IClientTrader):
     @property
     def config(self):
         return self._config
-
-    @property
-    def grid_data_get_strategy(self):
-        return self._grid_data_get_strategy
-
-    @grid_data_get_strategy.setter
-    def grid_data_get_strategy(self, strategy_cls):
-        if not issubclass(
-            strategy_cls, grid_data_get_strategy.IGridDataGetStrategy
-        ):
-            raise TypeError(
-                "Strategy must be implement class of IGridDataGetStrategy"
-            )
-        self._grid_data_get_strategy = strategy_cls(self)
 
     def connect(self, exe_path=None, **kwargs):
         """
@@ -361,7 +330,7 @@ class ClientTrader(IClientTrader):
         self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _get_grid_data(self, control_id):
-        return self._grid_data_get_strategy.get(control_id)
+        return self.grid_strategy(self).get(control_id)
 
     def _type_keys(self, control_id, text):
         self._main.window(

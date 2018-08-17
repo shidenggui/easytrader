@@ -103,9 +103,9 @@ user.connect(r'客户端xiadan.exe路径') # 类似 r'C:\htzqzyb2\xiadan.exe'
 使用方式如下:
 
 ```python
-from easytrader import grid_data_get_strategy
+from easytrader import grid_strategies
 
-user.grid_data_get_strategy = grid_data_get_strategy.XlsStrategy
+user.grid_strategy = grid_strategies.Xls
 ```
 
 ### 交易相关
