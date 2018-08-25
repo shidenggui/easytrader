@@ -203,7 +203,7 @@ class ClientTrader(IClientTrader):
 
     def _set_market_trade_type(self, ttype):
         """根据选择的市价交易类型选择对应的下拉选项"""
-        selects = self._main(
+        selects = self._main.window(
             control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
             class_name="ComboBox",
         )
