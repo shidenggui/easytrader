@@ -45,15 +45,17 @@ class XueQiuFollower(BaseFollower):
 
         log.info('登录成功')
 
-    def follow(self,
-               users,
-               strategies,
-               total_assets=10000,
-               initial_assets=None,
-               adjust_sell=False,
-               track_interval=10,
-               trade_cmd_expire_seconds=120,
-               cmd_cache=True):
+    def follow(  # type: ignore
+            self,
+            users,
+            strategies,
+            total_assets=10000,
+            initial_assets=None,
+            adjust_sell=False,
+            track_interval=10,
+            trade_cmd_expire_seconds=120,
+            cmd_cache=True,
+            slippage: float = 0.0):
         """跟踪 joinquant 对应的模拟交易，支持多用户多策略
         :param users: 支持 easytrader 的用户对象，支持使用 [] 指定多个用户
         :param strategies: 雪球组合名, 类似 ZH123450
@@ -72,7 +74,15 @@ class XueQiuFollower(BaseFollower):
         :param track_interval: 轮训模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
+        :param slippage: 滑点，0.0 表示无滑点, 0.05 表示滑点为 5%
         """
+        super().follow(users=users,
+                       strategies=strategies,
+                       track_interval=track_interval,
+                       trade_cmd_expire_seconds=trade_cmd_expire_seconds,
+                       cmd_cache=cmd_cache,
+                       slippage=slippage)
+
         self._adjust_sell = adjust_sell
 
         self._users = self.warp_list(users)
@@ -194,7 +204,7 @@ class XueQiuFollower(BaseFollower):
             stock = next(s for s in position if s['证券代码'] == stock_code)
         except StopIteration:
             log.info('根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整',
-                stock_code, stock_code)
+                     stock_code, stock_code)
             return amount
 
         available_amount = stock['可用余额']

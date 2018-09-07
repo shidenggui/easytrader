@@ -16,6 +16,10 @@ from .log import log
 
 
 class BaseFollower(metaclass=abc.ABCMeta):
+    """
+    slippage: 滑点，取值范围为 [0, 1]
+    """
+
     LOGIN_PAGE = ""
     LOGIN_API = ""
     TRANSACTION_API = ""
@@ -28,6 +32,8 @@ class BaseFollower(metaclass=abc.ABCMeta):
         self.expired_cmds = set()
 
         self.s = requests.Session()
+
+        self.slippage: float = 0.0
 
     def login(self, user=None, password=None, **kwargs):
         """
@@ -86,9 +92,11 @@ class BaseFollower(metaclass=abc.ABCMeta):
         track_interval=1,
         trade_cmd_expire_seconds=120,
         cmd_cache=True,
+        slippage: float = 0.0,
         **kwargs
     ):
         """跟踪平台对应的模拟交易，支持多用户多策略
+
         :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
         :param strategies: 雪球组合名, 类似 ZH123450
         :param total_assets: 雪球组合对应的总资产， 格式 [ 组合1对应资金, 组合2对应资金 ]
@@ -99,8 +107,22 @@ class BaseFollower(metaclass=abc.ABCMeta):
         :param track_interval: 轮询模拟交易时间，单位为秒
         :param trade_cmd_expire_seconds: 交易指令过期时间, 单位为秒
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
+        :param slippage: 滑点，0.0 表示无滑点, 0.05 表示滑点为 5%
         """
-        raise NotImplementedError
+        self.slippage = slippage
+
+    def _calculate_price_by_slippage(self, action: str, price: float) -> float:
+        """
+        计算考虑滑点之后的价格
+        :param action: 交易动作， 支持 ['buy', 'sell']
+        :param price: 原始交易价格
+        :return: 考虑滑点后的交易价格
+        """
+        if action == "buy":
+            return price * (1 + self.slippage)
+        if action == "sell":
+            return price * (1 - self.slippage)
+        return price
 
     def load_expired_cmd_cache(self):
         if os.path.exists(self.CMD_CACHE_FILE):
@@ -281,9 +303,12 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 )
                 break
 
+            actual_price = self._calculate_price_by_slippage(
+                trade_cmd["action"], trade_cmd["price"]
+            )
             args = {
                 "security": trade_cmd["stock_code"],
-                "price": trade_cmd["price"],
+                "price": actual_price,
                 "amount": trade_cmd["amount"],
                 "entrust_prop": entrust_prop,
             }
