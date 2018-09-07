@@ -406,6 +406,11 @@ follower.follow(***, entrust_prop='market')
 ```
 follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
 ```
+#### 设置买卖时的滑点
+
+```
+follower.follow(***, slippage=0.05) # 设置滑点为 5%
+```
 
 ### 命令行模式
 
