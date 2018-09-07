@@ -88,7 +88,7 @@ class Xls(BaseStrategy):
         self._trader.wait(1)
 
         temp_path = tempfile.mktemp(suffix=".csv")
-        self._trader.app.top_window().type_keys(temp_path)
+        self._trader.app.top_window().type_keys(self.normalize_path(temp_path))
 
         # Wait until file save complete
         self._trader.wait(0.3)
@@ -98,6 +98,9 @@ class Xls(BaseStrategy):
         # Wait until file save complete otherwise pandas can not find file
         self._trader.wait(0.2)
         return self._format_grid_data(temp_path)
+
+    def normalize_path(self, temp_path: str) -> str:
+        return temp_path.replace('~', '{~}')
 
     def _format_grid_data(self, data: str) -> List[Dict]:
         df = pd.read_csv(
