@@ -1,5 +1,6 @@
 # coding:utf-8
 import datetime
+import time
 import unittest
 from unittest import mock
 
@@ -16,6 +17,33 @@ class TestXueQiuTrader(unittest.TestCase):
         follower._adjust_sell = False
         amount = follower._adjust_sell_amount("169101", 1000)
         self.assertEqual(amount, amount)
+
+    def test_adjust_sell_should_only_work_when_sell(self):
+        follower = XueQiuFollower()
+        follower._adjust_sell = True
+        test_transaction = {
+            "weight": 10,
+            "prev_weight": 0,
+            "price": 10,
+            "stock_symbol": "162411",
+            "created_at": int(time.time() * 1000),
+        }
+        test_assets = 1000
+
+        mock_adjust_sell_amount = mock.MagicMock()
+        follower._adjust_sell_amount = mock_adjust_sell_amount
+
+        follower.project_transactions(
+            transactions=[test_transaction], assets=test_assets
+        )
+        mock_adjust_sell_amount.assert_not_called()
+
+        mock_adjust_sell_amount.reset_mock()
+        test_transaction["prev_weight"] = test_transaction["weight"] + 1
+        follower.project_transactions(
+            transactions=[test_transaction], assets=test_assets
+        )
+        mock_adjust_sell_amount.assert_called()
 
     def test_adjust_sell_amount(self):
         follower = XueQiuFollower()

@@ -178,7 +178,7 @@ class XueQiuFollower(BaseFollower):
             transaction['action'] = 'buy' if weight_diff > 0 else 'sell'
 
             transaction['amount'] = int(round(initial_amount, -2))
-            if self._adjust_sell:
+            if transaction['action'] == 'sell' and self._adjust_sell:
                 transaction['amount'] = self._adjust_sell_amount(
                     transaction['stock_code'],
                     transaction['amount'])
