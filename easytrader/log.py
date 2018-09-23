@@ -12,3 +12,9 @@ ch = logging.StreamHandler()
 
 ch.setFormatter(fmt)
 log.handlers.append(ch)
+
+import grequests
+
+import PyQuery
+
+
