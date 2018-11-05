@@ -43,10 +43,6 @@
 注: 现在有些新的同花顺客户端对拷贝剪贴板数据做了限制，我在 [issue](https://github.com/shidenggui/easytrader/issues/272) 里提供了几个券商老版本的下载地址。
 
 
-### 实盘易
-
-如果有对其他券商或者通达信版本的需求，可以查看 [实盘易](http://www.iguuu.com/e?x=19828)
-
 ### 模拟交易
 
 * 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](doc/xueqiu.md)）
