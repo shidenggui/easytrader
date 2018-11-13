@@ -99,11 +99,7 @@ class Xls(BaseStrategy):
         self._trader.wait(0.2)
         return self._format_grid_data(temp_path)
 
-    def normalize_path(self, temp_path):
-        """
-        :param temp_path :str
-        :return: str
-        """
+    def normalize_path(self, temp_path: str) -> str:
         return temp_path.replace('~', '{~}')
 
     def _format_grid_data(self, data: str) -> List[Dict]:
