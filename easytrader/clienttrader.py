@@ -337,6 +337,11 @@ class ClientTrader(IClientTrader):
             control_id=control_id, class_name="Edit"
         ).set_edit_text(text)
 
+    def _collapse_left_menus(self):
+        items = self._get_left_menus_handle().roots()
+        for item in items:
+            item.collapse()
+
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
         self.wait(sleep)
@@ -347,17 +352,22 @@ class ClientTrader(IClientTrader):
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
+        count = 10
         while True:
             try:
                 handle = self._main.window(
                     control_id=129, class_name="SysTreeView32"
                 )
+                if count <= 0:
+                    return handle
                 # sometime can't find handle ready, must retry
                 handle.wait("ready", 2)
                 return handle
             # pylint: disable=broad-except
-            except Exception:
+            except Exception as ex:
+                print(ex)
                 pass
+            count = count - 1
 
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
@@ -379,7 +389,10 @@ class ClientTrader(IClientTrader):
         handler = handler_class(self._app)
 
         while self._is_exist_pop_dialog():
-            title = self._get_pop_dialog_title()
+            try:
+                title = self._get_pop_dialog_title()
+            except pywinauto.findwindows.ElementNotFoundError:
+                return {"message": "success"}
 
             result = handler.handle(title)
             if result:

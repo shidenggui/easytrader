@@ -31,7 +31,10 @@ class PopDialogHandler:
         return re.search(r"\d+", content).group()
 
     def _submit_by_click(self):
-        self._app.top_window()["确定"].click()
+        try:
+            self._app.top_window()["确定"].click()
+        except Exception as ex:
+            self._app.Window_(best_match='Dialog', top_level_only=True).ChildWindow(best_match='确定').click()
 
     def _submit_by_shortcut(self):
         self._app.top_window().type_keys("%Y")
