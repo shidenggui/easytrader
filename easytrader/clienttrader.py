@@ -352,7 +352,7 @@ class ClientTrader(IClientTrader):
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
-        count = 10
+        count = 2
         while True:
             try:
                 handle = self._main.window(
