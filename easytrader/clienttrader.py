@@ -5,6 +5,7 @@ import os
 import sys
 import time
 from typing import Type
+from . import perf_clock
 
 import easyutils
 
@@ -151,6 +152,7 @@ class ClientTrader(IClientTrader):
 
         return self.trade(security, price, amount)
 
+    @perf_clock()
     def market_buy(self, security, amount, ttype=None, **kwargs):
         """
         市价买入
@@ -254,6 +256,7 @@ class ClientTrader(IClientTrader):
             class_name="CVirtualGridCtrl",
         ).click(coords=(x, y))
 
+    @perf_clock()
     def _is_exist_pop_dialog(self):
         self.wait(0.2)  # wait dialog display
         return (
@@ -291,6 +294,7 @@ class ClientTrader(IClientTrader):
             control_id=control_id, class_name="Button"
         ).click()
 
+    @perf_clock()
     def _submit_trade(self):
         time.sleep(0.05)
         self._main.window(
@@ -298,12 +302,22 @@ class ClientTrader(IClientTrader):
             class_name="Button",
         ).click()
 
+    @perf_clock()
+    def __get_top_window_pop_dialog(self):
+        return self._app.top_window().window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+
+    @perf_clock()
     def _get_pop_dialog_title(self):
         return (
-            self._app.top_window()
-            .window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+            self.__get_top_window_pop_dialog()
             .window_text()
         )
+    # def _get_pop_dialog_title(self):
+    #     return (
+    #         self._app.top_window()
+    #         .window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+    #         .window_text()
+    #     )
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
@@ -342,6 +356,7 @@ class ClientTrader(IClientTrader):
         for item in items:
             item.collapse()
 
+    @perf_clock()
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
         self.wait(sleep)
@@ -383,6 +398,7 @@ class ClientTrader(IClientTrader):
     def refresh(self):
         self._switch_left_menus(["买入[F1]"], sleep=0.05)
 
+    @perf_clock()
     def _handle_pop_dialogs(
         self, handler_class=pop_dialog_handler.PopDialogHandler
     ):

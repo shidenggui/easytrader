@@ -3,13 +3,14 @@ import re
 import time
 from typing import Optional
 
-from . import exceptions
+from . import exceptions, perf_clock
 
 
 class PopDialogHandler:
     def __init__(self, app):
         self._app = app
 
+    @perf_clock()
     def handle(self, title):
         if any(s in title for s in {"提示信息", "委托确认", "网上交易用户协议"}):
             self._submit_by_shortcut()
@@ -27,6 +28,7 @@ class PopDialogHandler:
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
 
+    @perf_clock()
     def _extract_entrust_id(self, content):
         return re.search(r"\d+", content).group()
 
@@ -44,6 +46,8 @@ class PopDialogHandler:
 
 
 class TradePopDialogHandler(PopDialogHandler):
+
+    @perf_clock()
     def handle(self, title) -> Optional[dict]:
         if title == "委托确认":
             self._submit_by_shortcut()
