@@ -106,18 +106,21 @@ class ClientTrader(IClientTrader):
             )
         return result
 
+    @perf_clock()
     @property
     def position(self):
         self._switch_left_menus(["查询[F4]", "资金股票"])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
+    @perf_clock()
     @property
     def today_entrusts(self):
         self._switch_left_menus(["查询[F4]", "当日委托"])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
+    @perf_clock()
     @property
     def today_trades(self):
         self._switch_left_menus(["查询[F4]", "当日成交"])
@@ -131,6 +134,7 @@ class ClientTrader(IClientTrader):
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
+    @perf_clock()
     def cancel_entrust(self, entrust_no):
         self.refresh()
         for i, entrust in enumerate(self.cancel_entrusts):
@@ -142,11 +146,13 @@ class ClientTrader(IClientTrader):
                 return self._handle_pop_dialogs()
         return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
+    @perf_clock()
     def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(["买入[F1]"])
 
         return self.trade(security, price, amount)
 
+    @perf_clock()
     def sell(self, security, price, amount, **kwargs):
         self._switch_left_menus(["卖出[F2]"])
 
@@ -168,6 +174,7 @@ class ClientTrader(IClientTrader):
 
         return self.market_trade(security, amount, ttype)
 
+    @perf_clock()
     def market_sell(self, security, amount, ttype=None, **kwargs):
         """
         市价卖出
