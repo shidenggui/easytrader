@@ -216,7 +216,10 @@ class ClientTrader(IClientTrader):
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
             if i == 0:
-                continue
+                if ttype in text:  # 当前已经选中
+                    break
+                else:
+                    continue
             if ttype in text:
                 selects.select(i - 1)
                 break
