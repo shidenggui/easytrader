@@ -81,17 +81,19 @@ class Xls(BaseStrategy):
     通过将 Grid 另存为 xls 文件再读取的方式获取 grid 内容，
     用于绕过一些客户端不允许复制的限制
     """
-    def _set_foreground(self):
-        if self._trader.main.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(self._trader.main.wrapper_object(), 9)  # restore window state
+    def _set_foreground(self, grid=None):
+        if grid is None:
+            grid = self._trader.main
+        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+            ShowWindow(grid.wrapper_object(), 9)  # restore window state
         else:
-            SetForegroundWindow(self._trader.main.wrapper_object())  # bring to front
+            SetForegroundWindow(grid.wrapper_object())  # bring to front
 
     def get(self, control_id: int) -> List[Dict]:
         grid = self._get_grid(control_id)
 
         # ctrl+s 保存 grid 内容为 xls 文件
-        self._set_foreground()  # setFocus buggy, instead of SetForegroundWindow
+        self._set_foreground(grid)  # setFocus buggy, instead of SetForegroundWindow
         grid.type_keys("^s", set_foreground=False)
         self._trader.wait(1)
 
