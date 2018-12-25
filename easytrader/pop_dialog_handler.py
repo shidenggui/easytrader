@@ -4,11 +4,20 @@ import time
 from typing import Optional
 
 from . import exceptions, perf_clock
-
+import  pywinauto
+from pywinauto.win32functions import SetForegroundWindow, ShowWindow
 
 class PopDialogHandler:
     def __init__(self, app):
         self._app = app
+
+    def _set_foreground(self, grid=None):
+        if grid is None:
+            grid = self._trader.main
+        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+            ShowWindow(grid.wrapper_object(), 9)  # restore window state
+        else:
+            SetForegroundWindow(grid.wrapper_object())  # bring to front
 
     @perf_clock()
     def handle(self, title):
@@ -39,7 +48,8 @@ class PopDialogHandler:
             self._app.Window_(best_match='Dialog', top_level_only=True).ChildWindow(best_match='确定').click()
 
     def _submit_by_shortcut(self):
-        self._app.top_window().type_keys("%Y")
+        self._set_foreground(self._app.top_window())
+        self._app.top_window().type_keys("%Y", set_foreground=False)
 
     def _close(self):
         self._app.top_window().close()

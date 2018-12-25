@@ -11,6 +11,7 @@ import easyutils
 
 from . import grid_strategies, helpers, pop_dialog_handler
 from .config import client
+from pywinauto.win32functions import SetForegroundWindow, ShowWindow
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
@@ -55,6 +56,14 @@ class ClientTrader(IClientTrader):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
+
+    def _set_foreground(self, grid=None):
+        if grid is None:
+            grid = self._trader.main
+        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+            ShowWindow(grid.wrapper_object(), 9)  # restore window state
+        else:
+            SetForegroundWindow(grid.wrapper_object())  # bring to front
 
     @property
     def app(self):
@@ -265,7 +274,7 @@ class ClientTrader(IClientTrader):
 
     @perf_clock()
     def _is_exist_pop_dialog(self):
-        self.wait(0.2)  # wait dialog display
+        self.wait(0.5)  # wait dialog display
         return (
             self._main.wrapper_object()
             != self._app.top_window().wrapper_object()
@@ -303,7 +312,7 @@ class ClientTrader(IClientTrader):
 
     @perf_clock()
     def _submit_trade(self):
-        time.sleep(0.05)
+        time.sleep(0.2)
         self._main.window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
@@ -329,31 +338,35 @@ class ClientTrader(IClientTrader):
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
 
-        self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
+        self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
         self.wait(0.1)
 
-        self._type_keys(
+        self._type_edit_control_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code),
         )
-        self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
+        self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _set_market_trade_params(self, security, amount):
         code = security[-6:]
 
-        self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
+        self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
         self.wait(0.1)
 
-        self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
+        self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _get_grid_data(self, control_id):
         return self.grid_strategy(self).get(control_id)
 
-    def _type_keys(self, control_id, text):
+    def _type_common_control_keys(self, control, text):
+        self._set_foreground(control)
+        control.type_keys(text, set_foreground=False)
+
+    def _type_edit_control_keys(self, control_id, text):
         self._main.window(
             control_id=control_id, class_name="Edit"
         ).set_edit_text(text)
