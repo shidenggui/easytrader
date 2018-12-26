@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pywinauto
 import pywinauto.clipboard
+from pywinauto.win32functions import SetForegroundWindow
 
 from . import clienttrader
 
@@ -37,7 +38,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except RuntimeError:
                     pass
-
+            SetForegroundWindow(self._app.top_window())
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
 
