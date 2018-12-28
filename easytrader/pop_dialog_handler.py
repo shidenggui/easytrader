@@ -73,6 +73,10 @@ class TradePopDialogHandler(PopDialogHandler):
                 self._submit_by_shortcut()
                 return None
 
+            if  "逆回购" in content:
+                self._submit_by_shortcut()
+                return None
+
             return None
 
         if title == "提示":
