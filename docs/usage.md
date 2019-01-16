@@ -72,7 +72,7 @@ user.prepare('/path/to/your/yh_client.json') // 配置文件路径
 ```
 {
   "user": "华泰用户名",
-  "password": "华泰明文密码"
+  "password": "华泰明文密码",
   "comm_password": "华泰通讯密码"
 }
 
