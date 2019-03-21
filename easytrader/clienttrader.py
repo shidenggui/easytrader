@@ -226,14 +226,13 @@ class ClientTrader(IClientTrader):
             # skip 0 index, because 0 index is current select index
             if i == 0:
                 if ttype in text:  # 当前已经选中
-                    break
+                    return
                 else:
                     continue
             if ttype in text:
                 selects.select(i - 1)
-                break
-        else:
-            raise TypeError("不支持对应的市价类型: {}".format(ttype))
+                return
+        raise TypeError("不支持对应的市价类型: {}".format(ttype))
 
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
