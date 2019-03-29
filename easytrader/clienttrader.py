@@ -8,6 +8,7 @@ from typing import Type
 from . import perf_clock
 
 import easyutils
+import re
 
 from . import grid_strategies, helpers, pop_dialog_handler
 from .config import client
@@ -225,11 +226,11 @@ class ClientTrader(IClientTrader):
         for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
             if i == 0:
-                if ttype in text:  # 当前已经选中
+                if re.search(ttype, text):  # 当前已经选中
                     return
                 else:
                     continue
-            if ttype in text:
+            if re.search(ttype, text):
                 selects.select(i - 1)
                 return
         raise TypeError("不支持对应的市价类型: {}".format(ttype))
