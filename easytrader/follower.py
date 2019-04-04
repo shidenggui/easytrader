@@ -32,6 +32,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
         self.expired_cmds = set()
 
         self.s = requests.Session()
+        self.s.verify = False
 
         self.slippage: float = 0.0
 
@@ -183,7 +184,8 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 )
             # pylint: disable=broad-except
             except Exception as e:
-                log.warning("无法获取策略 %s 调仓信息, 错误: %s, 跳过此次调仓查询", name, e)
+                log.exception("无法获取策略 %s 调仓信息, 错误: %s, 跳过此次调仓查询", name, e)
+                time.sleep(3)
                 continue
             for transaction in transactions:
                 trade_cmd = {

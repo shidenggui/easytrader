@@ -1,5 +1,6 @@
 # coding:utf-8
 import datetime
+import os
 import time
 import unittest
 from unittest import mock
@@ -130,6 +131,19 @@ class TestXueQiuTrader(unittest.TestCase):
         self.assertAlmostEqual(kwargs["price"], excepted_price)
 
 
+class TestXqFollower(unittest.TestCase):
+    def setUp(self):
+        self.follower = XueQiuFollower()
+        cookies = os.getenv("EZ_TEST_XQ_COOKIES")
+        if not cookies:
+            return
+        self.follower.login(cookies=cookies)
+
+    def test_extract_transactions(self):
+        result = self.follower.extract_transactions(TEST_XQ_PORTOFOLIO_HISTORY)
+        self.assertTrue(len(result) == 1)
+
+
 TEST_POSITION = [
     {
         "Unnamed: 14": "",
@@ -148,3 +162,79 @@ TEST_POSITION = [
         "证券代码": "169101",
     }
 ]
+
+TEST_XQ_PORTOFOLIO_HISTORY = {
+    "count": 1,
+    "page": 1,
+    "totalCount": 17,
+    "list": [
+        {
+            "id": 1,
+            "status": "pending",
+            "cube_id": 1,
+            "prev_bebalancing_id": 1,
+            "category": "user_rebalancing",
+            "exe_strategy": "intraday_all",
+            "created_at": 1,
+            "updated_at": 1,
+            "cash_value": 0.1,
+            "cash": 100.0,
+            "error_code": "1",
+            "error_message": None,
+            "error_status": None,
+            "holdings": None,
+            "rebalancing_histories": [
+                {
+                    "id": 1,
+                    "rebalancing_id": 1,
+                    "stock_id": 1023662,
+                    "stock_name": "华宝油气",
+                    "stock_symbol": "SZ162411",
+                    "volume": 0.0,
+                    "price": None,
+                    "net_value": 0.0,
+                    "weight": 0.0,
+                    "target_weight": 0.1,
+                    "prev_weight": None,
+                    "prev_target_weight": None,
+                    "prev_weight_adjusted": None,
+                    "prev_volume": None,
+                    "prev_price": None,
+                    "prev_net_value": None,
+                    "proactive": True,
+                    "created_at": 1554339333333,
+                    "updated_at": 1554339233333,
+                    "target_volume": 0.00068325,
+                    "prev_target_volume": None,
+                },
+                {
+                    "id": 2,
+                    "rebalancing_id": 1,
+                    "stock_id": 1023662,
+                    "stock_name": "华宝油气",
+                    "stock_symbol": "SZ162411",
+                    "volume": 0.0,
+                    "price": 0.55,
+                    "net_value": 0.0,
+                    "weight": 0.0,
+                    "target_weight": 0.1,
+                    "prev_weight": None,
+                    "prev_target_weight": None,
+                    "prev_weight_adjusted": None,
+                    "prev_volume": None,
+                    "prev_price": None,
+                    "prev_net_value": None,
+                    "proactive": True,
+                    "created_at": 1554339333333,
+                    "updated_at": 1554339233333,
+                    "target_volume": 0.00068325,
+                    "prev_target_volume": None,
+                },
+            ],
+            "comment": "",
+            "diff": 0.0,
+            "new_buy_count": 0,
+        }
+    ],
+    "maxPage": 17,
+}

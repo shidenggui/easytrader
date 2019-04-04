@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
-from .api import use, follower
+import urllib3
+
 from . import exceptions
+from .api import use, follower
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 __version__ = "0.18.2"
 __author__ = "shidenggui"

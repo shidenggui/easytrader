@@ -42,6 +42,7 @@ class XueQiuTrader(webtrader.WebTrader):
             raise ValueError("雪球初始资产不能小于1000元，当前预设值 {}".format(self.multiple))
 
         self.s = requests.Session()
+        self.s.verify = False
         self.s.headers.update(self._HEADERS)
         self.account_config = None
 

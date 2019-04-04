@@ -142,12 +142,18 @@ class XueQiuFollower(BaseFollower):
         return rep.json()[info_index]['name']
 
     def extract_transactions(self, history):
-        print(history)
         if history['count'] <= 0:
             return []
         rebalancing_index = 0
-        transactions = history['list'][rebalancing_index][
+        raw_transactions = history['list'][rebalancing_index][
             'rebalancing_histories']
+        transactions = []
+        for transaction in raw_transactions:
+            if transaction['price'] is None:
+                log.info('该笔交易无法获取价格，疑似未成交，跳过。交易详情: %s', transaction)
+                continue
+            transactions.append(transaction)
+
         return transactions
 
     def create_query_transaction_params(self, strategy):
