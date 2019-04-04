@@ -210,7 +210,16 @@ class ClientTrader(IClientTrader):
         """
         self._set_market_trade_params(security, amount)
         if ttype is not None:
-            self._set_market_trade_type(ttype)
+            retry = 0
+            retry_max = 10
+            while retry < retry_max:
+                try:
+                    self._set_market_trade_type(ttype)
+                    break
+                except:
+                    retry += 1
+                    self.wait(0.1)
+
         self._submit_trade()
 
         return self._handle_pop_dialogs(
@@ -295,6 +304,12 @@ class ClientTrader(IClientTrader):
             if window.window_text() != self._config.TITLE:
                 window.close()
         self.wait(1)
+
+    def close_pormpt_window_no_wait(self):
+        for window in self._app.windows(class_name="#32770"):
+            if window.window_text() != self._config.TITLE:
+                window.close()
+
 
     def trade(self, security, price, amount):
         self._set_trade_params(security, price, amount)
