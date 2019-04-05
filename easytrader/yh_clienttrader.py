@@ -71,21 +71,21 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         self._close_prompt_windows()
         self._main = self._app.window(title="网上股票交易系统5.0")
         try:
-            self._main.window(control_id=129, class_name="SysTreeView32").wait(
-                "ready", 2
-            )
+            self._main.child_window(
+                control_id=129, class_name="SysTreeView32"
+            ).wait("ready", 2)
         # pylint: disable=broad-except
         except Exception:
             self.wait(2)
             self._switch_window_to_normal_mode()
 
     def _switch_window_to_normal_mode(self):
-        self._app.top_window().window(
+        self._app.top_window().child_window(
             control_id=32812, class_name="Button"
         ).click()
 
     def _handle_verify_code(self, is_xiadan):
-        control = self._app.top_window().window(
+        control = self._app.top_window().child_window(
             control_id=1499 if is_xiadan else 22202
         )
         control.click()

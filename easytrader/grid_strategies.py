@@ -39,7 +39,7 @@ class BaseStrategy(IGridStrategy):
         pass
 
     def _get_grid(self, control_id: int):
-        grid = self._trader.main.window(
+        grid = self._trader.main.child_window(
             control_id=control_id, class_name="CVirtualGridCtrl"
         )
         return grid
@@ -100,7 +100,7 @@ class Xls(BaseStrategy):
         return self._format_grid_data(temp_path)
 
     def normalize_path(self, temp_path: str) -> str:
-        return temp_path.replace('~', '{~}')
+        return temp_path.replace("~", "{~}")
 
     def _format_grid_data(self, data: str) -> List[Dict]:
         df = pd.read_csv(
