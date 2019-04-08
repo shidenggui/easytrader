@@ -40,9 +40,9 @@ class WebTrader(metaclass=abc.ABCMeta):
     def prepare(self, config_file=None, user=None, password=None, **kwargs):
         """登录的统一接口
         :param config_file 登录数据文件，若无则选择参数登录模式
-        :param user: 各家券商的账号或者雪球的用户名
-        :param password: 密码, 券商为加密后的密码，雪球为明文密码
-        :param account: [雪球登录需要]雪球手机号(邮箱手机二选一)
+        :param user: 各家券商的账号
+        :param password: 密码, 券商为加密后的密码
+        :param cookies: [雪球登录需要]雪球登录需要设置对应的 cookies
         :param portfolio_code: [雪球登录需要]组合代码
         :param portfolio_market: [雪球登录需要]交易市场，
             可选['cn', 'us', 'hk'] 默认 'cn'
