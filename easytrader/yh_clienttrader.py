@@ -89,7 +89,6 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             control_id=1499 if is_xiadan else 22202
         )
         control.click()
-        control.draw_outline()
 
         file_path = tempfile.mktemp()
         if is_xiadan:
