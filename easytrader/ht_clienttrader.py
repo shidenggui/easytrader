@@ -7,6 +7,9 @@ from . import clienttrader
 
 
 class HTClientTrader(clienttrader.BaseLoginClientTrader):
+
+    login_test_host: bool = True
+
     @property
     def broker_type(self):
         return "ht"
@@ -38,6 +41,17 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except RuntimeError:
                     pass
+
+            if self.login_test_host:
+                self._app.top_window().type_keys("%t")
+                self.wait(0.5)
+                self._app.top_window().Button2.wait('enabled',timeout=20, retry_interval=1)
+                self._app.top_window().Button5.check()   # enable 自动选择
+                self.wait(0.5)
+                self._app.top_window().Button3.click()
+                self.wait(0.3)
+
+
             SetForegroundWindow(self._app.top_window().Edit1.wrapper_object())
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
