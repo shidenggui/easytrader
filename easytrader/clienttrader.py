@@ -231,7 +231,7 @@ class ClientTrader(IClientTrader):
         if len(stock_list) == len(invalid_list_idx):
             return {"message": "没有发现可以申购的新股"}
 
-        self.broker_type!='yh' and self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
+        self._click(self._config.AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID)
         self.wait(0.1)
 
         for row in invalid_list_idx:
