@@ -117,10 +117,8 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         if len(stock_list) == len(invalid_list_idx):
             return {"message": "没有发现可以申购的新股"}
         self.wait(0.1)
-        for row in invalid_list_idx:
-            self._click_grid_by_row(row)
-        self.wait(0.1)
-
+        # for row in invalid_list_idx:
+            # self._click_grid_by_row(row)
         self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
         self.wait(0.1)
         return self._handle_pop_dialogs()
