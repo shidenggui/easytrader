@@ -45,7 +45,10 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             if self.login_test_host:
                 self._app.top_window().type_keys("%t")
                 self.wait(0.5)
-                self._app.top_window().Button2.wait('enabled',timeout=20, retry_interval=1)
+                try:
+                    self._app.top_window().Button2.wait('enabled',timeout=30, retry_interval=1)
+                except:
+                    pass
                 self._app.top_window().Button5.check()   # enable 自动选择
                 self.wait(0.5)
                 self._app.top_window().Button3.click()
