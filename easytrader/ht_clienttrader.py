@@ -53,9 +53,8 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     self.wait(0.3)
                 except Exception as ex:
                     logging.exception("test speed error", ex)
-                    self._app.top_window().wrapper_object().Close()
+                    self._app.top_window().wrapper_object().close()
                     self.wait(0.3)
-
 
             SetForegroundWindow(self._app.top_window().Edit1.wrapper_object())
             self._app.top_window().Edit1.type_keys(user)
