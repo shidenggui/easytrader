@@ -4,7 +4,7 @@ import pywinauto.clipboard
 from pywinauto.win32functions import SetForegroundWindow
 
 from . import clienttrader
-
+import logging
 
 class HTClientTrader(clienttrader.BaseLoginClientTrader):
 
@@ -46,13 +46,15 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                 self._app.top_window().type_keys("%t")
                 self.wait(0.5)
                 try:
-                    self._app.top_window().Button2.wait('enabled',timeout=30, retry_interval=1)
-                except:
-                    pass
-                self._app.top_window().Button5.check()   # enable 自动选择
-                self.wait(0.5)
-                self._app.top_window().Button3.click()
-                self.wait(0.3)
+                    self._app.top_window().Button2.wait('enabled',timeout=30, retry_interval=5)
+                    self._app.top_window().Button5.check()  # enable 自动选择
+                    self.wait(0.5)
+                    self._app.top_window().Button3.click()
+                    self.wait(0.3)
+                except Exception as ex:
+                    logging.exception("test speed error", ex)
+                    self._app.top_window().wrapper_object().Close()
+                    self.wait(0.3)
 
 
             SetForegroundWindow(self._app.top_window().Edit1.wrapper_object())
