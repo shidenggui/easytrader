@@ -213,7 +213,7 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
-        self._set_market_trade_params(security, amount)
+        self._set_market_trade_params(security, amount, limit_price=limit_price)
         if ttype is not None:
             retry = 0
             retry_max = 10
