@@ -166,7 +166,7 @@ class ClientTrader(IClientTrader):
         return self.trade(security, price, amount)
 
     @perf_clock()
-    def market_buy(self, security, amount, ttype=None, **kwargs):
+    def market_buy(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
         市价买入
         :param security: 六位证券代码
@@ -174,15 +174,16 @@ class ClientTrader(IClientTrader):
         :param ttype: 市价委托类型，默认客户端默认选择，
                      深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
                      沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+        :param limit_price: 科创板 限价
 
         :return: {'entrust_no': '委托单号'}
         """
         self._switch_left_menus(["市价委托", "买入"])
 
-        return self.market_trade(security, amount, ttype)
+        return self.market_trade(security, amount, ttype, limit_price=limit_price)
 
     @perf_clock()
-    def market_sell(self, security, amount, ttype=None, **kwargs):
+    def market_sell(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
         市价卖出
         :param security: 六位证券代码
@@ -190,14 +191,14 @@ class ClientTrader(IClientTrader):
         :param ttype: 市价委托类型，默认客户端默认选择，
                      深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
                      沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
-
+        :param limit_price: 科创板 限价
         :return: {'entrust_no': '委托单号'}
         """
         self._switch_left_menus(["市价委托", "卖出"])
 
-        return self.market_trade(security, amount, ttype)
+        return self.market_trade(security, amount, ttype, limit_price=limit_price)
 
-    def market_trade(self, security, amount, ttype=None, **kwargs):
+    def market_trade(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
         市价交易
         :param security: 六位证券代码
@@ -365,7 +366,7 @@ class ClientTrader(IClientTrader):
         )
         self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
-    def _set_market_trade_params(self, security, amount):
+    def _set_market_trade_params(self, security, amount, limit_price=None):
         code = security[-6:]
 
         self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
@@ -374,6 +375,13 @@ class ClientTrader(IClientTrader):
         self.wait(0.1)
 
         self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
+        self.wait(0.1)
+        price_control = self._main.window(
+            control_id=self._config.TRADE_PRICE_CONTROL_ID, class_name="Edit"
+        )
+        if price_control is not None:
+            price_control.set_edit_text(limit_price)
+
 
     def _get_grid_data(self, control_id):
         return self.grid_strategy(self).get(control_id)
