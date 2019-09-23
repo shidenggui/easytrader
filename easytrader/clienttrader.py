@@ -5,6 +5,9 @@ import os
 import sys
 import time
 from typing import Type
+
+from pywinauto import findwindows
+
 from . import perf_clock
 
 import easyutils
@@ -13,6 +16,7 @@ import re
 from . import grid_strategies, helpers, pop_dialog_handler
 from .config import client
 from pywinauto.win32functions import SetForegroundWindow, ShowWindow
+import logging
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
@@ -286,10 +290,14 @@ class ClientTrader(IClientTrader):
     @perf_clock()
     def _is_exist_pop_dialog(self):
         self.wait(0.5)  # wait dialog display
-        return (
-            self._main.wrapper_object()
-            != self._app.top_window().wrapper_object()
-        )
+        try:
+            return (
+                self._main.wrapper_object()
+                != self._app.top_window().wrapper_object()
+            )
+        except findwindows.ElementNotFoundError|pywinauto.timings.TimeoutError as ex:
+            logging.exception(ex)
+            return False
 
     def _run_exe_path(self, exe_path):
         return os.path.join(os.path.dirname(exe_path), "xiadan.exe")
