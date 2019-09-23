@@ -384,9 +384,14 @@ class ClientTrader(IClientTrader):
 
         self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         self.wait(0.1)
-        price_control = self._main.window(
-            control_id=self._config.TRADE_PRICE_CONTROL_ID, class_name="Edit"
-        )
+        price_control = None
+        if str(security).startswith("68"):  # 科创板存在限价
+            try:
+                price_control = self._main.window(
+                    control_id=self._config.TRADE_PRICE_CONTROL_ID, class_name="Edit"
+                )
+            except:
+                pass
         if price_control is not None:
             price_control.set_edit_text(limit_price)
 
