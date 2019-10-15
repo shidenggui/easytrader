@@ -97,17 +97,19 @@ class Copy(BaseStrategy):
 
                     captcha_num = captcha_recognize(file_path)  # 识别验证码
                     log.info("captcha result-->" + captcha_num)
-                    self._trader.app.top_window().window(control_id=0x964, class_name='Edit').set_text(captcha_num)  # 模拟输入验证码
+                    if len(captcha_num) == 4:
+                        self._trader.app.top_window().window(control_id=0x964, class_name='Edit').set_text(captcha_num)  # 模拟输入验证码
 
-                    self._trader.app.top_window().set_focus()
-                    pywinauto.keyboard.SendKeys("{ENTER}")   # 模拟发送enter，点击确定
-                    try:
-                        log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static', timeout=0.5).window_text())
-                    except:
-                        found = True
-                        break
+                        self._trader.app.top_window().set_focus()
+                        pywinauto.keyboard.SendKeys("{ENTER}")   # 模拟发送enter，点击确定
+                        try:
+                            log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static', timeout=0.5).window_text())
+                        except:       # 窗体消失
+                            found = True
+                            break
                     count -= 1
                     self._trader.wait(0.1)
+                    self._trader.app.top_window().window(control_id=0x965, class_name='Static').click()
                 if not found:
                     self._trader.app.top_window().Button2.click()  # 点击取消
             else:
