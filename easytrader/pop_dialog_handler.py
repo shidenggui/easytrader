@@ -5,7 +5,7 @@ from typing import Optional
 
 from . import exceptions, perf_clock
 import  pywinauto
-from pywinauto.win32functions import SetForegroundWindow, ShowWindow
+from .utils import SetForegroundWindow, ShowWindow
 
 class PopDialogHandler:
     def __init__(self, app):

@@ -15,7 +15,7 @@ import re
 
 from . import grid_strategies, helpers, pop_dialog_handler
 from .config import client
-from pywinauto.win32functions import SetForegroundWindow, ShowWindow
+from win32gui import SetForegroundWindow, ShowWindow
 import logging
 
 if not sys.platform.startswith("darwin"):
@@ -54,6 +54,7 @@ class IClientTrader(abc.ABC):
 
 
 class ClientTrader(IClientTrader):
+    _editor_need_type_keys = True
     # The strategy to use for getting grid data
     grid_strategy: Type[grid_strategies.IGridStrategy] = grid_strategies.Copy
 
@@ -295,7 +296,7 @@ class ClientTrader(IClientTrader):
                 self._main.wrapper_object()
                 != self._app.top_window().wrapper_object()
             )
-        except findwindows.ElementNotFoundError|pywinauto.timings.TimeoutError as ex:
+        except findwindows.ElementNotFoundError|pywinauto.timings.TimeoutError|RuntimeError as ex:
             logging.exception(ex)
             return False
 
@@ -404,9 +405,14 @@ class ClientTrader(IClientTrader):
         control.type_keys(text, set_foreground=False)
 
     def _type_edit_control_keys(self, control_id, text):
-        self._main.window(
-            control_id=control_id, class_name="Edit"
-        ).set_edit_text(text)
+        if not self._editor_need_type_keys:
+            self._main.window(
+                control_id=control_id, class_name="Edit"
+            ).set_edit_text(text)
+        else:
+            self._main.window(
+                control_id=control_id, class_name="Edit"
+            ).type_keys(text)
 
     def _collapse_left_menus(self):
         items = self._get_left_menus_handle().roots()

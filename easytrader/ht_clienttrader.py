@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pywinauto
 import pywinauto.clipboard
-from pywinauto.win32functions import SetForegroundWindow
+from win32gui import SetForegroundWindow
 
 from . import clienttrader
 import logging
@@ -23,6 +23,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         :param kwargs:
         :return:
         """
+        self._editor_need_type_keys = False
         if comm_password is None:
             raise ValueError("华泰必须设置通讯密码")
 
@@ -41,7 +42,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except RuntimeError:
                     pass
-
+            self.login_test_host = False
             if self.login_test_host:
                 self._app.top_window().type_keys("%t")
                 self.wait(0.5)
@@ -56,7 +57,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     self._app.top_window().wrapper_object().close()
                     self.wait(0.3)
 
-            SetForegroundWindow(self._app.top_window().Edit1.wrapper_object())
+            self._app.top_window().Edit1.set_focus()
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
 
