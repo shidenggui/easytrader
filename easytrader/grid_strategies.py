@@ -90,9 +90,10 @@ class Copy(BaseStrategy):
             if self._trader.app.top_window().window(class_name='Static', title_re="验证码").exists(timeout=1):
                 file_path = "tmp.png"
                 count = 5
+                found = False
                 while count > 0:
                     self._trader.app.top_window().window(control_id=0x965, class_name='Static').\
-                        CaptureAsImage().save(file_path)  # 保存验证码
+                        capture_as_image().save(file_path)  # 保存验证码
 
                     captcha_num = captcha_recognize(file_path)  # 识别验证码
                     log.info("captcha result-->" + captcha_num)
@@ -103,9 +104,12 @@ class Copy(BaseStrategy):
                     try:
                         log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static', timeout=0.5).window_text())
                     except:
+                        found = True
                         break
                     count -= 1
                     self._trader.wait(0.1)
+                if not found:
+                    self._trader.app.top_window().Button2.click()  # 点击取消
             else:
                 Copy._need_captcha_reg = False
         count = 5
