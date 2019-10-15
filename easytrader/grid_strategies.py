@@ -95,7 +95,7 @@ class Copy(BaseStrategy):
                         CaptureAsImage().save(file_path)  # 保存验证码
 
                     captcha_num = captcha_recognize(file_path)  # 识别验证码
-                    log.info("captcha result-->", captcha_num)
+                    log.info("captcha result-->" + captcha_num)
                     self._trader.app.top_window().window(control_id=0x964, class_name='Edit').set_text(captcha_num)  # 模拟输入验证码
 
                     self._trader.app.top_window().set_focus()
