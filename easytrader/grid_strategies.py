@@ -103,7 +103,7 @@ class Copy(BaseStrategy):
                         self._trader.app.top_window().set_focus()
                         pywinauto.keyboard.SendKeys("{ENTER}")   # 模拟发送enter，点击确定
                         try:
-                            log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static', timeout=0.5).window_text())
+                            log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static').window_text())
                         except Exception as ex:       # 窗体消失
                             log.exception(ex)
                             found = True
