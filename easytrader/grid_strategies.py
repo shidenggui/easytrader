@@ -104,7 +104,8 @@ class Copy(BaseStrategy):
                         pywinauto.keyboard.SendKeys("{ENTER}")   # 模拟发送enter，点击确定
                         try:
                             log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static', timeout=0.5).window_text())
-                        except:       # 窗体消失
+                        except Exception as ex:       # 窗体消失
+                            log.exception(ex)
                             found = True
                             break
                     count -= 1
