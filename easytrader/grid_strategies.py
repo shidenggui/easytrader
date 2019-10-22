@@ -11,6 +11,10 @@ import pywinauto.clipboard
 from .utils import SetForegroundWindow, ShowWindow
 import pywinauto
 import logging
+try:
+    import StringIO
+except:
+    from io import StringIO
 
 from .log import log
 from .utils.captcha import captcha_recognize
@@ -168,9 +172,12 @@ class Xls(BaseStrategy):
         return temp_path.replace('~', '{~}')
 
     def _format_grid_data(self, data: str) -> List[Dict]:
+        f = open(data, encoding="gbk", errors='replace')
+        cont = f.read()
+        f.close()
+
         df = pd.read_csv(
-            data,
-            encoding="gbk",
+            StringIO(cont),
             delimiter="\t",
             dtype=self._trader.config.GRID_DTYPE,
             na_filter=False,
