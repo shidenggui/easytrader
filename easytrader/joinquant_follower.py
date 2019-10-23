@@ -27,7 +27,7 @@ class JoinQuantFollower(BaseFollower):
 
     def check_login_success(self, rep):
         set_cookie = rep.headers["set-cookie"]
-        if len(set_cookie) < 100:
+        if len(set_cookie) < 50:
             raise exceptions.NotLoginError("登录失败，请检查用户名和密码")
         self.s.headers.update({"cookie": set_cookie})
 
