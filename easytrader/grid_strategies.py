@@ -162,7 +162,7 @@ class Xls(BaseStrategy):
         self._trader.app.top_window().type_keys(self.normalize_path(temp_path), set_foreground=False)
 
         # alt+s保存，alt+y替换已存在的文件
-        self._set_foreground(self._trader.app.top_window())
+        # self._set_foreground(self._trader.app.top_window())
         self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
         # Wait until file save complete otherwise pandas can not find file
         self._trader.wait(0.2)
