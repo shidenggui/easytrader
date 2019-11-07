@@ -410,9 +410,10 @@ class ClientTrader(IClientTrader):
                 control_id=control_id, class_name="Edit"
             ).set_edit_text(text)
         else:
-            self._main.window(
-                control_id=control_id, class_name="Edit"
-            ).type_keys(text)
+            editor = self._main.window(
+                control_id=control_id, class_name="Edit")
+            editor.select()
+            editor.type_keys(text)
 
     def _collapse_left_menus(self):
         items = self._get_left_menus_handle().roots()

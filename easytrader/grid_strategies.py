@@ -142,7 +142,6 @@ class WMCopy(Copy):
         return self._format_grid_data(content)
 
 
-
 class Xls(BaseStrategy):
     """
     通过将 Grid 另存为 xls 文件再读取的方式获取 grid 内容，
@@ -159,13 +158,21 @@ class Xls(BaseStrategy):
 
         temp_path = tempfile.mktemp(suffix=".csv")
         self._set_foreground(self._trader.app.top_window())
-        self._trader.app.top_window().type_keys(self.normalize_path(temp_path), set_foreground=False)
+        # self._trader.app.top_window().type_keys(self.normalize_path(temp_path), set_foreground=False)
+
 
         # alt+s保存，alt+y替换已存在的文件
-        self._set_foreground(self._trader.app.top_window())
+        # # self._set_foreground(self._trader.app.top_window())
+        # self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
+        self._trader.app.top_window().Edit1.set_edit_text(self.normalize_path(temp_path))
+        self._trader.wait(0.1)
         self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
-        # Wait until file save complete otherwise pandas can not find file
         self._trader.wait(0.2)
+        if self._trader._is_exist_pop_dialog():
+            self._trader.app.top_window().Button2.click()
+            self._trader.wait(0.2)
+        # Wait until file save complete otherwise pandas can not find file
+
         return self._format_grid_data(temp_path)
 
     def normalize_path(self, temp_path: str) -> str:
