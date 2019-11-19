@@ -313,8 +313,9 @@ class ClientTrader(IClientTrader):
         self.wait(1)
         for window in self._app.windows(class_name="#32770"):
             if window.window_text() != self._config.TITLE:
-                window.close()
                 logging.info("close " + window.window_text())
+                window.close()
+
                 self.wait(0.2)
         self.wait(1)
 
