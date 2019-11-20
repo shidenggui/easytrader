@@ -311,7 +311,7 @@ class ClientTrader(IClientTrader):
 
     def _close_prompt_windows(self):
         self.wait(1)
-        for window in self._app.windows(class_name="#32770"):
+        for window in self._app.windows(class_name="#32770", visible_only=True):
             title = window.window_text()
             if title != self._config.TITLE:
                 logging.info("close " + title)
