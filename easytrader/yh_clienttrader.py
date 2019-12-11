@@ -71,25 +71,24 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
         self._close_prompt_windows()
         self._main = self._app.window(title="网上股票交易系统5.0")
         try:
-            self._main.window(control_id=129, class_name="SysTreeView32").wait(
-                "ready", 2
-            )
+            self._main.child_window(
+                control_id=129, class_name="SysTreeView32"
+            ).wait("ready", 2)
         # pylint: disable=broad-except
         except Exception:
             self.wait(2)
             self._switch_window_to_normal_mode()
 
     def _switch_window_to_normal_mode(self):
-        self._app.top_window().window(
+        self._app.top_window().child_window(
             control_id=32812, class_name="Button"
         ).click()
 
     def _handle_verify_code(self, is_xiadan):
-        control = self._app.top_window().window(
+        control = self._app.top_window().child_window(
             control_id=1499 if is_xiadan else 22202
         )
         control.click()
-        control.draw_outline()
 
         file_path = tempfile.mktemp()
         if is_xiadan:
@@ -106,5 +105,20 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
     @property
     def balance(self):
         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
-
         return self._get_grid_data(self._config.BALANCE_GRID_CONTROL_ID)
+    def auto_ipo(self):
+        self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
+        stock_list = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+        if len(stock_list) == 0:
+            return {"message": "今日无新股"}
+        invalid_list_idx = [
+            i for i, v in enumerate(stock_list) if v["申购数量"] <= 0
+        ]
+        if len(stock_list) == len(invalid_list_idx):
+            return {"message": "没有发现可以申购的新股"}
+        self.wait(0.1)
+        # for row in invalid_list_idx:
+            # self._click_grid_by_row(row)
+        self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
+        self.wait(0.1)
+        return self._handle_pop_dialogs()

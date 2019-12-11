@@ -50,18 +50,21 @@ class BaseStrategy(IGridStrategy):
         pass
 
     def _get_grid(self, control_id: int):
-        grid = self._trader.main.window(
+        grid = self._trader.main.child_window(
             control_id=control_id, class_name="CVirtualGridCtrl"
         )
         return grid
 
     def _set_foreground(self, grid=None):
-        if grid is None:
-            grid = self._trader.main
-        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(grid.wrapper_object(), 9)  # restore window state
-        else:
-            SetForegroundWindow(grid.wrapper_object())  # bring to front
+        try:
+            if grid is None:
+                grid = self._trader.main
+            if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+                ShowWindow(grid.wrapper_object(), 9)  # restore window state
+            else:
+                SetForegroundWindow(grid.wrapper_object())  # bring to front
+        except:
+            pass
 
 
 class Copy(BaseStrategy):
@@ -154,7 +157,12 @@ class Xls(BaseStrategy):
         # ctrl+s 保存 grid 内容为 xls 文件
         self._set_foreground(grid)  # setFocus buggy, instead of SetForegroundWindow
         grid.type_keys("^s", set_foreground=False)
-        self._trader.wait(0.5)
+        count = 10
+        while count > 0:
+            if self._trader._is_exist_pop_dialog():
+                break
+            self._trader.wait(0.2)
+            count -= 1
 
         temp_path = tempfile.mktemp(suffix=".csv")
         self._set_foreground(self._trader.app.top_window())

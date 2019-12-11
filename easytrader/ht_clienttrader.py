@@ -84,7 +84,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             result[key] = float(
-                self._main.window(
+                self._main.child_window(
                     control_id=control_id, class_name="Static"
                 ).window_text()
             )

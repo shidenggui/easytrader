@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
-from .api import use, follower
+import urllib3
+
 from . import exceptions
+from .api import use, follower
 import jsonpickle
 
-__version__ = "0.17.0"
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+__version__ = "0.18.4"
 __author__ = "shidenggui"
 
 

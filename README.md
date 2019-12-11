@@ -11,21 +11,18 @@
 * 实现自动登录
 * 支持通过 webserver 远程操作客户端
 * 支持命令行调用，方便其他语言适配
-* 支持 Python3, Linux / Win, 推荐使用 `Python3`
+* 基于 Python3, Win。注: Linux 仅支持雪球
 * 有兴趣的可以加群 `556050652` 一起讨论
-* 捐助:
-
-![微信](http://7xqo8v.com1.z0.glb.clouddn.com/wx.png?imageView2/1/w/300/h/300)             ![支付宝](http://7xqo8v.com1.z0.glb.clouddn.com/zhifubao2.png?imageView2/1/w/300/h/300)
-
 
 ## 公众号
 
 扫码关注“易量化”的微信公众号，不定时更新一些个人文章及与大家交流
 
-![](http://7xqo8v.com1.z0.glb.clouddn.com/easy_quant_qrcode.jpg?imageView2/1/w/300/h/300)
+![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/easy_quant_qrcode.jpg)
 
+## 赞助:
 
-**开发环境** : `Ubuntu 16.04` / `Python 3.5`
+![微信](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/wechat_pay_qr.png)             ![支付宝](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/alipay_qr.jpeg)
 
 ### 相关
 
@@ -43,10 +40,6 @@
 注: 现在有些新的同花顺客户端对拷贝剪贴板数据做了限制，我在 [issue](https://github.com/shidenggui/easytrader/issues/272) 里提供了几个券商老版本的下载地址。
 
 
-### 实盘易
-
-如果有对其他券商或者通达信版本的需求，可以查看 [实盘易](http://www.iguuu.com/e?x=19828)
-
 ### 模拟交易
 
 * 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](doc/xueqiu.md)）
@@ -57,4 +50,7 @@
 
 ### 其他
 
-[软件实现原理](http://www.jisilu.cn/question/42707)
+最近在开发一个[大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)，同时也将相关的功能集成到了对应的公众号，刚刚起步，如果大家对网文感兴趣的话欢迎关注交流
+
+![推书君](https://raw.githubusercontent.com/shidenggui/assets/master/tuishujun/qr.jpeg)
+

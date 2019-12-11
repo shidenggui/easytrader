@@ -115,7 +115,7 @@ class ClientTrader(IClientTrader):
         result = {}
         for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP.items():
             result[key] = float(
-                self._main.window(
+                self._main.child_window(
                     control_id=control_id, class_name="Static"
                 ).window_text()
             )
@@ -234,7 +234,7 @@ class ClientTrader(IClientTrader):
 
     def _set_market_trade_type(self, ttype):
         """根据选择的市价交易类型选择对应的下拉选项"""
-        selects = self._app.top_window().window(
+        selects = self._main.child_window(
             control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
             class_name="ComboBox",
         )
@@ -283,7 +283,7 @@ class ClientTrader(IClientTrader):
             self._config.COMMON_GRID_FIRST_ROW_HEIGHT
             + self._config.COMMON_GRID_ROW_HEIGHT * row
         )
-        self._app.top_window().window(
+        self._app.top_window().child_window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
             class_name="CVirtualGridCtrl",
         ).click(coords=(x, y))
@@ -335,14 +335,14 @@ class ClientTrader(IClientTrader):
         )
 
     def _click(self, control_id):
-        self._app.top_window().window(
+        self._app.top_window().child_window(
             control_id=control_id, class_name="Button"
         ).click()
 
     @perf_clock()
     def _submit_trade(self):
         time.sleep(0.2)
-        self._main.window(
+        self._main.child_window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
         ).click()
@@ -354,7 +354,8 @@ class ClientTrader(IClientTrader):
     @perf_clock()
     def _get_pop_dialog_title(self):
         return (
-            self.__get_top_window_pop_dialog()
+            self._app.top_window()
+            .child_window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
             .window_text()
         )
     # def _get_pop_dialog_title(self):
@@ -403,9 +404,17 @@ class ClientTrader(IClientTrader):
     def _get_grid_data(self, control_id):
         return self.grid_strategy(self).get(control_id)
 
+        ).set_edit_text(text)
+
+    def _type_keys(self, control_id, text):
+        self._main.child_window(
+            control_id=control_id, class_name="Edit"
+        ).set_edit_text(text)
+
     def _type_common_control_keys(self, control, text):
         self._set_foreground(control)
         control.type_keys(text, set_foreground=False)
+        ).set_edit_text(text)
 
     def _type_edit_control_keys(self, control_id, text):
         if not self._editor_need_type_keys:
@@ -426,6 +435,8 @@ class ClientTrader(IClientTrader):
     @perf_clock()
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
+        self._app.top_window().type_keys('{ESC}')
+        self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
@@ -437,7 +448,7 @@ class ClientTrader(IClientTrader):
         count = 2
         while True:
             try:
-                handle = self._main.window(
+                handle = self._main.child_window(
                     control_id=129, class_name="SysTreeView32"
                 )
                 if count <= 0:
@@ -457,7 +468,7 @@ class ClientTrader(IClientTrader):
             self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT
             + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
         )
-        self._app.top_window().window(
+        self._app.top_window().child_window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
             class_name="CVirtualGridCtrl",
         ).double_click(coords=(x, y))

@@ -24,7 +24,7 @@ pytesseract==0.2.4
 python-dateutil==2.7.3
 python-xlib==0.23
 pytz==2018.5
-pywinauto==0.6.4
+pywinauto==0.6.6
 requests==2.19.1
 rqopen-client==0.0.5
 six==1.11.0
