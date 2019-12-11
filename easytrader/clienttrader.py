@@ -405,9 +405,7 @@ class ClientTrader(IClientTrader):
         return self.grid_strategy(self).get(control_id)
 
     def _type_keys(self, control_id, text):
-        self._main.child_window(
-            control_id=control_id, class_name="Edit"
-        ).set_edit_text(text)
+        self._main.child_window(control_id=control_id, class_name="Edit").set_edit_text(text)
 
     def _type_common_control_keys(self, control, text):
         self._set_foreground(control)
