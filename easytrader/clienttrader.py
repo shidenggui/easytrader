@@ -54,9 +54,16 @@ class IClientTrader(abc.ABC):
 
 
 class ClientTrader(IClientTrader):
-    _editor_need_type_keys = True
+    _editor_need_type_keys = False
     # The strategy to use for getting grid data
     grid_strategy: Type[grid_strategies.IGridStrategy] = grid_strategies.Copy
+    _grid_strategy_instance: grid_strategies.IGridStrategy = None
+
+    @property
+    def grid_strategy_instance(self):
+        if self._grid_strategy_instance is None:
+            self._grid_strategy_instance = self.grid_strategy(self)
+        return self._grid_strategy_instance
 
     def __init__(self):
         self._config = client.create(self.broker_type)
@@ -392,7 +399,7 @@ class ClientTrader(IClientTrader):
         price_control = None
         if str(security).startswith("68"):  # 科创板存在限价
             try:
-                price_control = self._main.window(
+                price_control = self._main.child_window(
                     control_id=self._config.TRADE_PRICE_CONTROL_ID, class_name="Edit"
                 )
             except:
@@ -402,7 +409,7 @@ class ClientTrader(IClientTrader):
 
 
     def _get_grid_data(self, control_id):
-        return self.grid_strategy(self).get(control_id)
+        return self.grid_strategy_instance.get(control_id)
 
     def _type_keys(self, control_id, text):
         self._main.child_window(control_id=control_id, class_name="Edit").set_edit_text(text)
@@ -413,11 +420,11 @@ class ClientTrader(IClientTrader):
 
     def _type_edit_control_keys(self, control_id, text):
         if not self._editor_need_type_keys:
-            self._main.window(
+            self._main.child_window(
                 control_id=control_id, class_name="Edit"
             ).set_edit_text(text)
         else:
-            editor = self._main.window(
+            editor = self._main.child_window(
                 control_id=control_id, class_name="Edit")
             editor.select()
             editor.type_keys(text)
@@ -430,8 +437,8 @@ class ClientTrader(IClientTrader):
     @perf_clock()
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
-        self._app.top_window().type_keys('{ESC}')
-        self._app.top_window().type_keys('{F5}')
+        # self._app.top_window().type_keys('{ESC}')
+        # self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
