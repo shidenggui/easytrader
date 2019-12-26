@@ -221,7 +221,8 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
-        self._set_market_trade_params(security, amount, limit_price=limit_price)
+        code = security[-6:]
+        self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
         if ttype is not None:
             retry = 0
             retry_max = 10
@@ -232,7 +233,7 @@ class ClientTrader(IClientTrader):
                 except:
                     retry += 1
                     self.wait(0.1)
-
+        self._set_market_trade_params(security, amount, limit_price=limit_price)
         self._submit_trade()
 
         return self._handle_pop_dialogs(
@@ -387,13 +388,6 @@ class ClientTrader(IClientTrader):
         self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _set_market_trade_params(self, security, amount, limit_price=None):
-        code = security[-6:]
-
-        self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
-
-        # wait security input finish
-        self.wait(0.1)
-
         self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         self.wait(0.1)
         price_control = None
