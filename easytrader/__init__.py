@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import urllib3
 
-from .log import logger
-from . import exceptions
-from .api import use, follower
+from easytrader import exceptions
+from easytrader.api import use, follower
+from easytrader.log import logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
