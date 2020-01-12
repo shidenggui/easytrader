@@ -7,5 +7,5 @@ from .api import use, follower
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-__version__ = "0.18.4"
+__version__ = "0.18.5"
 __author__ = "shidenggui"
