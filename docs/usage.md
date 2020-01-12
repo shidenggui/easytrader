@@ -6,11 +6,6 @@ import easytrader
 
 # 设置券商类型
 
-**银河客户端**
-
-```python
-user = easytrader.use('yh_client')
-```
 **华泰客户端**
 
 ```python
