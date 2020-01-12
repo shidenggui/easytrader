@@ -44,7 +44,5 @@
 
 ### 其他
 
-最近在开发一个[大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)，同时也将相关的功能集成到了对应的公众号，刚刚起步，如果大家对网文感兴趣的话欢迎关注交流
-
-![推书君](https://raw.githubusercontent.com/shidenggui/assets/master/tuishujun/qr.jpeg)
+最近在开发一个[大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)，喜欢小说的朋友可以一起交流
 
