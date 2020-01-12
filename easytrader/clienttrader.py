@@ -6,10 +6,17 @@ import sys
 import time
 from typing import Type
 
+from pywinauto import findwindows
+
+from . import perf_clock
+
 import easyutils
+import re
 
 from . import grid_strategies, helpers, pop_dialog_handler
 from .config import client
+from win32gui import SetForegroundWindow, ShowWindow
+import logging
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
@@ -47,13 +54,29 @@ class IClientTrader(abc.ABC):
 
 
 class ClientTrader(IClientTrader):
+    _editor_need_type_keys = False
     # The strategy to use for getting grid data
     grid_strategy: Type[grid_strategies.IGridStrategy] = grid_strategies.Copy
+    _grid_strategy_instance: grid_strategies.IGridStrategy = None
+
+    @property
+    def grid_strategy_instance(self):
+        if self._grid_strategy_instance is None:
+            self._grid_strategy_instance = self.grid_strategy(self)
+        return self._grid_strategy_instance
 
     def __init__(self):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
+
+    def _set_foreground(self, grid=None):
+        if grid is None:
+            grid = self._trader.main
+        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+            ShowWindow(grid.wrapper_object(), 9)  # restore window state
+        else:
+            SetForegroundWindow(grid.wrapper_object())  # bring to front
 
     @property
     def app(self):
@@ -130,6 +153,7 @@ class ClientTrader(IClientTrader):
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
+    @perf_clock()
     def cancel_entrust(self, entrust_no):
         self.refresh()
         for i, entrust in enumerate(self.cancel_entrusts):
@@ -141,17 +165,20 @@ class ClientTrader(IClientTrader):
                 return self._handle_pop_dialogs()
         return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
+    @perf_clock()
     def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(["买入[F1]"])
 
         return self.trade(security, price, amount)
 
+    @perf_clock()
     def sell(self, security, price, amount, **kwargs):
         self._switch_left_menus(["卖出[F2]"])
 
         return self.trade(security, price, amount)
 
-    def market_buy(self, security, amount, ttype=None, **kwargs):
+    @perf_clock()
+    def market_buy(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
         市价买入
         :param security: 六位证券代码
@@ -159,14 +186,16 @@ class ClientTrader(IClientTrader):
         :param ttype: 市价委托类型，默认客户端默认选择，
                      深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
                      沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+        :param limit_price: 科创板 限价
 
         :return: {'entrust_no': '委托单号'}
         """
         self._switch_left_menus(["市价委托", "买入"])
 
-        return self.market_trade(security, amount, ttype)
+        return self.market_trade(security, amount, ttype, limit_price=limit_price)
 
-    def market_sell(self, security, amount, ttype=None, **kwargs):
+    @perf_clock()
+    def market_sell(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
         市价卖出
         :param security: 六位证券代码
@@ -174,14 +203,14 @@ class ClientTrader(IClientTrader):
         :param ttype: 市价委托类型，默认客户端默认选择，
                      深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
                      沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
-
+        :param limit_price: 科创板 限价
         :return: {'entrust_no': '委托单号'}
         """
         self._switch_left_menus(["市价委托", "卖出"])
 
-        return self.market_trade(security, amount, ttype)
+        return self.market_trade(security, amount, ttype, limit_price=limit_price)
 
-    def market_trade(self, security, amount, ttype=None, **kwargs):
+    def market_trade(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
         市价交易
         :param security: 六位证券代码
@@ -192,9 +221,19 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
-        self._set_market_trade_params(security, amount)
+        code = security[-6:]
+        self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
         if ttype is not None:
-            self._set_market_trade_type(ttype)
+            retry = 0
+            retry_max = 10
+            while retry < retry_max:
+                try:
+                    self._set_market_trade_type(ttype)
+                    break
+                except:
+                    retry += 1
+                    self.wait(0.1)
+        self._set_market_trade_params(security, amount, limit_price=limit_price)
         self._submit_trade()
 
         return self._handle_pop_dialogs(
@@ -207,15 +246,17 @@ class ClientTrader(IClientTrader):
             control_id=self._config.TRADE_MARKET_TYPE_CONTROL_ID,
             class_name="ComboBox",
         )
-        for i, text in selects.texts():
+        for i, text in enumerate(selects.texts()):
             # skip 0 index, because 0 index is current select index
             if i == 0:
-                continue
-            if ttype in text:
+                if re.search(ttype, text):  # 当前已经选中
+                    return
+                else:
+                    continue
+            if re.search(ttype, text):
                 selects.select(i - 1)
-                break
-        else:
-            raise TypeError("不支持对应的市价类型: {}".format(ttype))
+                return
+        raise TypeError("不支持对应的市价类型: {}".format(ttype))
 
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
@@ -225,6 +266,7 @@ class ClientTrader(IClientTrader):
         if len(stock_list) == 0:
             return {"message": "今日无新股"}
         invalid_list_idx = [
+            # i for i, v in enumerate(stock_list) if v["申购数量"] <= 0 or v["证券代码"][:2] == "78"
             i for i, v in enumerate(stock_list) if v["申购数量"] <= 0
         ]
 
@@ -254,12 +296,17 @@ class ClientTrader(IClientTrader):
             class_name="CVirtualGridCtrl",
         ).click(coords=(x, y))
 
+    @perf_clock()
     def _is_exist_pop_dialog(self):
-        self.wait(0.2)  # wait dialog display
-        return (
-            self._main.wrapper_object()
-            != self._app.top_window().wrapper_object()
-        )
+        self.wait(0.5)  # wait dialog display
+        try:
+            return (
+                self._main.wrapper_object()
+                != self._app.top_window().wrapper_object()
+            )
+        except findwindows.ElementNotFoundError|pywinauto.timings.TimeoutError|RuntimeError as ex:
+            logging.exception(ex)
+            return False
 
     def _run_exe_path(self, exe_path):
         return os.path.join(os.path.dirname(exe_path), "xiadan.exe")
@@ -272,10 +319,19 @@ class ClientTrader(IClientTrader):
 
     def _close_prompt_windows(self):
         self.wait(1)
+        for window in self._app.windows(class_name="#32770", visible_only=True):
+            title = window.window_text()
+            if title != self._config.TITLE:
+                logging.info("close " + title)
+                window.close()
+                self.wait(0.2)
+        self.wait(1)
+
+    def close_pormpt_window_no_wait(self):
         for window in self._app.windows(class_name="#32770"):
             if window.window_text() != self._config.TITLE:
                 window.close()
-        self.wait(1)
+
 
     def trade(self, security, price, amount):
         self._set_trade_params(security, price, amount)
@@ -291,56 +347,92 @@ class ClientTrader(IClientTrader):
             control_id=control_id, class_name="Button"
         ).click()
 
+    @perf_clock()
     def _submit_trade(self):
-        time.sleep(0.05)
+        time.sleep(0.2)
         self._main.child_window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID,
             class_name="Button",
         ).click()
 
+    @perf_clock()
+    def __get_top_window_pop_dialog(self):
+        return self._app.top_window().window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+
+    @perf_clock()
     def _get_pop_dialog_title(self):
         return (
             self._app.top_window()
             .child_window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
             .window_text()
         )
+    # def _get_pop_dialog_title(self):
+    #     return (
+    #         self._app.top_window()
+    #         .window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+    #         .window_text()
+    #     )
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
 
-        self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
+        self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
         self.wait(0.1)
 
-        self._type_keys(
+        self._type_edit_control_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code),
         )
-        self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
+        self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
-    def _set_market_trade_params(self, security, amount):
-        code = security[-6:]
-
-        self._type_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
-
-        # wait security input finish
+    def _set_market_trade_params(self, security, amount, limit_price=None):
+        self._type_edit_control_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
         self.wait(0.1)
+        price_control = None
+        if str(security).startswith("68"):  # 科创板存在限价
+            try:
+                price_control = self._main.child_window(
+                    control_id=self._config.TRADE_PRICE_CONTROL_ID, class_name="Edit"
+                )
+            except:
+                pass
+        if price_control is not None:
+            price_control.set_edit_text(limit_price)
 
-        self._type_keys(self._config.TRADE_AMOUNT_CONTROL_ID, str(int(amount)))
 
     def _get_grid_data(self, control_id):
-        return self.grid_strategy(self).get(control_id)
+        return self.grid_strategy_instance.get(control_id)
 
     def _type_keys(self, control_id, text):
-        self._main.child_window(
-            control_id=control_id, class_name="Edit"
-        ).set_edit_text(text)
+        self._main.child_window(control_id=control_id, class_name="Edit").set_edit_text(text)
 
+    def _type_common_control_keys(self, control, text):
+        self._set_foreground(control)
+        control.type_keys(text, set_foreground=False)
+
+    def _type_edit_control_keys(self, control_id, text):
+        if not self._editor_need_type_keys:
+            self._main.child_window(
+                control_id=control_id, class_name="Edit"
+            ).set_edit_text(text)
+        else:
+            editor = self._main.child_window(
+                control_id=control_id, class_name="Edit")
+            editor.select()
+            editor.type_keys(text)
+
+    def _collapse_left_menus(self):
+        items = self._get_left_menus_handle().roots()
+        for item in items:
+            item.collapse()
+
+    @perf_clock()
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
-        self._app.top_window().type_keys('{ESC}')
-        self._app.top_window().type_keys('{F5}')
+        # self._app.top_window().type_keys('{ESC}')
+        # self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
@@ -349,17 +441,22 @@ class ClientTrader(IClientTrader):
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
+        count = 2
         while True:
             try:
                 handle = self._main.child_window(
                     control_id=129, class_name="SysTreeView32"
                 )
+                if count <= 0:
+                    return handle
                 # sometime can't find handle ready, must retry
                 handle.wait("ready", 2)
                 return handle
             # pylint: disable=broad-except
-            except Exception:
+            except Exception as ex:
+                print(ex)
                 pass
+            count = count - 1
 
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
@@ -375,13 +472,17 @@ class ClientTrader(IClientTrader):
     def refresh(self):
         self._switch_left_menus(["买入[F1]"], sleep=0.05)
 
+    @perf_clock()
     def _handle_pop_dialogs(
         self, handler_class=pop_dialog_handler.PopDialogHandler
     ):
         handler = handler_class(self._app)
 
         while self._is_exist_pop_dialog():
-            title = self._get_pop_dialog_title()
+            try:
+                title = self._get_pop_dialog_title()
+            except pywinauto.findwindows.ElementNotFoundError:
+                return {"message": "success"}
 
             result = handler.handle(title)
             if result:

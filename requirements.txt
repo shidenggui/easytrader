@@ -1,3 +1,4 @@
+win32gui
 -i http://mirrors.aliyun.com/pypi/simple/
 --trusted-host mirrors.aliyun.com
 beautifulsoup4==4.6.0

@@ -30,21 +30,25 @@ def use(broker, debug=True, **kwargs):
         log.setLevel(logging.INFO)
     if broker.lower() in ["xq", "雪球"]:
         return XueQiuTrader(**kwargs)
+
     if broker.lower() in ["yh_client", "银河客户端"]:
         from .yh_clienttrader import YHClientTrader
-
         return YHClientTrader()
+
     if broker.lower() in ["ht_client", "华泰客户端"]:
         from .ht_clienttrader import HTClientTrader
-
         return HTClientTrader()
+
+    if broker.lower() in ["wk_client", "五矿客户端"]:
+        from .ht_clienttrader import WKClientTrader
+        return WKClientTrader()
+
     if broker.lower() in ["gj_client", "国金客户端"]:
         from .gj_clienttrader import GJClientTrader
-
         return GJClientTrader()
+
     if broker.lower() in ["ths", "同花顺客户端"]:
         from .clienttrader import ClientTrader
-
         return ClientTrader()
 
     raise NotImplementedError

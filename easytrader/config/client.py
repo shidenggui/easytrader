@@ -8,6 +8,8 @@ def create(broker):
         return GJ
     if broker == "ths":
         return CommonConfig
+    if broker == "wk":
+        return WK
     raise NotImplementedError
 
 
@@ -129,3 +131,7 @@ class GJ(CommonConfig):
     }
 
     AUTO_IPO_MENU_PATH = ["新股申购", "新股批量申购"]
+
+
+class WK(HT):
+    pass
