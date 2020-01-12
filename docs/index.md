@@ -16,8 +16,6 @@
 
 ![](https://raw.githubusercontent.com/shidenggui/assets/master/easytrader/easy_quant_qrcode.jpg)
 
-**开发环境** : `OSX 10.12.3` / `Python 3.5`
-
 
 ### 支持券商
 
