@@ -6,6 +6,7 @@ from io import StringIO
 from typing import TYPE_CHECKING, Dict, List
 
 import pandas as pd
+import pywinauto.keyboard
 import pywinauto
 import pywinauto.clipboard
 from pywinauto import win32defines
@@ -65,7 +66,7 @@ class BaseStrategy(IGridStrategy):
 
 class Copy(BaseStrategy):
     """
-    通过复制 grid 内容到剪切板z再读取来获取 grid 内容
+    通过复制 grid 内容到剪切板再读取来获取 grid 内容
     """
 
     _need_captcha_reg = True
@@ -150,7 +151,7 @@ class Copy(BaseStrategy):
 
 class WMCopy(Copy):
     """
-    通过复制 grid 内容到剪切板z再读取来获取 grid 内容
+    通过复制 grid 内容到剪切板再读取来获取 grid 内容
     """
 
     def get(self, control_id: int) -> List[Dict]:
@@ -177,18 +178,15 @@ class Xls(BaseStrategy):
         grid.type_keys("^s", set_foreground=False)
         count = 10
         while count > 0:
-            if self._trader._is_exist_pop_dialog():
+            if self._trader.is_exist_pop_dialog():
                 break
             self._trader.wait(0.2)
             count -= 1
 
         temp_path = tempfile.mktemp(suffix=".csv")
         self._set_foreground(self._trader.app.top_window())
-        # self._trader.app.top_window().type_keys(self.normalize_path(temp_path), set_foreground=False)
 
         # alt+s保存，alt+y替换已存在的文件
-        # # self._set_foreground(self._trader.app.top_window())
-        # self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
         self._trader.app.top_window().Edit1.set_edit_text(
             self.normalize_path(temp_path)
         )
@@ -196,11 +194,11 @@ class Xls(BaseStrategy):
         self._trader.app.top_window().type_keys(
             "%{s}%{y}", set_foreground=False
         )
+        # Wait until file save complete otherwise pandas can not find file
         self._trader.wait(0.2)
-        if self._trader._is_exist_pop_dialog():
+        if self._trader.is_exist_pop_dialog():
             self._trader.app.top_window().Button2.click()
             self._trader.wait(0.2)
-        # Wait until file save complete otherwise pandas can not find file
 
         return self._format_grid_data(temp_path)
 
@@ -208,12 +206,11 @@ class Xls(BaseStrategy):
         return temp_path.replace("~", "{~}")
 
     def _format_grid_data(self, data: str) -> List[Dict]:
-        f = open(data, encoding="gbk", errors="replace")
-        cont = f.read()
-        f.close()
+        with open(data, encoding="gbk", errors="replace") as f:
+            content = f.read()
 
         df = pd.read_csv(
-            StringIO(cont),
+            StringIO(content),
             delimiter="\t",
             dtype=self._trader.config.GRID_DTYPE,
             na_filter=False,

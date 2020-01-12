@@ -40,7 +40,6 @@ class PopDialogHandler:
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
 
-    @perf_clock
     def _extract_entrust_id(self, content):
         return re.search(r"\d+", content).group()
 

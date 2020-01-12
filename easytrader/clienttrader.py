@@ -9,10 +9,11 @@ import time
 from typing import Type
 
 import easyutils
-from pywinauto import findwindows
+from pywinauto import findwindows, timings
 
 from easytrader import grid_strategies, pop_dialog_handler
 from easytrader.config import client
+from easytrader.log import logger
 from easytrader.utils.misc import file2dict
 from easytrader.utils.perf import perf_clock
 from win32gui import SetForegroundWindow, ShowWindow
@@ -49,6 +50,10 @@ class IClientTrader(abc.ABC):
     @abc.abstractmethod
     def refresh(self):
         """Refresh data"""
+        pass
+
+    @abc.abstractmethod
+    def is_exist_pop_dialog(self):
         pass
 
 
@@ -279,7 +284,6 @@ class ClientTrader(IClientTrader):
         if len(stock_list) == 0:
             return {"message": "今日无新股"}
         invalid_list_idx = [
-            # i for i, v in enumerate(stock_list) if v["申购数量"] <= 0 or v["证券代码"][:2] == "78"
             i
             for i, v in enumerate(stock_list)
             if v["申购数量"] <= 0
@@ -312,15 +316,15 @@ class ClientTrader(IClientTrader):
         ).click(coords=(x, y))
 
     @perf_clock
-    def _is_exist_pop_dialog(self):
+    def is_exist_pop_dialog(self):
         self.wait(0.5)  # wait dialog display
         try:
             return (
                 self._main.wrapper_object()
                 != self._app.top_window().wrapper_object()
             )
-        except findwindows.ElementNotFoundError | pywinauto.timings.TimeoutError | RuntimeError as ex:
-            logging.exception(ex)
+        except (findwindows.ElementNotFoundError, timings.TimeoutError, RuntimeError) as ex:
+            logger.exception('check pop dialog timeout')
             return False
 
     def _run_exe_path(self, exe_path):
@@ -384,13 +388,6 @@ class ClientTrader(IClientTrader):
             .child_window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
             .window_text()
         )
-
-    # def _get_pop_dialog_title(self):
-    #     return (
-    #         self._app.top_window()
-    #         .window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-    #         .window_text()
-    #     )
 
     def _set_trade_params(self, security, price, amount):
         code = security[-6:]
@@ -459,8 +456,6 @@ class ClientTrader(IClientTrader):
     @perf_clock
     def _switch_left_menus(self, path, sleep=0.2):
         self._get_left_menus_handle().get_item(path).click()
-        # self._app.top_window().type_keys('{ESC}')
-        # self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
@@ -482,8 +477,7 @@ class ClientTrader(IClientTrader):
                 return handle
             # pylint: disable=broad-except
             except Exception as ex:
-                print(ex)
-                pass
+                logger.exception('error occurred when trying to get left menus')
             count = count - 1
 
     def _cancel_entrust_by_double_click(self, row):
@@ -506,7 +500,7 @@ class ClientTrader(IClientTrader):
     ):
         handler = handler_class(self._app)
 
-        while self._is_exist_pop_dialog():
+        while self.is_exist_pop_dialog():
             try:
                 title = self._get_pop_dialog_title()
             except pywinauto.findwindows.ElementNotFoundError:

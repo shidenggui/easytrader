@@ -1,4 +1,3 @@
-win32gui
 -i http://mirrors.aliyun.com/pypi/simple/
 --trusted-host mirrors.aliyun.com
 beautifulsoup4==4.6.0
@@ -30,3 +29,4 @@ rqopen-client==0.0.5
 six==1.11.0
 urllib3==1.23; python_version != '3.1.*'
 werkzeug==0.14.1
+win32gui

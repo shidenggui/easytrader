@@ -20,7 +20,6 @@ def captcha_recognize(img_path):
             table.append(1)
 
     out = im.point(table, "1")
-    # out.show()
     # 2. recognize with tesseract
     num = pytesseract.image_to_string(out)
     return num
