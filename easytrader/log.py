@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 import logging
 
-log = logging.getLogger("easytrader")
-log.setLevel(logging.DEBUG)
-log.propagate = False
+logger = logging.getLogger("easytrader")
+logger.setLevel(logging.DEBUG)
+logger.propagate = False
 
 fmt = logging.Formatter(
     "%(asctime)s [%(levelname)s] %(filename)s %(lineno)s: %(message)s"
@@ -11,4 +11,4 @@ fmt = logging.Formatter(
 ch = logging.StreamHandler()
 
 ch.setFormatter(fmt)
-log.handlers.append(ch)
+logger.handlers.append(ch)

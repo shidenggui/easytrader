@@ -3,7 +3,7 @@ import functools
 from flask import Flask, jsonify, request
 
 from . import api
-from .log import log
+from .log import logger
 
 app = Flask(__name__)
 
@@ -17,7 +17,7 @@ def error_handle(func):
             return func(*args, **kwargs)
         # pylint: disable=broad-except
         except Exception as e:
-            log.exception("server error")
+            logger.exception("server error")
             message = "{}: {}".format(e.__class__, e)
             return jsonify({"error": message}), 400
 

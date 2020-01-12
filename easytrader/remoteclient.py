@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import requests
 
-from . import helpers
+from easytrader.utils.misc import file2dict
 
 
 def use(broker, host, port=1430, **kwargs):
@@ -28,7 +28,8 @@ class RemoteClient:
         :param config_path: 登陆配置文件，跟参数登陆方式二选一
         :param user: 账号
         :param password: 明文密码
-        :param exe_path: 客户端路径类似 r'C:\\htzqzyb2\\xiadan.exe', 默认 r'C:\\htzqzyb2\\xiadan.exe'
+        :param exe_path: 客户端路径类似 r'C:\\htzqzyb2\\xiadan.exe',
+            默认 r'C:\\htzqzyb2\\xiadan.exe'
         :param comm_password: 通讯密码
         :return:
         """
@@ -36,7 +37,7 @@ class RemoteClient:
         params.pop("self")
 
         if config_path is not None:
-            account = helpers.file2dict(config_path)
+            account = file2dict(config_path)
             params["user"] = account["user"]
             params["password"] = account["password"]
 

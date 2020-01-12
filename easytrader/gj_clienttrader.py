@@ -6,7 +6,8 @@ import time
 import pywinauto
 import pywinauto.clipboard
 
-from . import clienttrader, helpers
+from easytrader import clienttrader
+from easytrader.utils.captcha import recognize_verify_code
 
 
 class GJClientTrader(clienttrader.BaseLoginClientTrader):
@@ -75,5 +76,5 @@ class GJClientTrader(clienttrader.BaseLoginClientTrader):
         file_path = tempfile.mktemp() + ".jpg"
         control.capture_as_image().save(file_path)
         time.sleep(0.2)
-        vcode = helpers.recognize_verify_code(file_path, "gj_client")
+        vcode = recognize_verify_code(file_path, "gj_client")
         return "".join(re.findall("[a-zA-Z0-9]+", vcode))

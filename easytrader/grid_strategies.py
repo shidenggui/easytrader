@@ -2,27 +2,21 @@
 import abc
 import io
 import tempfile
-
-from pywinauto import win32defines
+from io import StringIO
 from typing import TYPE_CHECKING, Dict, List
 
 import pandas as pd
-import pywinauto.clipboard
-from .utils import SetForegroundWindow, ShowWindow
 import pywinauto
-import logging
-try:
-    import StringIO
-except:
-    from io import StringIO
+import pywinauto.clipboard
+from pywinauto import win32defines
 
-from .log import log
-from .utils.captcha import captcha_recognize
-
+from easytrader.log import logger
+from easytrader.utils.captcha import captcha_recognize
+from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
-    from . import clienttrader
+    from easytrader import clienttrader
 
 
 class IGridStrategy(abc.ABC):
@@ -59,7 +53,9 @@ class BaseStrategy(IGridStrategy):
         try:
             if grid is None:
                 grid = self._trader.main
-            if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+            if grid.has_style(
+                pywinauto.win32defines.WS_MINIMIZE
+            ):  # if minimized
                 ShowWindow(grid.wrapper_object(), 9)  # restore window state
             else:
                 SetForegroundWindow(grid.wrapper_object())  # bring to front
@@ -71,6 +67,7 @@ class Copy(BaseStrategy):
     """
     通过复制 grid 内容到剪切板z再读取来获取 grid 内容
     """
+
     _need_captcha_reg = True
 
     def get(self, control_id: int) -> List[Dict]:
@@ -94,30 +91,49 @@ class Copy(BaseStrategy):
 
     def _get_clipboard_data(self) -> str:
         if Copy._need_captcha_reg:
-            if self._trader.app.top_window().window(class_name='Static', title_re="验证码").exists(timeout=1):
+            if (
+                self._trader.app.top_window()
+                .window(class_name="Static", title_re="验证码")
+                .exists(timeout=1)
+            ):
                 file_path = "tmp.png"
                 count = 5
                 found = False
                 while count > 0:
-                    self._trader.app.top_window().window(control_id=0x965, class_name='Static').\
-                        capture_as_image().save(file_path)  # 保存验证码
+                    self._trader.app.top_window().window(
+                        control_id=0x965, class_name="Static"
+                    ).capture_as_image().save(
+                        file_path
+                    )  # 保存验证码
 
                     captcha_num = captcha_recognize(file_path)  # 识别验证码
-                    log.info("captcha result-->" + captcha_num)
+                    logger.info("captcha result-->" + captcha_num)
                     if len(captcha_num) == 4:
-                        self._trader.app.top_window().window(control_id=0x964, class_name='Edit').set_text(captcha_num)  # 模拟输入验证码
+                        self._trader.app.top_window().window(
+                            control_id=0x964, class_name="Edit"
+                        ).set_text(
+                            captcha_num
+                        )  # 模拟输入验证码
 
                         self._trader.app.top_window().set_focus()
-                        pywinauto.keyboard.SendKeys("{ENTER}")   # 模拟发送enter，点击确定
+                        pywinauto.keyboard.SendKeys(
+                            "{ENTER}"
+                        )  # 模拟发送enter，点击确定
                         try:
-                            log.info(self._trader.app.top_window().window(control_id=0x966, class_name='Static').window_text())
-                        except Exception as ex:       # 窗体消失
-                            log.exception(ex)
+                            logger.info(
+                                self._trader.app.top_window()
+                                .window(control_id=0x966, class_name="Static")
+                                .window_text()
+                            )
+                        except Exception as ex:  # 窗体消失
+                            logger.exception(ex)
                             found = True
                             break
                     count -= 1
                     self._trader.wait(0.1)
-                    self._trader.app.top_window().window(control_id=0x965, class_name='Static').click()
+                    self._trader.app.top_window().window(
+                        control_id=0x965, class_name="Static"
+                    ).click()
                 if not found:
                     self._trader.app.top_window().Button2.click()  # 点击取消
             else:
@@ -129,7 +145,7 @@ class Copy(BaseStrategy):
             # pylint: disable=broad-except
             except Exception as e:
                 count -= 1
-                log.exception("%s, retry ......", e)
+                logger.exception("%s, retry ......", e)
 
 
 class WMCopy(Copy):
@@ -139,7 +155,7 @@ class WMCopy(Copy):
 
     def get(self, control_id: int) -> List[Dict]:
         grid = self._get_grid(control_id)
-        grid.post_message(win32defines.WM_COMMAND, 0xe122, 0)
+        grid.post_message(win32defines.WM_COMMAND, 0xE122, 0)
         self._trader.wait(0.1)
         content = self._get_clipboard_data()
         return self._format_grid_data(content)
@@ -155,7 +171,9 @@ class Xls(BaseStrategy):
         grid = self._get_grid(control_id)
 
         # ctrl+s 保存 grid 内容为 xls 文件
-        self._set_foreground(grid)  # setFocus buggy, instead of SetForegroundWindow
+        self._set_foreground(
+            grid
+        )  # setFocus buggy, instead of SetForegroundWindow
         grid.type_keys("^s", set_foreground=False)
         count = 10
         while count > 0:
@@ -168,13 +186,16 @@ class Xls(BaseStrategy):
         self._set_foreground(self._trader.app.top_window())
         # self._trader.app.top_window().type_keys(self.normalize_path(temp_path), set_foreground=False)
 
-
         # alt+s保存，alt+y替换已存在的文件
         # # self._set_foreground(self._trader.app.top_window())
         # self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
-        self._trader.app.top_window().Edit1.set_edit_text(self.normalize_path(temp_path))
+        self._trader.app.top_window().Edit1.set_edit_text(
+            self.normalize_path(temp_path)
+        )
         self._trader.wait(0.1)
-        self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
+        self._trader.app.top_window().type_keys(
+            "%{s}%{y}", set_foreground=False
+        )
         self._trader.wait(0.2)
         if self._trader._is_exist_pop_dialog():
             self._trader.app.top_window().Button2.click()
@@ -184,10 +205,10 @@ class Xls(BaseStrategy):
         return self._format_grid_data(temp_path)
 
     def normalize_path(self, temp_path: str) -> str:
-        return temp_path.replace('~', '{~}')
+        return temp_path.replace("~", "{~}")
 
     def _format_grid_data(self, data: str) -> List[Dict]:
-        f = open(data, encoding="gbk", errors='replace')
+        f = open(data, encoding="gbk", errors="replace")
         cont = f.read()
         f.close()
 

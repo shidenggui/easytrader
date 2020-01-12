@@ -3,9 +3,9 @@ import re
 from datetime import datetime
 from threading import Thread
 
-from . import exceptions
-from .follower import BaseFollower
-from .log import log
+from easytrader import exceptions
+from easytrader.follower import BaseFollower
+from easytrader.log import logger
 
 
 class JoinQuantFollower(BaseFollower):
@@ -67,7 +67,7 @@ class JoinQuantFollower(BaseFollower):
                 strategy_id = self.extract_strategy_id(strategy_url)
                 strategy_name = self.extract_strategy_name(strategy_url)
             except:
-                log.error("抽取交易id和策略名失败, 无效的模拟交易url: %s", strategy_url)
+                logger.error("抽取交易id和策略名失败, 无效的模拟交易url: %s", strategy_url)
                 raise
             strategy_worker = Thread(
                 target=self.track_strategy_worker,
@@ -76,7 +76,7 @@ class JoinQuantFollower(BaseFollower):
             )
             strategy_worker.start()
             workers.append(strategy_worker)
-            log.info("开始跟踪策略: %s", strategy_name)
+            logger.info("开始跟踪策略: %s", strategy_name)
         for worker in workers:
             worker.join()
 

@@ -7,8 +7,9 @@ import time
 
 import requests
 
-from . import exceptions, helpers, webtrader
-from .log import log
+from easytrader import exceptions, webtrader
+from easytrader.log import logger
+from easytrader.utils.misc import parse_cookies_str
 
 
 class XueQiuTrader(webtrader.WebTrader):
@@ -59,7 +60,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :param cookies: 雪球 cookies
         :type cookies: str
         """
-        cookie_dict = helpers.parse_cookies_str(cookies)
+        cookie_dict = parse_cookies_str(cookies)
         self.s.cookies.update(cookie_dict)
 
     def _prepare_account(self, user="", password="", **kwargs):
@@ -365,7 +366,7 @@ class XueQiuTrader(webtrader.WebTrader):
 
         remain_weight = 100 - sum(i.get("weight") for i in position_list)
         cash = round(remain_weight, 2)
-        log.debug("调仓比例:%f, 剩余持仓 :%f", weight, remain_weight)
+        logger.info("调仓比例:%f, 剩余持仓 :%f", weight, remain_weight)
         data = {
             "cash": cash,
             "holdings": str(json.dumps(position_list)),
@@ -378,19 +379,19 @@ class XueQiuTrader(webtrader.WebTrader):
             resp = self.s.post(self.config["rebalance_url"], data=data)
         # pylint: disable=broad-except
         except Exception as e:
-            log.warning("调仓失败: %s ", e)
+            logger.warning("调仓失败: %s ", e)
             return None
-        log.debug("调仓 %s: 持仓比例%d", stock["name"], weight)
+        logger.info("调仓 %s: 持仓比例%d", stock["name"], weight)
         resp_json = json.loads(resp.text)
         if "error_description" in resp_json and resp.status_code != 200:
-            log.error("调仓错误: %s", resp_json["error_description"])
+            logger.error("调仓错误: %s", resp_json["error_description"])
             return [
                 {
                     "error_no": resp_json["error_code"],
                     "error_info": resp_json["error_description"],
                 }
             ]
-        log.debug("调仓成功 %s: 持仓比例%d", stock["name"], weight)
+        logger.info("调仓成功 %s: 持仓比例%d", stock["name"], weight)
         return None
 
     def _trade(self, security, price=0, amount=0, volume=0, entrust_bs="buy"):
@@ -479,7 +480,7 @@ class XueQiuTrader(webtrader.WebTrader):
                 * 100
             )
         cash = round(cash, 2)
-        log.debug("weight:%f, cash:%f", weight, cash)
+        logger.info("weight:%f, cash:%f", weight, cash)
 
         data = {
             "cash": cash,
@@ -493,15 +494,15 @@ class XueQiuTrader(webtrader.WebTrader):
             resp = self.s.post(self.config["rebalance_url"], data=data)
         # pylint: disable=broad-except
         except Exception as e:
-            log.warning("调仓失败: %s ", e)
+            logger.warning("调仓失败: %s ", e)
             return None
         else:
-            log.debug(
+            logger.info(
                 "调仓 %s%s: %d", entrust_bs, stock["name"], resp.status_code
             )
             resp_json = json.loads(resp.text)
             if "error_description" in resp_json and resp.status_code != 200:
-                log.error("调仓错误: %s", resp_json["error_description"])
+                logger.error("调仓错误: %s", resp_json["error_description"])
                 return [
                     {
                         "error_no": resp_json["error_code"],
