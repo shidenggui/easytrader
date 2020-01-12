@@ -15,7 +15,7 @@
 
 ### 登陆时的验证码识别
 
-银河可以直接自动登录, 其他券商如果登陆需要识别验证码的话需要安装 tesseract：
+券商如果登陆需要识别验证码的话需要安装 tesseract：
 
 * `tesseract` : 非 `pytesseract`, 需要单独安装, [地址](https://github.com/tesseract-ocr/tesseract/wiki),保证在命令行下 `tesseract` 可用
 
