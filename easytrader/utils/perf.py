@@ -3,7 +3,6 @@ import functools
 import logging
 import timeit
 
-import jsonpickle
 from easytrader import logger
 
 try:
@@ -36,8 +35,8 @@ def perf_clock(f):
                 f.__name__,
                 te - ts,
                 ce - cs,
-                jsonpickle.dumps(args[1:]),
-                jsonpickle.dumps(kwargs),
+                args[1:],
+                kwargs,
             )
         )
         if ex is not None:
