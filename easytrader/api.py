@@ -44,7 +44,7 @@ def use(broker, debug=False, **kwargs):
         return HTClientTrader()
 
     if broker.lower() in ["wk_client", "五矿客户端"]:
-        from .ht_clienttrader import WKClientTrader
+        from easytrader.wk_clienttrader import WKClientTrader
 
         return WKClientTrader()
 
