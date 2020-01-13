@@ -105,7 +105,7 @@ setup(
         "Programming Language :: Python :: 3.5",
         "License :: OSI Approved :: BSD License",
     ],
-    packages=["easytrader", "easytrader.config"],
+    packages=["easytrader", "easytrader.config", "easytrader.utils"],
     package_data={
         "": ["*.jar", "*.json"],
         "config": ["config/*.json"],
