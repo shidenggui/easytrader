@@ -11,8 +11,8 @@ from typing import List
 
 import requests
 
-from . import exceptions
-from .log import log
+from easytrader import exceptions
+from easytrader.log import logger
 
 
 class BaseFollower(metaclass=abc.ABCMeta):
@@ -55,7 +55,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
         rep = self.s.post(self.LOGIN_API, data=params)
 
         self.check_login_success(rep)
-        log.info("登录成功")
+        logger.info("登录成功")
 
     def _generate_headers(self):
         headers = {
@@ -184,7 +184,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 )
             # pylint: disable=broad-except
             except Exception as e:
-                log.exception("无法获取策略 %s 调仓信息, 错误: %s, 跳过此次调仓查询", name, e)
+                logger.exception("无法获取策略 %s 调仓信息, 错误: %s, 跳过此次调仓查询", name, e)
                 time.sleep(3)
                 continue
             for transaction in transactions:
@@ -199,7 +199,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 }
                 if self.is_cmd_expired(trade_cmd):
                     continue
-                log.info(
+                logger.info(
                     "策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
                     name,
                     trade_cmd["stock_code"],
@@ -214,7 +214,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 for _ in range(interval):
                     time.sleep(1)
             except KeyboardInterrupt:
-                log.info("程序退出")
+                logger.info("程序退出")
                 break
 
     @staticmethod
@@ -263,7 +263,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
             now = datetime.datetime.now()
             expire = (now - trade_cmd["datetime"]).total_seconds()
             if expire > expire_seconds:
-                log.warning(
+                logger.warning(
                     "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 超过设置的最大过期时间 %s 秒, 被丢弃",
                     trade_cmd["strategy_name"],
                     trade_cmd["stock_code"],
@@ -279,7 +279,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
             # check price
             price = trade_cmd["price"]
             if not self._is_number(price) or price <= 0:
-                log.warning(
+                logger.warning(
                     "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 价格无效 , 被丢弃",
                     trade_cmd["strategy_name"],
                     trade_cmd["stock_code"],
@@ -293,7 +293,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
 
             # check amount
             if trade_cmd["amount"] <= 0:
-                log.warning(
+                logger.warning(
                     "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 买入股数无效 , 被丢弃",
                     trade_cmd["strategy_name"],
                     trade_cmd["stock_code"],
@@ -319,7 +319,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
             except exceptions.TradeError as e:
                 trader_name = type(user).__name__
                 err_msg = "{}: {}".format(type(e).__name__, e.args)
-                log.error(
+                logger.error(
                     "%s 执行 策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格(考虑滑点): %s 指令产生时间: %s) 失败, 错误信息: %s",
                     trader_name,
                     trade_cmd["strategy_name"],
@@ -331,7 +331,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
                     err_msg,
                 )
             else:
-                log.info(
+                logger.info(
                     "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格(考虑滑点): %s 指令产生时间: %s) 执行成功, 返回: %s",
                     trade_cmd["strategy_name"],
                     trade_cmd["stock_code"],

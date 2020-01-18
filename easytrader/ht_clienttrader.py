@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
+
 import pywinauto
 import pywinauto.clipboard
 
+from easytrader import grid_strategies
 from . import clienttrader
 
 
 class HTClientTrader(clienttrader.BaseLoginClientTrader):
+    grid_strategy = grid_strategies.Xls
+
     @property
     def broker_type(self):
         return "ht"
@@ -19,6 +23,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
         :param kwargs:
         :return:
         """
+        self._editor_need_type_keys = False
         if comm_password is None:
             raise ValueError("华泰必须设置通讯密码")
 
@@ -37,7 +42,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except RuntimeError:
                     pass
-
+            self._app.top_window().Edit1.set_focus()
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
 
@@ -46,7 +51,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             self._app.top_window().button0.click()
 
             # detect login is success or not
-            self._app.top_window().wait_not("exists", 10)
+            self._app.top_window().wait_not("exists", 100)
 
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
@@ -69,3 +74,5 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                 ).window_text()
             )
         return result
+
+

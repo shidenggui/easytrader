@@ -7,17 +7,17 @@ from datetime import datetime
 from numbers import Number
 from threading import Thread
 
-from . import helpers
-from .follower import BaseFollower
-from .log import log
+from easytrader.follower import BaseFollower
+from easytrader.log import logger
+from easytrader.utils.misc import parse_cookies_str
 
 
 class XueQiuFollower(BaseFollower):
-    LOGIN_PAGE = 'https://www.xueqiu.com'
-    LOGIN_API = 'https://xueqiu.com/snowman/login'
-    TRANSACTION_API = 'https://xueqiu.com/cubes/rebalancing/history.json'
-    PORTFOLIO_URL = 'https://xueqiu.com/p/'
-    WEB_REFERER = 'https://www.xueqiu.com'
+    LOGIN_PAGE = "https://www.xueqiu.com"
+    LOGIN_API = "https://xueqiu.com/snowman/login"
+    TRANSACTION_API = "https://xueqiu.com/cubes/rebalancing/history.json"
+    PORTFOLIO_URL = "https://xueqiu.com/p/"
+    WEB_REFERER = "https://www.xueqiu.com"
 
     def __init__(self):
         super().__init__()
@@ -31,31 +31,33 @@ class XueQiuFollower(BaseFollower):
             https://smalltool.github.io/2016/08/02/cookie/
         :return:
         """
-        cookies = kwargs.get('cookies')
+        cookies = kwargs.get("cookies")
         if cookies is None:
-            raise TypeError('雪球登陆需要设置 cookies， 具体见'
-                            'https://smalltool.github.io/2016/08/02/cookie/')
+            raise TypeError(
+                "雪球登陆需要设置 cookies， 具体见" "https://smalltool.github.io/2016/08/02/cookie/"
+            )
         headers = self._generate_headers()
         self.s.headers.update(headers)
 
         self.s.get(self.LOGIN_PAGE)
 
-        cookie_dict = helpers.parse_cookies_str(cookies)
+        cookie_dict = parse_cookies_str(cookies)
         self.s.cookies.update(cookie_dict)
 
-        log.info('登录成功')
+        logger.info("登录成功")
 
     def follow(  # type: ignore
-            self,
-            users,
-            strategies,
-            total_assets=10000,
-            initial_assets=None,
-            adjust_sell=False,
-            track_interval=10,
-            trade_cmd_expire_seconds=120,
-            cmd_cache=True,
-            slippage: float = 0.0):
+        self,
+        users,
+        strategies,
+        total_assets=10000,
+        initial_assets=None,
+        adjust_sell=False,
+        track_interval=10,
+        trade_cmd_expire_seconds=120,
+        cmd_cache=True,
+        slippage: float = 0.0,
+    ):
         """跟踪 joinquant 对应的模拟交易，支持多用户多策略
         :param users: 支持 easytrader 的用户对象，支持使用 [] 指定多个用户
         :param strategies: 雪球组合名, 类似 ZH123450
@@ -76,12 +78,14 @@ class XueQiuFollower(BaseFollower):
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         :param slippage: 滑点，0.0 表示无滑点, 0.05 表示滑点为 5%
         """
-        super().follow(users=users,
-                       strategies=strategies,
-                       track_interval=track_interval,
-                       trade_cmd_expire_seconds=trade_cmd_expire_seconds,
-                       cmd_cache=cmd_cache,
-                       slippage=slippage)
+        super().follow(
+            users=users,
+            strategies=strategies,
+            track_interval=track_interval,
+            trade_cmd_expire_seconds=trade_cmd_expire_seconds,
+            cmd_cache=cmd_cache,
+            slippage=slippage,
+        )
 
         self._adjust_sell = adjust_sell
 
@@ -97,37 +101,34 @@ class XueQiuFollower(BaseFollower):
         self.start_trader_thread(self._users, trade_cmd_expire_seconds)
 
         for strategy_url, strategy_total_assets, strategy_initial_assets in zip(
-                strategies, total_assets, initial_assets):
-            assets = self.calculate_assets(strategy_url, strategy_total_assets,
-                                           strategy_initial_assets)
+            strategies, total_assets, initial_assets
+        ):
+            assets = self.calculate_assets(
+                strategy_url, strategy_total_assets, strategy_initial_assets
+            )
             try:
                 strategy_id = self.extract_strategy_id(strategy_url)
                 strategy_name = self.extract_strategy_name(strategy_url)
             except:
-                log.error('抽取交易id和策略名失败, 无效模拟交易url: %s', strategy_url)
+                logger.error("抽取交易id和策略名失败, 无效模拟交易url: %s", strategy_url)
                 raise
             strategy_worker = Thread(
                 target=self.track_strategy_worker,
                 args=[strategy_id, strategy_name],
-                kwargs={
-                    'interval': track_interval,
-                    'assets': assets
-                })
+                kwargs={"interval": track_interval, "assets": assets},
+            )
             strategy_worker.start()
-            log.info('开始跟踪策略: %s', strategy_name)
+            logger.info("开始跟踪策略: %s", strategy_name)
 
-    def calculate_assets(self,
-                         strategy_url,
-                         total_assets=None,
-                         initial_assets=None):
+    def calculate_assets(self, strategy_url, total_assets=None, initial_assets=None):
         # 都设置时优先选择 total_assets
         if total_assets is None and initial_assets is not None:
             net_value = self._get_portfolio_net_value(strategy_url)
             total_assets = initial_assets * net_value
         if not isinstance(total_assets, Number):
-            raise TypeError('input assets type must be number(int, float)')
+            raise TypeError("input assets type must be number(int, float)")
         if total_assets < 1e3:
-            raise ValueError('雪球总资产不能小于1000元，当前预设值 {}'.format(total_assets))
+            raise ValueError("雪球总资产不能小于1000元，当前预设值 {}".format(total_assets))
         return total_assets
 
     @staticmethod
@@ -135,29 +136,28 @@ class XueQiuFollower(BaseFollower):
         return strategy_url
 
     def extract_strategy_name(self, strategy_url):
-        base_url = 'https://xueqiu.com/cubes/nav_daily/all.json?cube_symbol={}'
+        base_url = "https://xueqiu.com/cubes/nav_daily/all.json?cube_symbol={}"
         url = base_url.format(strategy_url)
         rep = self.s.get(url)
         info_index = 0
-        return rep.json()[info_index]['name']
+        return rep.json()[info_index]["name"]
 
     def extract_transactions(self, history):
-        if history['count'] <= 0:
+        if history["count"] <= 0:
             return []
         rebalancing_index = 0
-        raw_transactions = history['list'][rebalancing_index][
-            'rebalancing_histories']
+        raw_transactions = history["list"][rebalancing_index]["rebalancing_histories"]
         transactions = []
         for transaction in raw_transactions:
-            if transaction['price'] is None:
-                log.info('该笔交易无法获取价格，疑似未成交，跳过。交易详情: %s', transaction)
+            if transaction["price"] is None:
+                logger.info("该笔交易无法获取价格，疑似未成交，跳过。交易详情: %s", transaction)
                 continue
             transactions.append(transaction)
 
         return transactions
 
     def create_query_transaction_params(self, strategy):
-        params = {'cube_symbol': strategy, 'page': 1, 'count': 1}
+        params = {"cube_symbol": strategy, "page": 1, "count": 1}
         return params
 
     # noinspection PyMethodOverriding
@@ -169,25 +169,25 @@ class XueQiuFollower(BaseFollower):
     # noinspection PyMethodOverriding
     def project_transactions(self, transactions, assets):
         for transaction in transactions:
-            weight_diff = self.none_to_zero(
-                transaction['weight']) - self.none_to_zero(
-                transaction['prev_weight'])
+            weight_diff = self.none_to_zero(transaction["weight"]) - self.none_to_zero(
+                transaction["prev_weight"]
+            )
 
-            initial_amount = abs(weight_diff) / 100 * assets / transaction[
-                'price']
+            initial_amount = abs(weight_diff) / 100 * assets / transaction["price"]
 
-            transaction['datetime'] = datetime.fromtimestamp(
-                transaction['created_at'] // 1000)
+            transaction["datetime"] = datetime.fromtimestamp(
+                transaction["created_at"] // 1000
+            )
 
-            transaction['stock_code'] = transaction['stock_symbol'].lower()
+            transaction["stock_code"] = transaction["stock_symbol"].lower()
 
-            transaction['action'] = 'buy' if weight_diff > 0 else 'sell'
+            transaction["action"] = "buy" if weight_diff > 0 else "sell"
 
-            transaction['amount'] = int(round(initial_amount, -2))
-            if transaction['action'] == 'sell' and self._adjust_sell:
-                transaction['amount'] = self._adjust_sell_amount(
-                    transaction['stock_code'],
-                    transaction['amount'])
+            transaction["amount"] = int(round(initial_amount, -2))
+            if transaction["action"] == "sell" and self._adjust_sell:
+                transaction["amount"] = self._adjust_sell_amount(
+                    transaction["stock_code"], transaction["amount"]
+                )
 
     def _adjust_sell_amount(self, stock_code, amount):
         """
@@ -207,19 +207,23 @@ class XueQiuFollower(BaseFollower):
         user = self._users[0]
         position = user.position
         try:
-            stock = next(s for s in position if s['证券代码'] == stock_code)
+            stock = next(s for s in position if s["证券代码"] == stock_code)
         except StopIteration:
-            log.info('根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整',
-                     stock_code, stock_code)
+            logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整", stock_code, stock_code)
             return amount
 
-        available_amount = stock['可用余额']
+        available_amount = stock["可用余额"]
         if available_amount >= amount:
             return amount
 
         adjust_amount = available_amount // 100 * 100
-        log.info('股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 调整为 %s',
-                 stock_code, available_amount, amount, adjust_amount)
+        logger.info(
+            "股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 调整为 %s",
+            stock_code,
+            available_amount,
+            amount,
+            adjust_amount,
+        )
         return adjust_amount
 
     def _get_portfolio_info(self, portfolio_code):
@@ -228,15 +232,13 @@ class XueQiuFollower(BaseFollower):
         """
         url = self.PORTFOLIO_URL + portfolio_code
         portfolio_page = self.s.get(url)
-        match_info = re.search(r'(?<=SNB.cubeInfo = ).*(?=;\n)',
-                               portfolio_page.text)
+        match_info = re.search(r"(?<=SNB.cubeInfo = ).*(?=;\n)", portfolio_page.text)
         if match_info is None:
-            raise Exception(
-                'cant get portfolio info, portfolio url : {}'.format(url))
+            raise Exception("cant get portfolio info, portfolio url : {}".format(url))
         try:
             portfolio_info = json.loads(match_info.group())
         except Exception as e:
-            raise Exception('get portfolio info error: {}'.format(e))
+            raise Exception("get portfolio info error: {}".format(e))
         return portfolio_info
 
     def _get_portfolio_net_value(self, portfolio_code):
@@ -244,4 +246,4 @@ class XueQiuFollower(BaseFollower):
         获取组合信息
         """
         portfolio_info = self._get_portfolio_info(portfolio_code)
-        return portfolio_info['net_value']
+        return portfolio_info["net_value"]

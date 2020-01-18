@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 import logging
+import sys
 
 import six
 
-from .joinquant_follower import JoinQuantFollower
-from .log import log
-from .ricequant_follower import RiceQuantFollower
-from .xq_follower import XueQiuFollower
-from .xqtrader import XueQiuTrader
+from easytrader.joinquant_follower import JoinQuantFollower
+from easytrader.log import logger
+from easytrader.ricequant_follower import RiceQuantFollower
+from easytrader.xq_follower import XueQiuFollower
+from easytrader.xqtrader import XueQiuTrader
 
-if six.PY2:
-    raise TypeError("不支持 Python2，请升级 Python3")
+if sys.version_info <= (3, 5):
+    raise TypeError("不支持 Python3.5 及以下版本，请升级")
 
 
-def use(broker, debug=True, **kwargs):
+def use(broker, debug=False, **kwargs):
     """用于生成特定的券商对象
     :param broker:券商名支持 ['yh_client', '银河客户端'] ['ht_client', '华泰客户端']
     :param debug: 控制 debug 日志的显示, 默认为 True
@@ -26,22 +27,32 @@ def use(broker, debug=True, **kwargs):
         >>> user = easytrader.use('xq')
         >>> user.prepare('xq.json')
     """
-    if not debug:
-        log.setLevel(logging.INFO)
+    if debug:
+        logger.setLevel(logging.DEBUG)
+
     if broker.lower() in ["xq", "雪球"]:
         return XueQiuTrader(**kwargs)
+
     if broker.lower() in ["yh_client", "银河客户端"]:
         from .yh_clienttrader import YHClientTrader
 
         return YHClientTrader()
+
     if broker.lower() in ["ht_client", "华泰客户端"]:
         from .ht_clienttrader import HTClientTrader
 
         return HTClientTrader()
+
+    if broker.lower() in ["wk_client", "五矿客户端"]:
+        from easytrader.wk_clienttrader import WKClientTrader
+
+        return WKClientTrader()
+
     if broker.lower() in ["gj_client", "国金客户端"]:
         from .gj_clienttrader import GJClientTrader
 
         return GJClientTrader()
+
     if broker.lower() in ["ths", "同花顺客户端"]:
         from .clienttrader import ClientTrader
 

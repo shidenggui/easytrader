@@ -6,11 +6,6 @@ import easytrader
 
 # 设置券商类型
 
-**银河客户端**
-
-```python
-user = easytrader.use('yh_client')
-```
 **华泰客户端**
 
 ```python
@@ -261,8 +256,8 @@ user.today_entrusts
 #### 查询今天可以申购的新股信息
 
 ```python
-from easytrader import helpers
-ipo_data = helpers.get_today_ipo_data()
+from easytrader.utils.stock import get_today_ipo_data
+ipo_data = get_today_ipo_data()
 print(ipo_data)
 ```
 

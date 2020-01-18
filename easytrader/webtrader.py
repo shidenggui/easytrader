@@ -9,8 +9,10 @@ from threading import Thread
 import requests
 import requests.exceptions
 
-from . import exceptions, helpers
-from .log import log
+from easytrader import exceptions
+from easytrader.log import logger
+from easytrader.utils.misc import file2dict
+from easytrader.utils.stock import get_30_date
 
 
 # noinspection PyIncorrectDocstring
@@ -30,12 +32,12 @@ class WebTrader(metaclass=abc.ABCMeta):
 
     def read_config(self, path):
         try:
-            self.account_config = helpers.file2dict(path)
+            self.account_config = file2dict(path)
         except ValueError:
-            log.error("配置文件格式有误，请勿使用记事本编辑，推荐 sublime text")
+            logger.error("配置文件格式有误，请勿使用记事本编辑，推荐 sublime text")
         for value in self.account_config:
             if isinstance(value, int):
-                log.warning("配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题")
+                logger.warning("配置文件的值最好使用双引号包裹，使用字符串，否则可能导致不可知问题")
 
     def prepare(self, config_file=None, user=None, password=None, **kwargs):
         """登录的统一接口
@@ -89,18 +91,18 @@ class WebTrader(metaclass=abc.ABCMeta):
                 time.sleep(1)
 
     def check_login(self, sleepy=30):
-        log.setLevel(logging.ERROR)
+        logger.setLevel(logging.ERROR)
         try:
             response = self.heartbeat()
             self.check_account_live(response)
         except requests.exceptions.ConnectionError:
             pass
         except requests.exceptions.RequestException as e:
-            log.setLevel(self.log_level)
-            log.error("心跳线程发现账户出现错误: %s %s, 尝试重新登陆", e.__class__, e)
+            logger.setLevel(self.log_level)
+            logger.error("心跳线程发现账户出现错误: %s %s, 尝试重新登陆", e.__class__, e)
             self.autologin()
         finally:
-            log.setLevel(self.log_level)
+            logger.setLevel(self.log_level)
         time.sleep(sleepy)
 
     def heartbeat(self):
@@ -115,8 +117,8 @@ class WebTrader(metaclass=abc.ABCMeta):
 
     def __read_config(self):
         """读取 config"""
-        self.config = helpers.file2dict(self.config_path)
-        self.global_config = helpers.file2dict(self.global_config_path)
+        self.config = file2dict(self.config_path)
+        self.global_config = file2dict(self.global_config_path)
         self.config.update(self.global_config)
 
     @property
@@ -150,7 +152,7 @@ class WebTrader(metaclass=abc.ABCMeta):
     def get_current_deal(self):
         """获取当日委托列表"""
         # return self.do(self.config['current_deal'])
-        log.warning("目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充")
+        logger.warning("目前仅在 佣金宝/银河子类 中实现, 其余券商需要补充")
 
     @property
     def exchangebill(self):
@@ -159,7 +161,7 @@ class WebTrader(metaclass=abc.ABCMeta):
         :return:
         """
         # TODO 目前仅在 华泰子类 中实现
-        start_date, end_date = helpers.get_30_date()
+        start_date, end_date = get_30_date()
         return self.get_exchangebill(start_date, end_date)
 
     def get_exchangebill(self, start_date, end_date):
@@ -169,7 +171,7 @@ class WebTrader(metaclass=abc.ABCMeta):
         :param end_date: 20160211
         :return:
         """
-        log.warning("目前仅在 华泰子类 中实现, 其余券商需要补充")
+        logger.warning("目前仅在 华泰子类 中实现, 其余券商需要补充")
 
     def get_ipo_limit(self, stock_code):
         """
@@ -177,7 +179,7 @@ class WebTrader(metaclass=abc.ABCMeta):
         :param stock_code: 申购代码 ID
         :return:
         """
-        log.warning("目前仅在 佣金宝子类 中实现, 其余券商需要补充")
+        logger.warning("目前仅在 佣金宝子类 中实现, 其余券商需要补充")
 
     def do(self, params):
         """发起对 api 的请求并过滤返回结果
@@ -232,9 +234,13 @@ class WebTrader(metaclass=abc.ABCMeta):
             for key in item:
                 try:
                     if re.search(int_match_str, key) is not None:
-                        item[key] = helpers.str2num(item[key], "int")
+                        item[key] = easytrader.utils.misc.str2num(
+                            item[key], "int"
+                        )
                     elif re.search(float_match_str, key) is not None:
-                        item[key] = helpers.str2num(item[key], "float")
+                        item[key] = easytrader.utils.misc.str2num(
+                            item[key], "float"
+                        )
                 except ValueError:
                     continue
         return response_data

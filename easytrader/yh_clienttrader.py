@@ -4,7 +4,8 @@ import tempfile
 
 import pywinauto
 
-from . import clienttrader, grid_strategies, helpers
+from easytrader import clienttrader, grid_strategies
+from easytrader.utils.captcha import recognize_verify_code
 
 
 class YHClientTrader(clienttrader.BaseLoginClientTrader):
@@ -99,13 +100,14 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             control.capture_as_image(rect).save(file_path, "jpeg")
         else:
             control.capture_as_image().save(file_path, "jpeg")
-        verify_code = helpers.recognize_verify_code(file_path, "yh_client")
+        verify_code = recognize_verify_code(file_path, "yh_client")
         return "".join(re.findall(r"\d+", verify_code))
 
     @property
     def balance(self):
         self._switch_left_menus(self._config.BALANCE_MENU_PATH)
         return self._get_grid_data(self._config.BALANCE_GRID_CONTROL_ID)
+
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
         stock_list = self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
@@ -118,7 +120,7 @@ class YHClientTrader(clienttrader.BaseLoginClientTrader):
             return {"message": "没有发现可以申购的新股"}
         self.wait(0.1)
         # for row in invalid_list_idx:
-            # self._click_grid_by_row(row)
+        # self._click_grid_by_row(row)
         self._click(self._config.AUTO_IPO_BUTTON_CONTROL_ID)
         self.wait(0.1)
         return self._handle_pop_dialogs()

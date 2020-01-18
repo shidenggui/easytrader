@@ -77,7 +77,7 @@ return::
 
 setup(
     name="easytrader",
-    version="0.18.4",
+    version="0.18.6",
     description="A utility for China Stock Trade",
     long_description=long_desc,
     author="shidenggui",
@@ -105,7 +105,7 @@ setup(
         "Programming Language :: Python :: 3.5",
         "License :: OSI Approved :: BSD License",
     ],
-    packages=["easytrader", "easytrader.config"],
+    packages=["easytrader", "easytrader.config", "easytrader.utils"],
     package_data={
         "": ["*.jar", "*.json"],
         "config": ["config/*.json"],

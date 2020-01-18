@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-Exceptions
-"""
 
 
 class TradeError(IOError):
