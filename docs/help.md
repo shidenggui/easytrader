@@ -1,3 +1,10 @@
+# 某些券商客户端无法输入文本
+
+有些客户端无法通过 set_edit_text 方法输入内容，可以通过使用 type_keys 方法绕过，开启方式
+
+```
+user.enable_type_keys_for_editor()
+```
 
 # 如何关闭 debug 日志的输出
 

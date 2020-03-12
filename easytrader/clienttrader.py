@@ -63,6 +63,12 @@ class ClientTrader(IClientTrader):
     grid_strategy: Type[grid_strategies.IGridStrategy] = grid_strategies.Copy
     _grid_strategy_instance: grid_strategies.IGridStrategy = None
 
+    def enable_type_keys_for_editor(self):
+        """
+        有些客户端无法通过 set_edit_text 方法输入内容，可以通过使用 type_keys 方法绕过
+        """
+        self._editor_need_type_keys = True
+
     @property
     def grid_strategy_instance(self):
         if self._grid_strategy_instance is None:
