@@ -16,9 +16,9 @@
 
 ### 加微信群以及公众号
 
-欢迎大家扫码关注公众号"食灯鬼"，通过菜单加我好友，备注量化进群
+欢迎大家扫码关注公众号「食灯鬼」，一起交流。进群可通过菜单加我好友，备注量化。
 
-![JDRUhz](https://gitee.com/shidenggui/assets/raw/master/uPic/JDRUhz.jpg)
+![公众号二维码](https://gitee.com/shidenggui/assets/raw/master/uPic/mp-qr.png)
 
 ### 作者其他作品
 * [大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)
