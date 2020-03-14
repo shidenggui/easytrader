@@ -14,7 +14,7 @@
 * 基于 Python3.6, Win。注: Linux 仅支持雪球
 
 
-### 加微信群以及公众号
+### 微信群以及公众号
 
 欢迎大家扫码关注公众号「食灯鬼」，一起交流。进群可通过菜单加我好友，备注量化。
 
@@ -22,9 +22,11 @@
 
 若二维码因 Github 网络无法打开，请点击[公众号二维码](https://gitee.com/shidenggui/assets/raw/master/uPic/mp-qr.png)直接打开图片。
 
-### 作者其他作品
-* [大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)
-* [中文独立个人博客导航 - bloghub.fun](https://bloghub.fun)
+### Author
+
+**easytrader** © [shidenggui](https://github.com/shidenggui), Released under the [MIT](./LICENSE) License.<br>
+
+> Blog [@shidenggui](https://shidenggui.com) · Weibo [@食灯鬼](https://www.weibo.com/u/1651274491) · Twitter [@shidenggui](https://twitter.com/shidenggui)
 
 ### 相关
 
@@ -48,7 +50,7 @@
 
 [中文文档](http://easytrader.readthedocs.io/zh/master/)
 
-### 其他
 
-最近在开发一个[大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)，喜欢小说的朋友可以一起交流
-
+### 作者其他作品
+* [大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)
+* [中文独立个人博客导航 - bloghub.fun](https://bloghub.fun)
