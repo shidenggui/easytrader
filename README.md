@@ -20,6 +20,8 @@
 
 ![公众号二维码](https://gitee.com/shidenggui/assets/raw/master/uPic/mp-qr.png)
 
+若二维码因 Github 网络无法打开，请点击[公众号二维码](https://gitee.com/shidenggui/assets/raw/master/uPic/mp-qr.png)直接打开图片。
+
 ### 作者其他作品
 * [大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)
 * [中文独立个人博客导航 - bloghub.fun](https://bloghub.fun)
