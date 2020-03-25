@@ -68,6 +68,7 @@ class CommonConfig:
     AUTO_IPO_SELECT_ALL_BUTTON_CONTROL_ID = 1098
     AUTO_IPO_BUTTON_CONTROL_ID = 1006
     AUTO_IPO_MENU_PATH = ["新股申购", "批量新股申购"]
+    AUTO_IPO_NUMBER = '申购数量'
 
 
 class YH(CommonConfig):
@@ -148,3 +149,5 @@ class HTZQ(CommonConfig):
         "可取金额": 1017,
         "总资产": 1015,
     }
+
+    AUTO_IPO_NUMBER = '可申购数量'

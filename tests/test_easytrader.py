@@ -6,7 +6,7 @@ import unittest
 
 sys.path.append(".")
 
-TEST_CLIENTS = set(os.environ.get("EZ_TEST_CLIENTS", "").split(','))
+TEST_CLIENTS = set(os.environ.get("EZ_TEST_CLIENTS", "").split(","))
 
 IS_WIN_PLATFORM = sys.platform != "darwin"
 
@@ -22,9 +22,7 @@ class TestYhClientTrader(unittest.TestCase):
 
         # input your test account and password
         cls._ACCOUNT = os.environ.get("EZ_TEST_YH_ACCOUNT") or "your account"
-        cls._PASSWORD = (
-            os.environ.get("EZ_TEST_YH_PASSWORD") or "your password"
-        )
+        cls._PASSWORD = os.environ.get("EZ_TEST_YH_PASSWORD") or "your password"
 
         cls._user = easytrader.use("yh_client")
         cls._user.prepare(user=cls._ACCOUNT, password=cls._PASSWORD)
@@ -72,18 +70,14 @@ class TestHTClientTrader(unittest.TestCase):
 
         # input your test account and password
         cls._ACCOUNT = os.environ.get("EZ_TEST_HT_ACCOUNT") or "your account"
-        cls._PASSWORD = (
-            os.environ.get("EZ_TEST_HT_PASSWORD") or "your password"
-        )
+        cls._PASSWORD = os.environ.get("EZ_TEST_HT_PASSWORD") or "your password"
         cls._COMM_PASSWORD = (
             os.environ.get("EZ_TEST_HT_COMM_PASSWORD") or "your comm password"
         )
 
         cls._user = easytrader.use("ht_client")
         cls._user.prepare(
-            user=cls._ACCOUNT,
-            password=cls._PASSWORD,
-            comm_password=cls._COMM_PASSWORD,
+            user=cls._ACCOUNT, password=cls._PASSWORD, comm_password=cls._COMM_PASSWORD
         )
 
     def test_balance(self):
@@ -129,21 +123,20 @@ class TestHTZQClientTrader(unittest.TestCase):
 
         # input your test account and password
         cls._ACCOUNT = os.environ.get("EZ_TEST_HTZQ_ACCOUNT") or "your account"
-        cls._PASSWORD = (
-                os.environ.get("EZ_TEST_HTZQ_PASSWORD") or "your password"
-        )
+        cls._PASSWORD = os.environ.get("EZ_TEST_HTZQ_PASSWORD") or "your password"
         cls._COMM_PASSWORD = (
-                os.environ.get("EZ_TEST_HTZQ_COMMON_PASSWORD") or "your comm password"
+            os.environ.get("EZ_TEST_HTZQ_COMM_PASSWORD") or "your comm password"
         )
 
         cls._user = easytrader.use("htzq_client")
 
-        cls._user.prepare(user=cls._ACCOUNT, password=cls._PASSWORD, comm_password=cls._COMM_PASSWORD)
+        cls._user.prepare(
+            user=cls._ACCOUNT, password=cls._PASSWORD, comm_password=cls._COMM_PASSWORD
+        )
 
     def test_balance(self):
         time.sleep(3)
         result = self._user.balance
-        self.assertEqual(result, '')
 
     def test_today_entrusts(self):
         result = self._user.today_entrusts
@@ -170,8 +163,8 @@ class TestHTZQClientTrader(unittest.TestCase):
             result = self._user.sell("162411", 200, 1e10)
 
     def test_auto_ipo(self):
-       self._user.auto_ipo()
+        self._user.auto_ipo()
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
-
