@@ -48,6 +48,11 @@ def use(broker, debug=False, **kwargs):
 
         return WKClientTrader()
 
+    if broker.lower() in ["htzq_client", "海通证券客户端"]:
+        from easytrader.htzq_clienttrader import HTZQClientTrader
+
+        return HTZQClientTrader()
+
     if broker.lower() in ["gj_client", "国金客户端"]:
         from .gj_clienttrader import GJClientTrader
 

@@ -10,6 +10,8 @@ def create(broker):
         return CommonConfig
     if broker == "wk":
         return WK
+    if broker == "htzq":
+        return HTZQ
     raise NotImplementedError
 
 
@@ -135,3 +137,14 @@ class GJ(CommonConfig):
 
 class WK(HT):
     pass
+
+
+class HTZQ(CommonConfig):
+    DEFAULT_EXE_PATH = r"c:\\海通证券委托\\xiadan.exe"
+
+    BALANCE_CONTROL_ID_GROUP = {
+        "资金余额": 1012,
+        "可用金额": 1016,
+        "可取金额": 1017,
+        "总资产": 1015,
+    }
