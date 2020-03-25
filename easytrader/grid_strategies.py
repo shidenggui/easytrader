@@ -186,13 +186,11 @@ class Xls(BaseStrategy):
             self._trader.wait(0.2)
             count -= 1
 
-        temp_path = tempfile.mktemp(suffix=".csv", dir=self.tmp_folder)
+        temp_path = tempfile.mktemp(suffix=".xls", dir=self.tmp_folder)
         self._set_foreground(self._trader.app.top_window())
 
         # alt+s保存，alt+y替换已存在的文件
-        self._trader.app.top_window().Edit1.set_edit_text(
-            self.normalize_path(temp_path)
-        )
+        self._trader.app.top_window().Edit1.set_edit_text(temp_path)
         self._trader.wait(0.1)
         self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
         # Wait until file save complete otherwise pandas can not find file
@@ -202,9 +200,6 @@ class Xls(BaseStrategy):
             self._trader.wait(0.2)
 
         return self._format_grid_data(temp_path)
-
-    def normalize_path(self, temp_path: str) -> str:
-        return temp_path.replace("~", "{~}")
 
     def _format_grid_data(self, data: str) -> List[Dict]:
         with open(data, encoding="gbk", errors="replace") as f:
