@@ -111,6 +111,18 @@ class TestHTClientTrader(unittest.TestCase):
     def test_auto_ipo(self):
         self._user.auto_ipo()
 
+    def test_invalid_repo(self):
+        import easytrader
+
+        with self.assertRaises(easytrader.exceptions.TradeError):
+            result = self._user.repo("204001", 100, 1)
+
+    def test_invalid_reverse_repo(self):
+        import easytrader
+
+        with self.assertRaises(easytrader.exceptions.TradeError):
+            result = self._user.reverse_repo("204001", 1, 100)
+
 
 @unittest.skipUnless("htzq" in TEST_CLIENTS and IS_WIN_PLATFORM, "skip htzq test")
 class TestHTZQClientTrader(unittest.TestCase):

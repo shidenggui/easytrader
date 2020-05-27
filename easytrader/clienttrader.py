@@ -177,6 +177,19 @@ class ClientTrader(IClientTrader):
         return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
     @perf_clock
+    def repo(self, security, price, amount, **kwargs):
+        self._switch_left_menus(["债券回购", "融资回购（正回购）"])
+
+        return self.trade(security, price, amount)
+
+    @perf_clock
+    def reverse_repo(self, security, price, amount, **kwargs):
+        self._switch_left_menus(["债券回购", "融劵回购（逆回购）"])
+
+        return self.trade(security, price, amount)
+
+
+    @perf_clock
     def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(["买入[F1]"])
 
