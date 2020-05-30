@@ -1,3 +1,14 @@
+# 某些同花顺客户端不允许拷贝 `Grid` 数据
+
+现在默认获取 `Grid` 数据的策略是通过剪切板拷贝，有些券商不允许这种方式，导致无法获取持仓等数据。为解决此问题，额外实现了一种通过将 `Grid` 数据存为文件再读取的策略，
+使用方式如下:
+
+```python
+from easytrader import grid_strategies
+
+user.grid_strategy = grid_strategies.Xls
+```
+
 # 无法保存对应的 xls 文件
 
 有些系统默认的临时文件目录过长，使用 xls 策略时无法正常保存，可通过如下方式修改为自定义目录

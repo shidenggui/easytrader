@@ -385,6 +385,10 @@ class BaseFollower(metaclass=abc.ABCMeta):
     def re_find(pattern, string, dtype=str):
         return dtype(re.search(pattern, string).group())
 
+    @staticmethod
+    def re_search(pattern, string, dtype=str):
+        return dtype(re.search(pattern,string).group(1))
+
     def project_transactions(self, transactions, **kwargs):
         """
         修证调仓记录为内部使用的统一格式
