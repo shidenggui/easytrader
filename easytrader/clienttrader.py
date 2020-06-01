@@ -488,7 +488,8 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def refresh(self):
-        self._switch_left_menus(["买入[F1]"], sleep=0.05)
+        #  self._switch_left_menus(["买入[F1]"], sleep=0.05)
+        self._switch_left_menus_by_shortcut("{F5}",sleep=0.1)
 
     @perf_clock
     def _handle_pop_dialogs(self, handler_class=pop_dialog_handler.PopDialogHandler):
