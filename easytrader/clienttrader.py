@@ -188,7 +188,6 @@ class ClientTrader(IClientTrader):
 
         return self.trade(security, price, amount)
 
-
     @perf_clock
     def buy(self, security, price, amount, **kwargs):
         self._switch_left_menus(["买入[F1]"])
@@ -288,7 +287,9 @@ class ClientTrader(IClientTrader):
 
         if len(stock_list) == 0:
             return {"message": "今日无新股"}
-        invalid_list_idx = [i for i, v in enumerate(stock_list) if v[self.config.AUTO_IPO_NUMBER] <= 0]
+        invalid_list_idx = [
+            i for i, v in enumerate(stock_list) if v[self.config.AUTO_IPO_NUMBER] <= 0
+        ]
 
         if len(stock_list) == len(invalid_list_idx):
             return {"message": "没有发现可以申购的新股"}
@@ -488,8 +489,7 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def refresh(self):
-        #  self._switch_left_menus(["买入[F1]"], sleep=0.05)
-        self._switch_left_menus_by_shortcut("{F5}",sleep=0.1)
+        self._switch_left_menus_by_shortcut("{F5}", sleep=0.1)
 
     @perf_clock
     def _handle_pop_dialogs(self, handler_class=pop_dialog_handler.PopDialogHandler):

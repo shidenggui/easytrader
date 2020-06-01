@@ -41,18 +41,15 @@ class PopDialogHandler:
         return self._app.top_window().Static.window_text()
 
     def _extract_entrust_id(self, content):
-        #  return re.search(r"\d+", content).group()
-        rule = '编号：(.*?)。'
-        ids=re.findall(rule,content)
-        return ids[0]
+        return re.search(r"[\da-zA-Z]+", content).group()
 
     def _submit_by_click(self):
         try:
             self._app.top_window()["确定"].click()
         except Exception as ex:
-            self._app.Window_(
-                best_match="Dialog", top_level_only=True
-            ).ChildWindow(best_match="确定").click()
+            self._app.Window_(best_match="Dialog", top_level_only=True).ChildWindow(
+                best_match="确定"
+            ).click()
 
     def _submit_by_shortcut(self):
         self._set_foreground(self._app.top_window())
