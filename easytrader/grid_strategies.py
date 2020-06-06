@@ -9,11 +9,10 @@ import pandas as pd
 import pywinauto.keyboard
 import pywinauto
 import pywinauto.clipboard
-from pywinauto import win32defines
 
 from easytrader.log import logger
 from easytrader.utils.captcha import captcha_recognize
-from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow
+from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow, win32defines
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
@@ -37,6 +36,9 @@ class IGridStrategy(abc.ABC):
 
 
 class BaseStrategy(IGridStrategy):
+    def __init__(self):
+        self._trader = None
+
     def set_trader(self, trader: "clienttrader.IClientTrader"):
         self._trader = trader
 
@@ -58,7 +60,7 @@ class BaseStrategy(IGridStrategy):
         try:
             if grid is None:
                 grid = self._trader.main
-            if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
+            if grid.has_style(win32defines.WS_MINIMIZE):  # if minimized
                 ShowWindow(grid.wrapper_object(), 9)  # restore window state
             else:
                 SetForegroundWindow(grid.wrapper_object())  # bring to front
@@ -95,9 +97,7 @@ class Copy(BaseStrategy):
     def _get_clipboard_data(self) -> str:
         if Copy._need_captcha_reg:
             if (
-                self._trader.app.top_window()
-                .window(class_name="Static", title_re="验证码")
-                .exists(timeout=1)
+                    self._trader.app.top_window().window(class_name="Static", title_re="验证码").exists(timeout=1)
             ):
                 file_path = "tmp.png"
                 count = 5
@@ -123,8 +123,8 @@ class Copy(BaseStrategy):
                         try:
                             logger.info(
                                 self._trader.app.top_window()
-                                .window(control_id=0x966, class_name="Static")
-                                .window_text()
+                                    .window(control_id=0x966, class_name="Static")
+                                    .window_text()
                             )
                         except Exception as ex:  # 窗体消失
                             logger.exception(ex)
@@ -171,6 +171,7 @@ class Xls(BaseStrategy):
         """
         :param tmp_folder: 用于保持临时文件的文件夹
         """
+        super().__init__()
         self.tmp_folder = tmp_folder
 
     def get(self, control_id: int) -> List[Dict]:

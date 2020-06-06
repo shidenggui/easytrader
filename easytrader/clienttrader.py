@@ -17,7 +17,6 @@ from easytrader.grid_strategies import IGridStrategy
 from easytrader.log import logger
 from easytrader.utils.misc import file2dict
 from easytrader.utils.perf import perf_clock
-from win32gui import SetForegroundWindow, ShowWindow
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
@@ -86,14 +85,6 @@ class ClientTrader(IClientTrader):
         self._app = None
         self._main = None
         self._toolbar = None
-
-    def _set_foreground(self, grid=None):
-        if grid is None:
-            grid = self._trader.main
-        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(grid.wrapper_object(), 9)  # restore window state
-        else:
-            SetForegroundWindow(grid.wrapper_object())  # bring to front
 
     @property
     def app(self):
@@ -243,7 +234,6 @@ class ClientTrader(IClientTrader):
         :param ttype: 市价委托类型，默认客户端默认选择，
                      深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
                      沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
-        :param limit_price:
 
         :return: {'entrust_no': '委托单号'}
         """
@@ -290,7 +280,9 @@ class ClientTrader(IClientTrader):
 
         if len(stock_list) == 0:
             return {"message": "今日无新股"}
-        invalid_list_idx = [i for i, v in enumerate(stock_list) if v[self.config.AUTO_IPO_NUMBER] <= 0]
+        invalid_list_idx = [
+            i for i, v in enumerate(stock_list) if v[self.config.AUTO_IPO_NUMBER] <= 0
+        ]
 
         if len(stock_list) == len(invalid_list_idx):
             return {"message": "没有发现可以申购的新股"}
@@ -310,8 +302,8 @@ class ClientTrader(IClientTrader):
     def _click_grid_by_row(self, row):
         x = self._config.COMMON_GRID_LEFT_MARGIN
         y = (
-                self._config.COMMON_GRID_FIRST_ROW_HEIGHT
-                + self._config.COMMON_GRID_ROW_HEIGHT * row
+            self._config.COMMON_GRID_FIRST_ROW_HEIGHT
+            + self._config.COMMON_GRID_ROW_HEIGHT * row
         )
         self._app.top_window().child_window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
@@ -323,12 +315,12 @@ class ClientTrader(IClientTrader):
         self.wait(0.5)  # wait dialog display
         try:
             return (
-                    self._main.wrapper_object() != self._app.top_window().wrapper_object()
+                self._main.wrapper_object() != self._app.top_window().wrapper_object()
             )
         except (
-                findwindows.ElementNotFoundError,
-                timings.TimeoutError,
-                RuntimeError,
+            findwindows.ElementNotFoundError,
+            timings.TimeoutError,
+            RuntimeError,
         ) as ex:
             logger.exception("check pop dialog timeout")
             return False
@@ -388,8 +380,8 @@ class ClientTrader(IClientTrader):
     def _get_pop_dialog_title(self):
         return (
             self._app.top_window()
-                .child_window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
-                .window_text()
+            .child_window(control_id=self._config.POP_DIALOD_TITLE_CONTROL_ID)
+            .window_text()
         )
 
     def _set_trade_params(self, security, price, amount):
@@ -431,10 +423,6 @@ class ClientTrader(IClientTrader):
         self._main.child_window(control_id=control_id, class_name="Edit").set_edit_text(
             text
         )
-
-    def _type_common_control_keys(self, control, text):
-        self._set_foreground(control)
-        control.type_keys(text, set_foreground=False)
 
     def _type_edit_control_keys(self, control_id, text):
         if not self._editor_need_type_keys:
@@ -481,8 +469,8 @@ class ClientTrader(IClientTrader):
     def _cancel_entrust_by_double_click(self, row):
         x = self._config.CANCEL_ENTRUST_GRID_LEFT_MARGIN
         y = (
-                self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT
-                + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
+            self._config.CANCEL_ENTRUST_GRID_FIRST_ROW_HEIGHT
+            + self._config.CANCEL_ENTRUST_GRID_ROW_HEIGHT * row
         )
         self._app.top_window().child_window(
             control_id=self._config.COMMON_GRID_CONTROL_ID,
@@ -490,8 +478,8 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def refresh(self):
-        # self._switch_left_menus(["买入[F1]"], sleep=0.05)
-        self._toolbar.button(3).click()		# 我的交易客户端工具栏中“刷新”是排在第4个的，所以其索引值是3
+        # self._switch_left_menus_by_shortcut("{F5}", sleep=0.1)
+        self._toolbar.button(3).click()  # 我的交易客户端工具栏中“刷新”是排在第4个的，所以其索引值是3
 
     @perf_clock
     def _handle_pop_dialogs(self, handler_class=pop_dialog_handler.PopDialogHandler):
@@ -516,13 +504,13 @@ class BaseLoginClientTrader(ClientTrader):
         pass
 
     def prepare(
-            self,
-            config_path=None,
-            user=None,
-            password=None,
-            exe_path=None,
-            comm_password=None,
-            **kwargs
+        self,
+        config_path=None,
+        user=None,
+        password=None,
+        exe_path=None,
+        comm_password=None,
+        **kwargs
     ):
         """
         登陆客户端
