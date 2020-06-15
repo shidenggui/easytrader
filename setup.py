@@ -88,7 +88,6 @@ setup(
     install_requires=[
         "requests",
         "six",
-        "rqopen-client",
         "easyutils",
         "flask",
         "pywinauto",

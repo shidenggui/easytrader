@@ -15,7 +15,6 @@ pillow = "*"
 pytesseract = "*"
 pandas = "*"
 pyperclip = "*"
-rqopen-client = ">=0.0.5"
 easyutils = "*"
 
 [dev-packages]
