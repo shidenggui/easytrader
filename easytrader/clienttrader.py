@@ -11,10 +11,11 @@ from typing import Type, Union
 import easyutils
 from pywinauto import findwindows, timings
 
-from easytrader import grid_strategies, pop_dialog_handler
+from easytrader import grid_strategies, pop_dialog_handler, refresh_strategies
 from easytrader.config import client
 from easytrader.grid_strategies import IGridStrategy
 from easytrader.log import logger
+from easytrader.refresh_strategies import IRefreshStrategy
 from easytrader.utils.misc import file2dict
 from easytrader.utils.perf import perf_clock
 
@@ -62,6 +63,7 @@ class ClientTrader(IClientTrader):
     # The strategy to use for getting grid data
     grid_strategy: Union[IGridStrategy, Type[IGridStrategy]] = grid_strategies.Copy
     _grid_strategy_instance: IGridStrategy = None
+    refresh_strategy: IRefreshStrategy = refresh_strategies.Switch()
 
     def enable_type_keys_for_editor(self):
         """
@@ -478,8 +480,8 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def refresh(self):
-        # self._switch_left_menus_by_shortcut("{F5}", sleep=0.1)
-        self._toolbar.button(3).click()  # 我的交易客户端工具栏中“刷新”是排在第4个的，所以其索引值是3
+        self.refresh_strategy.set_trader(self)
+        self.refresh_strategy.refresh()
 
     @perf_clock
     def _handle_pop_dialogs(self, handler_class=pop_dialog_handler.PopDialogHandler):
