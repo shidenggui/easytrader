@@ -17,7 +17,6 @@ from easytrader.grid_strategies import IGridStrategy
 from easytrader.log import logger
 from easytrader.utils.misc import file2dict
 from easytrader.utils.perf import perf_clock
-from win32gui import SetForegroundWindow, ShowWindow
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
@@ -85,14 +84,7 @@ class ClientTrader(IClientTrader):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
-
-    def _set_foreground(self, grid=None):
-        if grid is None:
-            grid = self._trader.main
-        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(grid.wrapper_object(), 9)  # restore window state
-        else:
-            SetForegroundWindow(grid.wrapper_object())  # bring to front
+        self._toolbar = None
 
     @property
     def app(self):
@@ -121,6 +113,7 @@ class ClientTrader(IClientTrader):
         self._app = pywinauto.Application().connect(path=connect_path, timeout=10)
         self._close_prompt_windows()
         self._main = self._app.top_window()
+        self._toolbar = self._main.child_window(class_name="ToolbarWindow32")
 
     @property
     def broker_type(self):
@@ -431,10 +424,6 @@ class ClientTrader(IClientTrader):
             text
         )
 
-    def _type_common_control_keys(self, control, text):
-        self._set_foreground(control)
-        control.type_keys(text, set_foreground=False)
-
     def _type_edit_control_keys(self, control_id, text):
         if not self._editor_need_type_keys:
             self._main.child_window(
@@ -489,7 +478,8 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def refresh(self):
-        self._switch_left_menus_by_shortcut("{F5}", sleep=0.1)
+        # self._switch_left_menus_by_shortcut("{F5}", sleep=0.1)
+        self._toolbar.button(3).click()  # 我的交易客户端工具栏中“刷新”是排在第4个的，所以其索引值是3
 
     @perf_clock
     def _handle_pop_dialogs(self, handler_class=pop_dialog_handler.PopDialogHandler):

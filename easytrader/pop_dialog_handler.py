@@ -3,24 +3,21 @@ import re
 import time
 from typing import Optional
 
-import pywinauto
-
 from easytrader import exceptions
 from easytrader.utils.perf import perf_clock
-from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow
+from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow, win32defines
 
 
 class PopDialogHandler:
     def __init__(self, app):
         self._app = app
 
-    def _set_foreground(self, grid=None):
-        if grid is None:
-            grid = self._trader.main
-        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(grid.wrapper_object(), 9)  # restore window state
+    @staticmethod
+    def _set_foreground(window):
+        if window.has_style(win32defines.WS_MINIMIZE):  # if minimized
+            ShowWindow(window.wrapper_object(), 9)  # restore window state
         else:
-            SetForegroundWindow(grid.wrapper_object())  # bring to front
+            SetForegroundWindow(window.wrapper_object())  # bring to front
 
     @perf_clock
     def handle(self, title):
@@ -40,7 +37,8 @@ class PopDialogHandler:
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
 
-    def _extract_entrust_id(self, content):
+    @staticmethod
+    def _extract_entrust_id(content):
         return re.search(r"[\da-zA-Z]+", content).group()
 
     def _submit_by_click(self):

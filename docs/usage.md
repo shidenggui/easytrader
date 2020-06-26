@@ -6,12 +6,6 @@ import easytrader
 
 ## 二、设置交易客户端类型
 
-**海通客户端**
-
-```python
-user = easytrader.use('htzq_client')
-```
-
 **华泰客户端**
 
 ```python
