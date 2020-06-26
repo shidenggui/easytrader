@@ -11,7 +11,7 @@ import requests.exceptions
 
 from easytrader import exceptions
 from easytrader.log import logger
-from easytrader.utils.misc import file2dict
+from easytrader.utils.misc import file2dict, str2num
 from easytrader.utils.stock import get_30_date
 
 
@@ -234,13 +234,9 @@ class WebTrader(metaclass=abc.ABCMeta):
             for key in item:
                 try:
                     if re.search(int_match_str, key) is not None:
-                        item[key] = easytrader.utils.misc.str2num(
-                            item[key], "int"
-                        )
+                        item[key] = str2num(item[key], "int")
                     elif re.search(float_match_str, key) is not None:
-                        item[key] = easytrader.utils.misc.str2num(
-                            item[key], "float"
-                        )
+                        item[key] = str2num(item[key], "float")
                 except ValueError:
                     continue
         return response_data
