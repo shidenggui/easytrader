@@ -115,7 +115,7 @@ class ClientTrader(IClientTrader):
         self._app = pywinauto.Application().connect(path=connect_path, timeout=10)
         self._close_prompt_windows()
         self._main = self._app.top_window()
-        self._toolbar = self._main.child_window(class_name="ToolbarWindow32")
+        self._init_toolbar()
 
     @property
     def broker_type(self):
@@ -126,6 +126,9 @@ class ClientTrader(IClientTrader):
         self._switch_left_menus(["查询[F4]", "资金股票"])
 
         return self._get_balance_from_statics()
+
+    def _init_toolbar(self):
+        self._toolbar = self._main.child_window(class_name="ToolbarWindow32")
 
     def _get_balance_from_statics(self):
         result = {}
@@ -536,3 +539,4 @@ class BaseLoginClientTrader(ClientTrader):
             comm_password,
             **kwargs
         )
+        self._init_toolbar()
