@@ -90,7 +90,7 @@ setup(
         "six",
         "easyutils",
         "flask",
-        "pywinauto",
+        "pywinauto==0.6.6",
         "pillow",
         "pandas",
     ],
