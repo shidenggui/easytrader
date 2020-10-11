@@ -58,6 +58,11 @@ def use(broker, debug=False, **kwargs):
 
         return GJClientTrader()
 
+    if broker.lower() in ["gf_client", "广发客户端"]:
+        from .gf_clienttrader import GFClientTrader
+
+        return GFClientTrader()
+
     if broker.lower() in ["ths", "同花顺客户端"]:
         from .clienttrader import ClientTrader
 
