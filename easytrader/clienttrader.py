@@ -8,6 +8,8 @@ import sys
 import time
 from typing import Type, Union
 
+import hashlib, binascii
+
 import easyutils
 from pywinauto import findwindows, timings
 
@@ -22,7 +24,6 @@ from easytrader.utils.perf import perf_clock
 if not sys.platform.startswith("darwin"):
     import pywinauto
     import pywinauto.clipboard
-
 
 class IClientTrader(abc.ABC):
     @property
@@ -174,6 +175,29 @@ class ClientTrader(IClientTrader):
                 return self._handle_pop_dialogs()
         return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
 
+    def cancel_all_entrusts(self):
+        self.refresh()
+        self._switch_left_menus(["撤单[F3]"])
+
+        # 点击全部撤销控件
+        self._app.top_window().child_window(
+            control_id=self._config.TRADE_CANCEL_ALL_ENTRUST_CONTROL_ID, class_name="Button", title_re="""全撤.*"""
+        ).click()
+        self.wait(0.2)
+
+        # 等待出现 确认兑换框
+        if self.is_exist_pop_dialog():
+            # 点击是 按钮
+            w = self._app.top_window()
+            if w is not None:
+                btn = w["是(Y)"]
+                if btn is not None:
+                    btn.click()
+                    self.wait(0.2)
+
+        # 如果出现了确认窗口
+        self.close_pop_dialog()
+
     @perf_clock
     def repo(self, security, price, amount, **kwargs):
         self._switch_left_menus(["债券回购", "融资回购（正回购）"])
@@ -278,6 +302,24 @@ class ClientTrader(IClientTrader):
                 return
         raise TypeError("不支持对应的市价类型: {}".format(ttype))
 
+    def _set_stock_exchange_type(self, ttype):
+        """根据选择的市价交易类型选择对应的下拉选项"""
+        selects = self._main.child_window(
+            control_id=self._config.TRADE_STOCK_EXCHANGE_CONTROL_ID, class_name="ComboBox"
+        )
+
+        for i, text in enumerate(selects.texts()):
+            # skip 0 index, because 0 index is current select index
+            if i == 0:
+                if ttype.strip() == text.strip():  # 当前已经选中
+                    return
+                else:
+                    continue
+            if ttype.strip() == text.strip():
+                selects.select(i - 1)
+                return
+        raise TypeError("不支持对应的市场类型: {}".format(ttype))
+
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
 
@@ -329,6 +371,21 @@ class ClientTrader(IClientTrader):
         ) as ex:
             logger.exception("check pop dialog timeout")
             return False
+
+    @perf_clock
+    def close_pop_dialog(self):
+        try:
+            if self._main.wrapper_object() != self._app.top_window().wrapper_object():
+                w = self._app.top_window()
+                if w is not None:
+                    w.close()
+                    self.wait(0.2)
+        except (
+                findwindows.ElementNotFoundError,
+                timings.TimeoutError,
+                RuntimeError,
+        ) as ex:
+            pass
 
     def _run_exe_path(self, exe_path):
         return os.path.join(os.path.dirname(exe_path), "xiadan.exe")
@@ -397,6 +454,14 @@ class ClientTrader(IClientTrader):
         # wait security input finish
         self.wait(0.1)
 
+        # 设置交易所
+        if security.lower().startswith("sz"):
+            self._set_stock_exchange_type("深圳Ａ股")
+        if security.lower().startswith("sh"):
+            self._set_stock_exchange_type("上海Ａ股")
+
+        self.wait(0.1)
+
         self._type_edit_control_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code),
@@ -439,6 +504,13 @@ class ClientTrader(IClientTrader):
             editor.select()
             editor.type_keys(text)
 
+    def type_edit_control_keys(self, editor, text):
+        if not self._editor_need_type_keys:
+            editor.set_edit_text(text)
+        else:
+            editor.select()
+            editor.type_keys(text)
+
     def _collapse_left_menus(self):
         items = self._get_left_menus_handle().roots()
         for item in items:
@@ -446,12 +518,14 @@ class ClientTrader(IClientTrader):
 
     @perf_clock
     def _switch_left_menus(self, path, sleep=0.2):
+        self.close_pop_dialog()
         self._get_left_menus_handle().get_item(path).select()
         self._app.top_window().type_keys('{ESC}')
         self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
+        self.close_pop_dialog()
         self._app.top_window().type_keys(shortcut)
         self.wait(sleep)
 
