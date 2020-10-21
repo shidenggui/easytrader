@@ -50,14 +50,12 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
 
             self._app.top_window().button0.click()
 
-            # detect login is success or not
-            self._app.top_window().wait_not("exists", 100)
-
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
             )
-        self._close_prompt_windows()
         self._main = self._app.window(title="网上股票交易系统5.0")
+        self._main.wait ( "exists enabled visible ready" , timeout=100 )
+        self._close_prompt_windows ( )
 
     @property
     def balance(self):
