@@ -3,28 +3,25 @@ import re
 import time
 from typing import Optional
 
-import pywinauto
-
 from easytrader import exceptions
 from easytrader.utils.perf import perf_clock
-from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow
+from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow, win32defines
 
 
 class PopDialogHandler:
     def __init__(self, app):
         self._app = app
 
-    def _set_foreground(self, grid=None):
-        if grid is None:
-            grid = self._trader.main
-        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(grid.wrapper_object(), 9)  # restore window state
+    @staticmethod
+    def _set_foreground(window):
+        if window.has_style(win32defines.WS_MINIMIZE):  # if minimized
+            ShowWindow(window.wrapper_object(), 9)  # restore window state
         else:
-            SetForegroundWindow(grid.wrapper_object())  # bring to front
+            SetForegroundWindow(window.wrapper_object())  # bring to front
 
     @perf_clock
     def handle(self, title):
-        if any(s in title for s in {"提示信息", "委托确认", "网上交易用户协议"}):
+        if any(s in title for s in {"提示信息", "委托确认", "网上交易用户协议", "撤单确认"}):
             self._submit_by_shortcut()
             return None
 
@@ -40,16 +37,17 @@ class PopDialogHandler:
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
 
-    def _extract_entrust_id(self, content):
-        return re.search(r"\d+", content).group()
+    @staticmethod
+    def _extract_entrust_id(content):
+        return re.search(r"[\da-zA-Z]+", content).group()
 
     def _submit_by_click(self):
         try:
             self._app.top_window()["确定"].click()
         except Exception as ex:
-            self._app.Window_(
-                best_match="Dialog", top_level_only=True
-            ).ChildWindow(best_match="确定").click()
+            self._app.Window_(best_match="Dialog", top_level_only=True).ChildWindow(
+                best_match="确定"
+            ).click()
 
     def _submit_by_shortcut(self):
         self._set_foreground(self._app.top_window())
@@ -77,6 +75,10 @@ class TradePopDialogHandler(PopDialogHandler):
                 return None
 
             if "逆回购" in content:
+                self._submit_by_shortcut()
+                return None
+
+            if "正回购" in content:
                 self._submit_by_shortcut()
                 return None
 

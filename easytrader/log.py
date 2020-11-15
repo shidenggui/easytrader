@@ -2,7 +2,7 @@
 import logging
 
 logger = logging.getLogger("easytrader")
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 logger.propagate = False
 
 fmt = logging.Formatter(

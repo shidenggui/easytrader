@@ -8,21 +8,22 @@ import sys
 import time
 from typing import Type, Union
 
+import hashlib, binascii
+
 import easyutils
 from pywinauto import findwindows, timings
 
-from easytrader import grid_strategies, pop_dialog_handler
+from easytrader import grid_strategies, pop_dialog_handler, refresh_strategies
 from easytrader.config import client
 from easytrader.grid_strategies import IGridStrategy
 from easytrader.log import logger
+from easytrader.refresh_strategies import IRefreshStrategy
 from easytrader.utils.misc import file2dict
 from easytrader.utils.perf import perf_clock
-from win32gui import SetForegroundWindow, ShowWindow
 
 if not sys.platform.startswith("darwin"):
     import pywinauto
     import pywinauto.clipboard
-
 
 class IClientTrader(abc.ABC):
     @property
@@ -63,6 +64,7 @@ class ClientTrader(IClientTrader):
     # The strategy to use for getting grid data
     grid_strategy: Union[IGridStrategy, Type[IGridStrategy]] = grid_strategies.Copy
     _grid_strategy_instance: IGridStrategy = None
+    refresh_strategy: IRefreshStrategy = refresh_strategies.Switch()
 
     def enable_type_keys_for_editor(self):
         """
@@ -85,14 +87,7 @@ class ClientTrader(IClientTrader):
         self._config = client.create(self.broker_type)
         self._app = None
         self._main = None
-
-    def _set_foreground(self, grid=None):
-        if grid is None:
-            grid = self._trader.main
-        if grid.has_style(pywinauto.win32defines.WS_MINIMIZE):  # if minimized
-            ShowWindow(grid.wrapper_object(), 9)  # restore window state
-        else:
-            SetForegroundWindow(grid.wrapper_object())  # bring to front
+        self._toolbar = None
 
     @property
     def app(self):
@@ -121,6 +116,7 @@ class ClientTrader(IClientTrader):
         self._app = pywinauto.Application().connect(path=connect_path, timeout=10)
         self._close_prompt_windows()
         self._main = self._app.top_window()
+        self._init_toolbar()
 
     @property
     def broker_type(self):
@@ -131,6 +127,9 @@ class ClientTrader(IClientTrader):
         self._switch_left_menus(["查询[F4]", "资金股票"])
 
         return self._get_balance_from_statics()
+
+    def _init_toolbar(self):
+        self._toolbar = self._main.child_window(class_name="ToolbarWindow32")
 
     def _get_balance_from_statics(self):
         result = {}
@@ -175,6 +174,41 @@ class ClientTrader(IClientTrader):
                 self._cancel_entrust_by_double_click(i)
                 return self._handle_pop_dialogs()
         return {"message": "委托单状态错误不能撤单, 该委托单可能已经成交或者已撤"}
+
+    def cancel_all_entrusts(self):
+        self.refresh()
+        self._switch_left_menus(["撤单[F3]"])
+
+        # 点击全部撤销控件
+        self._app.top_window().child_window(
+            control_id=self._config.TRADE_CANCEL_ALL_ENTRUST_CONTROL_ID, class_name="Button", title_re="""全撤.*"""
+        ).click()
+        self.wait(0.2)
+
+        # 等待出现 确认兑换框
+        if self.is_exist_pop_dialog():
+            # 点击是 按钮
+            w = self._app.top_window()
+            if w is not None:
+                btn = w["是(Y)"]
+                if btn is not None:
+                    btn.click()
+                    self.wait(0.2)
+
+        # 如果出现了确认窗口
+        self.close_pop_dialog()
+
+    @perf_clock
+    def repo(self, security, price, amount, **kwargs):
+        self._switch_left_menus(["债券回购", "融资回购（正回购）"])
+
+        return self.trade(security, price, amount)
+
+    @perf_clock
+    def reverse_repo(self, security, price, amount, **kwargs):
+        self._switch_left_menus(["债券回购", "融劵回购（逆回购）"])
+
+        return self.trade(security, price, amount)
 
     @perf_clock
     def buy(self, security, price, amount, **kwargs):
@@ -268,6 +302,24 @@ class ClientTrader(IClientTrader):
                 return
         raise TypeError("不支持对应的市价类型: {}".format(ttype))
 
+    def _set_stock_exchange_type(self, ttype):
+        """根据选择的市价交易类型选择对应的下拉选项"""
+        selects = self._main.child_window(
+            control_id=self._config.TRADE_STOCK_EXCHANGE_CONTROL_ID, class_name="ComboBox"
+        )
+
+        for i, text in enumerate(selects.texts()):
+            # skip 0 index, because 0 index is current select index
+            if i == 0:
+                if ttype.strip() == text.strip():  # 当前已经选中
+                    return
+                else:
+                    continue
+            if ttype.strip() == text.strip():
+                selects.select(i - 1)
+                return
+        raise TypeError("不支持对应的市场类型: {}".format(ttype))
+
     def auto_ipo(self):
         self._switch_left_menus(self._config.AUTO_IPO_MENU_PATH)
 
@@ -275,7 +327,9 @@ class ClientTrader(IClientTrader):
 
         if len(stock_list) == 0:
             return {"message": "今日无新股"}
-        invalid_list_idx = [i for i, v in enumerate(stock_list) if v[self.config.AUTO_IPO_NUMBER] <= 0]
+        invalid_list_idx = [
+            i for i, v in enumerate(stock_list) if v[self.config.AUTO_IPO_NUMBER] <= 0
+        ]
 
         if len(stock_list) == len(invalid_list_idx):
             return {"message": "没有发现可以申购的新股"}
@@ -317,6 +371,21 @@ class ClientTrader(IClientTrader):
         ) as ex:
             logger.exception("check pop dialog timeout")
             return False
+
+    @perf_clock
+    def close_pop_dialog(self):
+        try:
+            if self._main.wrapper_object() != self._app.top_window().wrapper_object():
+                w = self._app.top_window()
+                if w is not None:
+                    w.close()
+                    self.wait(0.2)
+        except (
+                findwindows.ElementNotFoundError,
+                timings.TimeoutError,
+                RuntimeError,
+        ) as ex:
+            pass
 
     def _run_exe_path(self, exe_path):
         return os.path.join(os.path.dirname(exe_path), "xiadan.exe")
@@ -385,6 +454,14 @@ class ClientTrader(IClientTrader):
         # wait security input finish
         self.wait(0.1)
 
+        # 设置交易所
+        if security.lower().startswith("sz"):
+            self._set_stock_exchange_type("深圳Ａ股")
+        if security.lower().startswith("sh"):
+            self._set_stock_exchange_type("上海Ａ股")
+
+        self.wait(0.1)
+
         self._type_edit_control_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
             easyutils.round_price_by_code(price, code),
@@ -417,10 +494,6 @@ class ClientTrader(IClientTrader):
             text
         )
 
-    def _type_common_control_keys(self, control, text):
-        self._set_foreground(control)
-        control.type_keys(text, set_foreground=False)
-
     def _type_edit_control_keys(self, control_id, text):
         if not self._editor_need_type_keys:
             self._main.child_window(
@@ -431,6 +504,13 @@ class ClientTrader(IClientTrader):
             editor.select()
             editor.type_keys(text)
 
+    def type_edit_control_keys(self, editor, text):
+        if not self._editor_need_type_keys:
+            editor.set_edit_text(text)
+        else:
+            editor.select()
+            editor.type_keys(text)
+
     def _collapse_left_menus(self):
         items = self._get_left_menus_handle().roots()
         for item in items:
@@ -438,10 +518,14 @@ class ClientTrader(IClientTrader):
 
     @perf_clock
     def _switch_left_menus(self, path, sleep=0.2):
-        self._get_left_menus_handle().get_item(path).click()
+        self.close_pop_dialog()
+        self._get_left_menus_handle().get_item(path).select()
+        self._app.top_window().type_keys('{ESC}')
+        self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
     def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
+        self.close_pop_dialog()
         self._app.top_window().type_keys(shortcut)
         self.wait(sleep)
 
@@ -475,7 +559,8 @@ class ClientTrader(IClientTrader):
         ).double_click(coords=(x, y))
 
     def refresh(self):
-        self._switch_left_menus(["买入[F1]"], sleep=0.05)
+        self.refresh_strategy.set_trader(self)
+        self.refresh_strategy.refresh()
 
     @perf_clock
     def _handle_pop_dialogs(self, handler_class=pop_dialog_handler.PopDialogHandler):
@@ -530,3 +615,4 @@ class BaseLoginClientTrader(ClientTrader):
             comm_password,
             **kwargs
         )
+        self._init_toolbar()
