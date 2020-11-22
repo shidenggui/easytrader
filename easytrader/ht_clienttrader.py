@@ -46,7 +46,7 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
             self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
 
-            self._app.top_window().Edit3.type_keys(comm_password)
+            self._app.top_window().Edit3.set_edit_text(comm_password)
 
             self._app.top_window().button0.click()
 
