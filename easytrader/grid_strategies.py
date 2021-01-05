@@ -109,7 +109,8 @@ class Copy(BaseStrategy):
                         file_path
                     )  # 保存验证码
 
-                    captcha_num = captcha_recognize(file_path)  # 识别验证码
+                    captcha_num = captcha_recognize(file_path).strip()  # 识别验证码
+                    captcha_num = "".join(captcha_num.split())
                     logger.info("captcha result-->" + captcha_num)
                     if len(captcha_num) == 4:
                         self._trader.app.top_window().window(
