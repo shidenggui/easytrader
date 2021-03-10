@@ -520,7 +520,6 @@ class ClientTrader(IClientTrader):
     def _switch_left_menus(self, path, sleep=0.2):
         self.close_pop_dialog()
         self._get_left_menus_handle().get_item(path).select()
-        self._app.top_window().type_keys('{ESC}')
         self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
