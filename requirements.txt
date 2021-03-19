@@ -11,7 +11,7 @@ easyutils==0.1.7
 flask==1.0.2
 idna==2.7
 itsdangerous==0.24
-jinja2==2.10
+jinja2==2.11.3
 lxml==4.2.3
 markupsafe==1.0
 numpy==1.15.0; python_version >= '2.7'
