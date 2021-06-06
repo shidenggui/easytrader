@@ -26,6 +26,9 @@ class CommonConfig:
     # 交易所类型。 深圳A股、上海A股
     TRADE_STOCK_EXCHANGE_CONTROL_ID = 1003
 
+    TRADE_STOCK_EXCHANGE_TYPE_SZA = "深圳Ａ股"
+    TRADE_STOCK_EXCHANGE_TYPE_SHA = "上海Ａ股"
+
     # 撤销界面上， 全部撤销按钮
     TRADE_CANCEL_ALL_ENTRUST_CONTROL_ID = 30001
 
@@ -82,7 +85,10 @@ class CommonConfig:
 
 
 class YH(CommonConfig):
-    DEFAULT_EXE_PATH = r"C:\双子星-中国银河证券\Binarystar.exe"
+    DEFAULT_EXE_PATH = r"C:\双子星金融终端独立交易-中国银河证券\xiadan.exe"
+
+    TRADE_STOCK_EXCHANGE_TYPE_SZA = "深Ａ"
+    TRADE_STOCK_EXCHANGE_TYPE_SHA = "沪Ａ"
 
     BALANCE_GRID_CONTROL_ID = 1308
 
@@ -103,6 +109,9 @@ class YH(CommonConfig):
 
 class HT(CommonConfig):
     DEFAULT_EXE_PATH = r"C:\htzqzyb2\xiadan.exe"
+
+    TRADE_STOCK_EXCHANGE_TYPE_SZA = "深圳Ａ"
+    TRADE_STOCK_EXCHANGE_TYPE_SHA = "上海Ａ"
 
     BALANCE_CONTROL_ID_GROUP = {
         "资金余额": 1012,

@@ -456,9 +456,9 @@ class ClientTrader(IClientTrader):
 
         # 设置交易所
         if security.lower().startswith("sz"):
-            self._set_stock_exchange_type("深圳Ａ股")
+            self._set_stock_exchange_type(self._config.TRADE_STOCK_EXCHANGE_TYPE_SZA)
         if security.lower().startswith("sh"):
-            self._set_stock_exchange_type("上海Ａ股")
+            self._set_stock_exchange_type(self._config.TRADE_STOCK_EXCHANGE_TYPE_SHA)
 
         self.wait(0.1)
 
