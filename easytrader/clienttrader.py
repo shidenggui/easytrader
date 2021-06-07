@@ -454,6 +454,9 @@ class ClientTrader(IClientTrader):
         # wait security input finish
         self.wait(0.1)
 
+        # close the popup dialog to prompt selecting stock exchange type
+        self._handle_pop_dialogs()
+
         # 设置交易所
         if security.lower().startswith("sz"):
             self._set_stock_exchange_type(self._config.TRADE_STOCK_EXCHANGE_TYPE_SZA)
