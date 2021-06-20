@@ -2,30 +2,32 @@
 --trusted-host mirrors.aliyun.com
 beautifulsoup4==4.6.0
 bs4==0.0.1
-certifi==2018.4.16
-chardet==3.0.4
-click==6.7
-cssselect==1.0.3; python_version != '3.3.*'
+certifi==2020.12.5
+chardet==4.0.0
+click==7.1.2
+cssselect==1.1.0; python_version != '3.3.*'
 dill==0.2.8.2
 easyutils==0.1.7
-flask==1.0.2
-idna==2.7
-itsdangerous==0.24
-jinja2==2.10
+flask==1.1.2
+idna==2.10
+itsdangerous==1.1.0
+jinja2==2.11.3
 lxml==4.6.3
-markupsafe==1.0
-numpy==1.15.0; python_version >= '2.7'
-pandas==0.23.3
-pillow==5.2.0
+markupsafe==1.1.1
+numpy==1.20.2; python_version >= '2.7'
+pandas==1.2.4
+pillow==8.2.0
 pyperclip==1.6.4
-pyquery==1.4.0; python_version != '3.0.*'
-pytesseract==0.2.4
-python-dateutil==2.7.3
+pyquery==1.4.3; python_version != '3.0.*'
+pytesseract==0.3.7
+python-dateutil==2.8.1
 python-xlib==0.23
-pytz==2018.5
+pytz==2021.1
+pywin32==300
+pypiwin32==223
 pywinauto==0.6.6
-requests==2.19.1
-six==1.11.0
-urllib3==1.23; python_version != '3.1.*'
-werkzeug==0.14.1
+requests==2.25.1
+six==1.16.0
+urllib3==1.26.4; python_version != '3.1.*'
+werkzeug==1.0.1
 

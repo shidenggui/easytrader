@@ -108,7 +108,7 @@ class YH(CommonConfig):
 
 
 class HT(CommonConfig):
-    DEFAULT_EXE_PATH = r"C:\htzqzyb2\xiadan.exe"
+    DEFAULT_EXE_PATH = r"C:\htwt\xiadan.exe"
 
     TRADE_STOCK_EXCHANGE_TYPE_SZA = "深圳Ａ"
     TRADE_STOCK_EXCHANGE_TYPE_SHA = "上海Ａ"
