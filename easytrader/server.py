@@ -32,6 +32,9 @@ def post_prepare():
     user = api.use(json_data.pop("broker"))
     user.prepare(**json_data)
 
+    # AttributeError: 'RemoteClient' object has no attribute 'enable_type_keys_for_editor'
+    user.enable_type_keys_for_editor()
+
     global_store["user"] = user
     return jsonify({"msg": "login success"}), 201
 
