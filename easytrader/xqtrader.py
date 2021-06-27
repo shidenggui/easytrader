@@ -133,7 +133,7 @@ class XueQiuTrader(webtrader.WebTrader):
         match_info = re.search(r"(?<=SNB.cubeInfo = ).*(?=;\n)", html)
         if match_info is None:
             raise Exception(
-                "cant get portfolio info, portfolio html : {}".format(html)
+                "can't get portfolio info, portfolio html : {}".format(html)
             )
         try:
             portfolio_info = json.loads(match_info.group())
