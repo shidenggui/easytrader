@@ -23,7 +23,7 @@ class IGridStrategy(abc.ABC):
     @abc.abstractmethod
     def get(self, control_id: int) -> List[Dict]:
         """
-        获取 gird 数据并格式化返回
+        获取 grid 数据并格式化返回
 
         :param control_id: grid 的 control id
         :return: grid 数据
