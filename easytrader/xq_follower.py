@@ -234,7 +234,7 @@ class XueQiuFollower(BaseFollower):
         portfolio_page = self.s.get(url)
         match_info = re.search(r"(?<=SNB.cubeInfo = ).*(?=;\n)", portfolio_page.text)
         if match_info is None:
-            raise Exception("cant get portfolio info, portfolio url : {}".format(url))
+            raise Exception("can't get portfolio info, portfolio url : {}".format(url))
         try:
             portfolio_info = json.loads(match_info.group())
         except Exception as e:
