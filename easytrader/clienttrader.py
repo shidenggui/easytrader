@@ -401,7 +401,7 @@ class ClientTrader(IClientTrader):
         for window in self._app.windows(class_name="#32770", visible_only=True):
             title = window.window_text()
             if title != self._config.TITLE:
-                logging.info("close " + title)
+                logging.info("close window %s" % title)
                 window.close()
                 self.wait(0.2)
         self.wait(1)
