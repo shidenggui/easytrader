@@ -6,12 +6,12 @@ from io import StringIO
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 import pandas as pd
-import pywinauto.keyboard
 import pywinauto
 import pywinauto.clipboard
+import pywinauto.keyboard
 
 from easytrader.log import logger
-from easytrader.utils.captcha import captcha_recognize
+from easytrader.utils.captcha import captcha_recognize, get_yzm_from_image
 from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow, win32defines
 
 if TYPE_CHECKING:
@@ -184,7 +184,17 @@ class Xls(BaseStrategy):
         count = 10
         while count > 0:
             if self._trader.is_exist_pop_dialog():
-                break
+                # 这里有可能是要求输入验证码的弹窗 liudongming
+                image = self._trader.app.top_window().capture_as_image()
+                yzm = get_yzm_from_image(image)
+                if len(yzm) == 4:
+                    # self._trader.app.top_window().print_control_identifiers()
+                    self._trader.app.top_window().Edit.type_keys(yzm)
+                    self._trader.app.top_window().type_keys("{ENTER}", set_foreground=False)
+
+                    grid.type_keys("^s", set_foreground=False)
+                else:
+                    break
             self._trader.wait(0.2)
             count -= 1
 
