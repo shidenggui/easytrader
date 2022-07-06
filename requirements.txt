@@ -12,7 +12,7 @@ flask==1.0.2
 idna==2.7
 itsdangerous==0.24
 jinja2==2.10
-lxml==4.2.3
+lxml==4.9.1
 markupsafe==1.0
 numpy==1.15.0; python_version >= '2.7'
 pandas==0.23.3
