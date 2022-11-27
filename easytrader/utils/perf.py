@@ -1,5 +1,6 @@
 # coding:utf-8
 import functools
+import inspect
 import logging
 import timeit
 
@@ -42,5 +43,6 @@ def perf_clock(f):
         if ex is not None:
             raise ex
         return result
-
+    
+    wrapper.__signature__ = inspect.signature(f)
     return wrapper
