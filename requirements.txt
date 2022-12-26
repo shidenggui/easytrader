@@ -16,7 +16,7 @@ lxml==4.2.3
 markupsafe==1.0
 numpy==1.15.0; python_version >= '2.7'
 pandas==0.23.3
-pillow==5.2.0
+pillow==9.1.1
 pyperclip==1.6.4
 pyquery==1.4.0; python_version != '3.0.*'
 pytesseract==0.2.4
