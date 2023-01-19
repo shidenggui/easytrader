@@ -37,6 +37,9 @@ class PopDialogHandler:
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
 
+    def _extract_content_edit(self):
+        return self._app.top_window().Edit.window_text()
+
     @staticmethod
     def _extract_entrust_id(content):
         return re.search(r"[\da-zA-Z]+", content).group()
@@ -85,7 +88,7 @@ class TradePopDialogHandler(PopDialogHandler):
             return None
 
         if title == "提示":
-            content = self._extract_content()
+            content = self._extract_content_edit()
             if "成功" in content:
                 entrust_no = self._extract_entrust_id(content)
                 self._submit_by_click()

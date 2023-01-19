@@ -1,3 +1,3 @@
 from easytrader import server
 
-server.run(port=1433) # 默认端口为 1430
+server.run(port=14433) # 默认端口为 1430
