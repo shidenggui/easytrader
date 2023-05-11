@@ -547,3 +547,91 @@ class XueQiuTrader(webtrader.WebTrader):
         :param entrust_prop:
         """
         return self._trade(security, price, amount, volume, "sell")
+
+    def adjust_weights(self, weights, ignore_minor=0.0):
+        """
+        雪球组合调仓, weights 为调整后的仓位比例
+        :param weights: dict[str, float] 股票代码 -> 调整之后的持仓百分比
+        """
+
+        # 获取原有仓位信息
+        position_list = self._get_position()
+        position_dict = {position["stock_id"]: position for position in position_list}
+        new_position_list = []
+
+        for stock_code, weight in weights.items():
+            stock = self._search_stock_info(stock_code)
+            if stock is None:
+                raise exceptions.TradeError(u"没有查询要操作的股票信息")
+            if stock["flag"] != 1:
+                raise exceptions.TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+
+            if stock["stock_id"] in position_dict:
+                # 调仓
+                position = position_dict[stock["stock_id"]]                  
+                current_weight = position["weight"]
+                if weight > 0 and abs(weight - current_weight) > ignore_minor:
+                    position["proactive"] = True
+                    position["weight"] = weight
+                    logger.info("调仓 %s 比例: %f", position['stock_name'], weight)
+                    new_position_list.append(position)
+                elif weight > 0:
+                    position["proactive"] = False
+                    new_position_list.append(position)
+                elif weight == 0.0:
+                    logger.info("平仓 %s 比例: %f", position['stock_name'], weight)                        
+            else:
+                # 开仓
+                new_position_list.append(
+                    {
+                        "code": stock["code"],
+                        "name": stock["name"],
+                        "enName": stock["enName"] if 'enName' in stock else '',
+                        "hasexist": stock["hasexist"] if 'hasexist' in stock else '',
+                        "flag": stock["flag"],
+                        "type": stock["type"] if 'type' in stock else '',
+                        "current": stock["current"],
+                        "chg": stock["chg"],
+                        "percent": str(stock["percent"]),
+                        "stock_id": stock["stock_id"],
+                        "ind_id": stock["ind_id"],
+                        "ind_name": stock["ind_name"],
+                        "ind_color": stock["ind_color"],
+                        "textname": stock["name"],
+                        "segment_name": stock["ind_name"],
+                        "weight": weights[stock_code],
+                        "url": "/S/" + stock["code"],
+                        "proactive": True,
+                        "price": str(stock["current"]),
+                    }
+                )
+                logger.info("开仓 %s 比例: %f", stock["name"], weight)
+
+        remain_weight = 100 - sum(i.get("weight") for i in new_position_list)
+        cash = round(remain_weight, 2)
+        assert cash >= 0
+        data = {
+            "cash": cash,
+            "holdings": str(json.dumps(new_position_list)),
+            "cube_symbol": str(self.account_config["portfolio_code"]),
+            "segment": "true",
+            "comment": "",
+        }
+        try:
+            resp = self.s.post(self.config["rebalance_url"], data=data)
+        # pylint: disable=broad-except
+        except Exception as e:
+            logger.warning("调仓失败: %s ", e)
+            return None
+        logger.info("剩余仓位: %f", cash)
+        resp_json = json.loads(resp.text)
+        if "error_description" in resp_json and resp.status_code != 200:
+            logger.error("调仓错误: %s", resp_json["error_description"])
+            return [
+                {
+                    "error_no": resp_json["error_code"],
+                    "error_info": resp_json["error_description"],
+                }
+            ]
+        logger.info("调仓成功")
+        return None
