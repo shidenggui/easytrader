@@ -4,6 +4,7 @@ import numbers
 import os
 import re
 import time
+import math
 
 import requests
 
@@ -548,6 +549,7 @@ class XueQiuTrader(webtrader.WebTrader):
         """
         return self._trade(security, price, amount, volume, "sell")
 
+
     def adjust_weights(self, weights, ignore_minor=0.0):
         """
         雪球组合调仓, weights 为调整后的仓位比例
@@ -563,8 +565,8 @@ class XueQiuTrader(webtrader.WebTrader):
             stock = self._search_stock_info(stock_code)
             if stock is None:
                 raise exceptions.TradeError(u"没有查询要操作的股票信息")
-            if stock["flag"] != 1:
-                raise exceptions.TradeError(u"未上市、停牌、涨跌停、退市的股票无法操作。")
+            # if stock["flag"] != 1:
+            #    raise exceptions.TradeError(f"未上市、停牌、涨跌停、退市的股票无法操作: {stock['name']}")
 
             if stock["stock_id"] in position_dict:
                 # 调仓
@@ -573,13 +575,13 @@ class XueQiuTrader(webtrader.WebTrader):
                 if weight > 0 and abs(weight - current_weight) > ignore_minor:
                     position["proactive"] = True
                     position["weight"] = weight
-                    logger.info("调仓 %s 比例: %f", position['stock_name'], weight)
+                    logger.info("调仓 %s %.2f -> %.2f", position['stock_name'], current_weight, weight)
                     new_position_list.append(position)
                 elif weight > 0:
                     position["proactive"] = False
                     new_position_list.append(position)
                 elif weight == 0.0:
-                    logger.info("平仓 %s 比例: %f", position['stock_name'], weight)                        
+                    logger.info("平仓 %s %.2f -> %.2f", position['stock_name'], current_weight, weight)                        
             else:
                 # 开仓
                 new_position_list.append(
@@ -605,7 +607,7 @@ class XueQiuTrader(webtrader.WebTrader):
                         "price": str(stock["current"]),
                     }
                 )
-                logger.info("开仓 %s 比例: %f", stock["name"], weight)
+                logger.info("开仓 %s 比例: %.2f", stock["name"], weight)
 
         remain_weight = 100 - sum(i.get("weight") for i in new_position_list)
         cash = round(remain_weight, 2)
