@@ -63,7 +63,7 @@ class BaseStrategy(IGridStrategy):
             if grid.has_style(win32defines.WS_MINIMIZE):  # if minimized
                 ShowWindow(grid.wrapper_object(), 9)  # restore window state
             else:
-                SetForegroundWindow(grid.wrapper_object())  # bring to front
+                SetForegroundWindow(grid.wrapper_object().handle)  # bring to front
         except:
             pass
 

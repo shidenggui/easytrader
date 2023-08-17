@@ -17,7 +17,7 @@ class PopDialogHandler:
         if window.has_style(win32defines.WS_MINIMIZE):  # if minimized
             ShowWindow(window.wrapper_object(), 9)  # restore window state
         else:
-            SetForegroundWindow(window.wrapper_object())  # bring to front
+            SetForegroundWindow(window.wrapper_object().handle)  # bring to front
 
     @perf_clock
     def handle(self, title):
@@ -65,6 +65,10 @@ class TradePopDialogHandler(PopDialogHandler):
     def handle(self, title) -> Optional[dict]:
         if title == "委托确认":
             self._submit_by_shortcut()
+            return None
+
+        if title == "风险提示":
+            self._submit_by_click()
             return None
 
         if title == "提示信息":

@@ -12,7 +12,6 @@ import pywinauto.clipboard
 
 from easytrader.log import logger
 from easytrader.utils.captcha import captcha_recognize
-from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow, win32defines
 
 if TYPE_CHECKING:
     # pylint: disable=unused-import
