@@ -344,8 +344,6 @@ class XueQiuTrader(webtrader.WebTrader):
                 {
                     "code": stock["code"],
                     "name": stock["name"],
-                    "enName": stock["enName"],
-                    "hasexist": stock["hasexist"],
                     "flag": stock["flag"],
                     "type": stock["type"],
                     "current": stock["current"],
