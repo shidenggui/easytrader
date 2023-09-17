@@ -76,14 +76,13 @@ return::
 """
 
 setup(
-    name="easytrader",
-    version="0.23.0",
+    name="sctrader",
+    version="0.3.0",
     description="A utility for China Stock Trade",
     long_description=long_desc,
-    author="shidenggui",
-    author_email="longlyshidenggui@gmail.com",
-    license="BSD",
-    url="https://github.com/shidenggui/easytrader",
+    author="noonehide",
+    author_email="noonehide@163.com",
+    url="https://github.com/noonehide/easytrader",
     keywords="China stock trade",
     install_requires=[
         "requests",
