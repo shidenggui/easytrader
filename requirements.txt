@@ -6,7 +6,7 @@ pytesseract==0.3.10
 pywin32==306
 pywinauto==0.6.8
 Requests==2.31.0
-rqopen_client==0.0.6
+#rqopen_client==0.0.6
 setuptools==56.0.0
 six==1.16.0
 urllib3==2.0.4
