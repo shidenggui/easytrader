@@ -278,7 +278,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
 
             # check price
             price = trade_cmd["price"]
-            if not self._is_number(price) or price <= 0:
+            if not (self._is_number(price) and price > 0):
                 logger.warning(
                     "策略 [%s] 指令(股票: %s 动作: %s 数量: %s 价格: %s)超时，指令产生时间: %s 当前时间: %s, 价格无效 , 被丢弃",
                     trade_cmd["strategy_name"],
