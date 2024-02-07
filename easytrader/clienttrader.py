@@ -154,8 +154,19 @@ class ClientTrader(IClientTrader):
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
+    def history_entrusts(self):
+        self._switch_left_menus(["查询[F4]", "历史委托"])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    @property
     def today_trades(self):
         self._switch_left_menus(["查询[F4]", "当日成交"])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    def history_trades(self):
+        self._switch_left_menus(["查询[F4]", "历史成交"])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
