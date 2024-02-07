@@ -17,7 +17,7 @@ class PopDialogHandler:
         if window.has_style(win32defines.WS_MINIMIZE):  # if minimized
             ShowWindow(window.wrapper_object(), 9)  # restore window state
         else:
-            SetForegroundWindow(window.wrapper_object())  # bring to front
+            SetForegroundWindow(window.wrapper_object().handle)  # bring to front
 
     @perf_clock
     def handle(self, title):
@@ -36,6 +36,9 @@ class PopDialogHandler:
 
     def _extract_content(self):
         return self._app.top_window().Static.window_text()
+
+    def _extract_content_edit(self):
+        return self._app.top_window().Edit.window_text()
 
     @staticmethod
     def _extract_entrust_id(content):
@@ -64,13 +67,17 @@ class TradePopDialogHandler(PopDialogHandler):
             self._submit_by_shortcut()
             return None
 
+        if title == "风险提示":
+            self._submit_by_click()
+            return None
+
         if title == "提示信息":
             content = self._extract_content()
             if "超出涨跌停" in content:
                 self._submit_by_shortcut()
                 return None
 
-            if "委托价格的小数价格应为" in content:
+            if "委托价格的小数" in content:
                 self._submit_by_shortcut()
                 return None
 
@@ -85,7 +92,7 @@ class TradePopDialogHandler(PopDialogHandler):
             return None
 
         if title == "提示":
-            content = self._extract_content()
+            content = self._extract_content_edit()
             if "成功" in content:
                 entrust_no = self._extract_entrust_id(content)
                 self._submit_by_click()
