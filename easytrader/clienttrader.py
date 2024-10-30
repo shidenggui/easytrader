@@ -456,9 +456,11 @@ class ClientTrader(IClientTrader):
 
         # 设置交易所
         if security.lower().startswith("sz"):
-            self._set_stock_exchange_type("深圳Ａ股")
+            self._set_stock_exchange_type("深圳Ａ")
         if security.lower().startswith("sh"):
-            self._set_stock_exchange_type("上海Ａ股")
+            self._set_stock_exchange_type("上海Ａ")
+        if security.lower().startswith("bj"):
+            self._set_stock_exchange_type("股转Ａ")
 
         self.wait(0.1)
 
@@ -495,12 +497,12 @@ class ClientTrader(IClientTrader):
         )
 
     def _type_edit_control_keys(self, control_id, text):
+        editor = self._main.child_window(control_id=control_id, class_name="Edit")
         if not self._editor_need_type_keys:
-            self._main.child_window(
-                control_id=control_id, class_name="Edit"
-            ).set_edit_text(text)
+            editor.set_edit_text("")
+            editor.set_edit_text(text)
         else:
-            editor = self._main.child_window(control_id=control_id, class_name="Edit")
+            editor.set_edit_text("")
             editor.select()
             editor.type_keys(text)
 

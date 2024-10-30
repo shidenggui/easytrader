@@ -62,9 +62,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
             "Accept": "application/json, text/javascript, */*; q=0.01",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "en-US,en;q=0.8",
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/54.0.2840.100 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
             "Referer": self.WEB_REFERER,
             "X-Requested-With": "XMLHttpRequest",
             "Origin": self.WEB_ORIGIN,
@@ -120,9 +118,9 @@ class BaseFollower(metaclass=abc.ABCMeta):
         :return: 考虑滑点后的交易价格
         """
         if action == "buy":
-            return price * (1 + self.slippage)
+            return round(price * (1 + self.slippage), 2)
         if action == "sell":
-            return price * (1 - self.slippage)
+            return round(price * (1 - self.slippage), 2)
         return price
 
     def load_expired_cmd_cache(self):
@@ -179,6 +177,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
         :param interval: 轮询策略的时间间隔，单位为秒"""
         while True:
             try:
+                logger.debug("Tracking strategy {}...".format(name))
                 transactions = self.query_strategy_transaction(
                     strategy, **kwargs
                 )
@@ -211,8 +210,8 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 self.trade_queue.put(trade_cmd)
                 self.add_cmd_to_expired_cmds(trade_cmd)
             try:
-                for _ in range(interval):
-                    time.sleep(1)
+                for _ in range(int(interval * 10)):  # 將 interval 乘以 10，再轉換為整數
+                    time.sleep(0.1)  # 每次睡眠 0.1 秒
             except KeyboardInterrupt:
                 logger.info("程序退出")
                 break
