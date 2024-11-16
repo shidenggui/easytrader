@@ -456,11 +456,11 @@ class ClientTrader(IClientTrader):
 
         # 设置交易所
         if security.lower().startswith("sz"):
-            self._set_stock_exchange_type("深圳Ａ")
+            self._set_stock_exchange_type("深圳Ａ股")
         if security.lower().startswith("sh"):
-            self._set_stock_exchange_type("上海Ａ")
+            self._set_stock_exchange_type("上海Ａ股")
         if security.lower().startswith("bj"):
-            self._set_stock_exchange_type("股转Ａ")
+            self._set_stock_exchange_type("股转Ａ股")
 
         self.wait(0.1)
 
