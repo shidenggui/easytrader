@@ -17,7 +17,7 @@ logger.handlers.append(ch)
 
 # 创建一个处理器，每天切割日志文件，保留7天
 handler = TimedRotatingFileHandler(
-    "easytrader.log",  # 日志文件名
+    "./logs/easytrader.log",  # 日志文件名
     when="midnight",  # 每天的午夜切割
     interval=1,  # 每隔一天切割
     backupCount=30,  # 保留7个备份
