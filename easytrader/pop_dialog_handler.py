@@ -35,7 +35,13 @@ class PopDialogHandler:
         return {"message": "unknown message: {}".format(content)}
 
     def _extract_content(self):
-        return self._app.top_window().Static.window_text()
+        edit_control = self._app.top_window().child_window(class_name="Edit",  found_index=0)
+        if edit_control.exists():
+            return edit_control.window_text()
+        
+        static_control = self._app.top_window().child_window(class_name="Static", found_index=0)
+        if static_control.exists():
+            return static_control.window_text()
 
     @staticmethod
     def _extract_entrust_id(content):
