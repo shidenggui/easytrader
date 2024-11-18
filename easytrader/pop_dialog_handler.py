@@ -4,6 +4,7 @@ import time
 from typing import Optional
 
 from easytrader import exceptions
+from easytrader.log import logger
 from easytrader.utils.perf import perf_clock
 from easytrader.utils.win_gui import SetForegroundWindow, ShowWindow, win32defines
 
@@ -35,6 +36,8 @@ class PopDialogHandler:
         return {"message": "unknown message: {}".format(content)}
 
     def _extract_content(self):
+        self.log_control_identifiers()
+
         edit_control = self._app.top_window().child_window(class_name="Edit",  found_index=0)
         if edit_control.exists():
             return edit_control.window_text()
@@ -42,6 +45,14 @@ class PopDialogHandler:
         static_control = self._app.top_window().child_window(class_name="Static", found_index=0)
         if static_control.exists():
             return static_control.window_text()
+    
+    def log_control_identifiers(self):
+        top_window = self._app.top_window()
+        
+        # 遍历并记录所有子控件
+        children = top_window.children()
+        for child in children:
+            logger.debug(f"Control: {child.control_type}, Name: {child.window_text()}")
 
     @staticmethod
     def _extract_entrust_id(content):
