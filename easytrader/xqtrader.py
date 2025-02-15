@@ -32,6 +32,7 @@ class XueQiuTrader(webtrader.WebTrader):
 
     def __init__(self, **kwargs):
         super(XueQiuTrader, self).__init__()
+        self.position_list = []
 
         # 资金换算倍数
         self.multiple = (
@@ -94,10 +95,10 @@ class XueQiuTrader(webtrader.WebTrader):
         :return: 换算的资金
         """
         return virtual * self.multiple
-
+    
     def _get_html(self, url):
         return self.s.get(url).text
-
+    
     def _search_stock_info(self, code):
         """
         通过雪球的接口获取股票详细信息
@@ -105,9 +106,7 @@ class XueQiuTrader(webtrader.WebTrader):
         :return: 查询到的股票 {u'stock_id': 1000279, u'code': u'SH600325',
             u'name': u'华发股份', u'ind_color': u'#d9633b', u'chg': -1.09,
             u'ind_id': 100014, u'percent': -9.31, u'current': 10.62,
-            u'hasexist': None, u'flag': 1, u'ind_name': u'房地产', u'type': None,
-            u'enName': None}
-            ** flag : 未上市(0)、正常(1)、停牌(2)、涨跌停(3)、退市(4)
+            u'ind_name': u'房地产', u'type': None}
         """
         data = {
             "code": str(code),
@@ -128,15 +127,16 @@ class XueQiuTrader(webtrader.WebTrader):
         获取组合信息
         :return: 字典
         """
-        url = self.config["portfolio_url"] + portfolio_code
-        html = self._get_html(url)
-        match_info = re.search(r"(?<=SNB.cubeInfo = ).*(?=;\n)", html)
-        if match_info is None:
-            raise Exception(
-                "cant get portfolio info, portfolio html : {}".format(html)
-            )
-        try:
-            portfolio_info = json.loads(match_info.group())
+        data_rb = {'cube_symbol': portfolio_code}
+        rb = self.s.get(self.config["portfolio_url_new"], params=data_rb)
+        data_qt = {'code': portfolio_code}
+        qt = self.s.get(self.config["portfolio_quote"], params=data_qt)
+        try:                                                                                           
+            rebalance_info = json.loads(rb.text)
+            quote_info = json.loads(qt.text)
+            net_value = quote_info[portfolio_code]['net_value']
+            portfolio_info = rebalance_info
+            portfolio_info['net_value'] = net_value
         except Exception as e:
             raise Exception("get portfolio info error: {}".format(e))
         return portfolio_info
@@ -151,7 +151,7 @@ class XueQiuTrader(webtrader.WebTrader):
         asset_balance = self._virtual_to_balance(
             float(portfolio_info["net_value"])
         )  # 总资产
-        position = portfolio_info["view_rebalancing"]  # 仓位结构
+        position = portfolio_info["last_rb"]  # 仓位结构
         cash = asset_balance * float(position["cash"]) / 100
         market = asset_balance - cash
         return [
@@ -165,6 +165,13 @@ class XueQiuTrader(webtrader.WebTrader):
             }
         ]
 
+    @property
+    def cash_weight(self):
+        portfolio_code = self.account_config.get("portfolio_code", "ch")
+        portfolio_info = self._get_portfolio_info(portfolio_code)
+        position = portfolio_info["last_rb"]
+        return float(position["cash"])
+
     def _get_position(self):
         """
         获取雪球持仓
@@ -172,7 +179,7 @@ class XueQiuTrader(webtrader.WebTrader):
         """
         portfolio_code = self.account_config["portfolio_code"]
         portfolio_info = self._get_portfolio_info(portfolio_code)
-        position = portfolio_info["view_rebalancing"]  # 仓位结构
+        position = portfolio_info["last_rb"]  # 仓位结构
         stocks = position["holdings"]  # 持仓股票
         return stocks
 
@@ -313,7 +320,7 @@ class XueQiuTrader(webtrader.WebTrader):
             raise exceptions.TradeError(u"撤销对象已失效")
         return True
 
-    def adjust_weight(self, stock_code, weight):
+    def adjust_weight(self, stock_code, weight, fetch_position=True):
         """
         雪球组合调仓, weight 为调整后的仓位比例
         :param stock_code: str 股票代码
@@ -329,25 +336,23 @@ class XueQiuTrader(webtrader.WebTrader):
         # 仓位比例向下取两位数
         weight = round(weight, 2)
         # 获取原有仓位信息
-        position_list = self._get_position()
+        if fetch_position:
+            self.position_list = self._get_position()
 
         # 调整后的持仓
-        for position in position_list:
+        for position in self.position_list:
             if position["stock_id"] == stock["stock_id"]:
                 position["proactive"] = True
                 position["weight"] = weight
 
         if weight != 0 and stock["stock_id"] not in [
-            k["stock_id"] for k in position_list
+            k["stock_id"] for k in self.position_list
         ]:
-            position_list.append(
+            self.position_list.append(
                 {
                     "code": stock["code"],
                     "name": stock["name"],
-                    "enName": stock["enName"],
-                    "hasexist": stock["hasexist"],
                     "flag": stock["flag"],
-                    "type": stock["type"],
                     "current": stock["current"],
                     "chg": stock["chg"],
                     "percent": str(stock["percent"]),
@@ -364,12 +369,12 @@ class XueQiuTrader(webtrader.WebTrader):
                 }
             )
 
-        remain_weight = 100 - sum(i.get("weight") for i in position_list)
+        remain_weight = 100 - sum(i.get("weight") for i in self.position_list)
         cash = round(remain_weight, 2)
         logger.info("调仓比例:%f, 剩余持仓 :%f", weight, remain_weight)
         data = {
             "cash": cash,
-            "holdings": str(json.dumps(position_list)),
+            "holdings": str(json.dumps(self.position_list)),
             "cube_symbol": str(self.account_config["portfolio_code"]),
             "segment": "true",
             "comment": "",
@@ -547,3 +552,4 @@ class XueQiuTrader(webtrader.WebTrader):
         :param entrust_prop:
         """
         return self._trade(security, price, amount, volume, "sell")
+
