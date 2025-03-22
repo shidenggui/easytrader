@@ -556,14 +556,16 @@ class XueQiuTrader(webtrader.WebTrader):
         return self._trade(security, price, amount, volume, "sell")
 
 
-    def adjust_weights(self, weights, ignore_minor=0.0):
+    def adjust_weights(self, weights, ignore_minor=0.0, fetch_position=True):
         """
         雪球组合调仓, weights 为调整后的仓位比例
         :param weights: dict[str, float] 股票代码 -> 调整之后的持仓百分比
         """
 
         # 获取原有仓位信息
-        position_list = self._get_position()
+        if fetch_position:
+            self.position_list = self._get_position()
+
         position_dict = {position["stock_id"]: position for position in position_list}
         new_position_list = []
 
@@ -571,8 +573,8 @@ class XueQiuTrader(webtrader.WebTrader):
             stock = self._search_stock_info(stock_code)
             if stock is None:
                 raise exceptions.TradeError(u"没有查询要操作的股票信息")
-            # if stock["flag"] != 1:
-            #    raise exceptions.TradeError(f"未上市、停牌、涨跌停、退市的股票无法操作: {stock['name']}")
+            if stock["flag"] != 1:
+               raise exceptions.TradeError(f"未上市、停牌、涨跌停、退市的股票无法操作: {stock['name']}")
 
             if stock["stock_id"] in position_dict:
                 # 调仓
@@ -594,10 +596,7 @@ class XueQiuTrader(webtrader.WebTrader):
                     {
                         "code": stock["code"],
                         "name": stock["name"],
-                        "enName": stock["enName"] if 'enName' in stock else '',
-                        "hasexist": stock["hasexist"] if 'hasexist' in stock else '',
                         "flag": stock["flag"],
-                        "type": stock["type"] if 'type' in stock else '',
                         "current": stock["current"],
                         "chg": stock["chg"],
                         "percent": str(stock["percent"]),
