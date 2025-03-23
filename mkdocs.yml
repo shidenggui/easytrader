@@ -1,5 +1,5 @@
 site_name: easytrader
-pages:
+nav:
   - Home: index.md
   - 安装: install.md
   - 使用: usage.md
