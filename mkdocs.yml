@@ -1,8 +1,12 @@
 site_name: easytrader
 nav:
-  - Home: index.md
+  - 简介: index.md
   - 安装: install.md
   - 使用: usage.md
   - 常见问题: help.md
   - 其他: 'other/xueqiu.md'
 theme: readthedocs
+markdown_extensions:
+  - toc:
+      permalink: true
+      toc_depth: 3
