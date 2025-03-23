@@ -72,6 +72,15 @@ def get_today_entrusts():
     return jsonify(today_entrusts), 200
 
 
+@app.route("/history_entrusts", methods=["GET"])
+@error_handle
+def get_history_entrusts():
+    user = global_store["user"]
+    history_entrusts = user.history_entrusts
+
+    return jsonify(history_entrusts), 200
+
+
 @app.route("/today_trades", methods=["GET"])
 @error_handle
 def get_today_trades():
@@ -80,6 +89,14 @@ def get_today_trades():
 
     return jsonify(today_trades), 200
 
+
+@app.route("/history_trades", methods=["GET"])
+@error_handle
+def get_history_trades():
+    user = global_store["user"]
+    history_trades = user.history_trades
+
+    return jsonify(history_trades), 200
 
 @app.route("/cancel_entrusts", methods=["GET"])
 @error_handle

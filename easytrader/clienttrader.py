@@ -154,8 +154,19 @@ class ClientTrader(IClientTrader):
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
+    def history_entrusts(self):
+        self._switch_left_menus(["查询[F4]", "历史委托"])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    @property
     def today_trades(self):
         self._switch_left_menus(["查询[F4]", "当日成交"])
+
+        return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
+
+    def history_trades(self):
+        self._switch_left_menus(["查询[F4]", "历史成交"])
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
@@ -454,11 +465,14 @@ class ClientTrader(IClientTrader):
         # wait security input finish
         self.wait(0.1)
 
+        # close the popup dialog to prompt selecting stock exchange type
+        self._handle_pop_dialogs()
+
         # 设置交易所
         if security.lower().startswith("sz"):
-            self._set_stock_exchange_type("深圳Ａ股")
+            self._set_stock_exchange_type(self._config.TRADE_STOCK_EXCHANGE_TYPE_SZA)
         if security.lower().startswith("sh"):
-            self._set_stock_exchange_type("上海Ａ股")
+            self._set_stock_exchange_type(self._config.TRADE_STOCK_EXCHANGE_TYPE_SHA)
 
         self.wait(0.1)
 
