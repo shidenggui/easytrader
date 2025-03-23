@@ -11,7 +11,7 @@
 
 欢迎大家扫码关注公众号"食灯鬼"，通过菜单加我好友，备注量化进群
 
-![JDRUhz](https://gitee.com/shidenggui/assets/raw/master/uPic/JDRUhz.jpg)
+![JDRUhz](https://camo.githubusercontent.com/6fad032c27b30b68a9d942ae77f8cc73933b95cea58e684657d31b94a300afd5/68747470733a2f2f67697465652e636f6d2f73686964656e676775692f6173736574732f7261772f6d61737465722f755069632f6d702d71722e706e67)
 
 
 ### 支持券商
