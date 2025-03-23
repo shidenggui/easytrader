@@ -448,32 +448,3 @@ follower.follow(***, send_interval=30) # 设置下单间隔为 30 s
 ```
 follower.follow(***, slippage=0.05) # 设置滑点为 5%
 ```
-
-## 七、命令行模式
-
-#### 登录
-
-```
- python cli.py --use yh --prepare gf.json
-```
-
-注: 此时会生成 `account.session` 文件保存生成的 `user` 对象
-
-#### 获取余额 / 持仓 / 以及其他变量
-
-```
- python cli.py --get balance
-```
-
-#### 买卖 / 撤单
-
-```
- python cli.py --do buy 162411 0.450 100
-```
-#### 查看帮助
-
-```
- python cli.py --help
-```
-
-
