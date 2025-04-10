@@ -22,7 +22,7 @@ setup(
         "pillow",
         "pandas",
     ],
-    extra_require={
+    extras_require={
         "miniqmt": ["xtquant"],
     },
     classifiers=[
