@@ -9,26 +9,21 @@ import requests
 def get_stock_type(stock_code):
     """判断股票ID对应的证券市场
     匹配规则
-    ['50', '51', '60', '90', '110'] 为 sh
-    ['00', '13', '18', '15', '16', '18', '20', '30', '39', '115'] 为 sz
-    ['5', '6', '9'] 开头的为 sh， 其余为 sz
-    :param stock_code:股票ID, 若以 'sz', 'sh' 开头直接返回对应类型，否则使用内置规则判断
-    :return 'sh' or 'sz'"""
-    stock_code = str(stock_code)
-    if stock_code.startswith(("sh", "sz")):
+    ['4'， '8'] 为 bj
+    ['5', '6', '7', '9', '110', '113', '118', '132', '204'] 为 sh
+    其余为 sz
+    :param stock_code:股票ID, 若以 'sz', 'sh', 'bj' 开头直接返回对应类型，否则使用内置规则判断
+    :return 'bj', 'sh' or 'sz'"""
+    assert isinstance(stock_code, str), "stock code need str type"
+    bj_head = ("43", "83", "87", "92")
+    sh_head = ("5", "6", "7", "9", "110", "113", "118", "132", "204")
+    if stock_code.startswith(("sh", "sz", "zz", "bj")):
         return stock_code[:2]
-    if stock_code.startswith(
-        ("50", "51", "60", "73", "90", "110", "113", "132", "204", "78")
-    ):
-        return "sh"
-    if stock_code.startswith(
-        ("00", "13", "18", "15", "16", "18", "20", "30", "39", "115", "1318")
-    ):
-        return "sz"
-    if stock_code.startswith(("5", "6", "9")):
+    elif stock_code.startswith(bj_head):
+        return "bj"
+    elif stock_code.startswith(sh_head):
         return "sh"
     return "sz"
-
 
 def get_30_date():
     """

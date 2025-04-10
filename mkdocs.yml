@@ -3,8 +3,10 @@ nav:
   - 简介: index.md
   - 安装: install.md
   - 使用: usage.md
-  - 常见问题: help.md
-  - 其他: 'other/xueqiu.md'
+  - miniqmt 量化接口: miniqmt.md
+  - 雪球组合模拟交易: xueqiu.md
+  - 远端服务模式: remote.md
+  - 策略跟踪: follow.md
 theme: readthedocs
 markdown_extensions:
   - toc:

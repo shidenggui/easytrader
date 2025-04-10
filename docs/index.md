@@ -1,11 +1,11 @@
 # 简介
 
 * 进行自动的程序化股票交易
-* 支持跟踪 `joinquant`, `ricequant` 的模拟交易
-* 支持跟踪 雪球组合 调仓, 实盘雪球组合
 * 支持通用的同花顺客户端模拟操作
+* 支持券商的 [miniqmt](miniqmt.md) 官方量化接口
+* 支持雪球组合调仓和跟踪
 * 支持远程操作客户端
-* 支持 Python3 , Linux / Win / Mac
+* 支持跟踪 `joinquant`, `ricequant` 的模拟交易
 
 ### 加微信群以及公众号
 
@@ -26,18 +26,18 @@
 
 ### 模拟交易
 
-* 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](other/xueqiu.md)）
+* 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](xueqiu.md)）
 
 
-### 相关
 
-[获取新浪免费实时行情的类库: easyquotation](https://github.com/shidenggui/easyquotation)
+### 作者
 
-[简单的股票量化交易框架 使用 easytrader 和 easyquotation](https://github.com/shidenggui/easyquant)
+> Blog [@shidenggui](https://shidenggui.com) · Weibo [@食灯鬼](https://www.weibo.com/u/1651274491) · Twitter [@shidenggui](https://twitter.com/shidenggui)
+>
 
+**其他作品**
 
-### 作者其他作品
+* [easyquotation 实时获取全市场股票行情](https://github.com/shidenggui/easyquotation)
+* [easyquant 简单的量化框架](https://github.com/shidenggui/easyqutant)
 
-* [大数据网络小说推荐系统 - 推书君](https://www.tuishujun.com)
-* [中文独立个人博客导航 - bloghub.fun](https://bloghub.fun)
 

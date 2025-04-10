@@ -16,8 +16,9 @@ if sys.version_info <= (3, 5):
 
 def use(broker, debug=False, **kwargs):
     """用于生成特定的券商对象
-    :param broker:券商名支持 ['yh_client', '银河客户端'] ['ht_client', '华泰客户端']
-    :param debug: 控制 debug 日志的显示, 默认为 True
+    :param broker: 券商名支持 
+        例如 ['miniqmt', 'xq', '雪球', 'gj_client', '国金客户端', "universal_client", "通用同花顺客户端", "ths", "同花顺客户端"] 等
+    :param debug: 控制 debug 日志的显示, 默认为 False
     :param initial_assets: [雪球参数] 控制雪球初始资金，默认为一百万
     :return the class of trader
 
@@ -72,6 +73,15 @@ def use(broker, debug=False, **kwargs):
         from .clienttrader import ClientTrader
 
         return ClientTrader()
+    
+    if broker.lower() in ["miniqmt"]:
+        try:
+            import xtquant
+        except:
+            logger.error("miniqmt 相关组件 xtqimt 未安装, 请执行 pip install easytrader[xtquant]安装")
+        from easytrader.miniqmt.miniqmt_trader import MiniqmtTrader
+
+        return MiniqmtTrader()
 
     raise NotImplementedError
 
