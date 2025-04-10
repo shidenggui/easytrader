@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="easytrader",
-    version="0.23.5",
+    version="0.23.6",
     description="A utility for China Stock Trade",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
