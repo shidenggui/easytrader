@@ -35,4 +35,4 @@
 
 ### 使用文档
 
-[中文文档](http://easytrader.readthedocs.io/zh/master/)
+[中文文档](https://easytrader.readthedocs.io/)
