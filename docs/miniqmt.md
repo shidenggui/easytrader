@@ -1,6 +1,6 @@
 # miniqmt
 
-miniqmt 是券商官方的 Python 量化交易接口，基于券商的讯投 QMT 服务。详情可以[进群](https://easytrader.readthedocs.io/zh-cn/master/#_2)交流。
+miniqmt 是券商官方的低门槛 Python 量化交易接口，基于券商的讯投 QMT 服务。详情可以[进群](https://easytrader.readthedocs.io/zh-cn/master/#_2)交流。
 
 ## 安装 miniqmt 组件
 
@@ -213,7 +213,7 @@ user.today_trades
   'order_sysid': '1111',
   'strategy_name': '',
   'order_remark': ''}]
- ```
+```
 
 
 ## 进阶功能
