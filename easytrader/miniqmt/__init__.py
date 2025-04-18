@@ -1,0 +1,1 @@
+from easytrader.miniqmt.miniqmt_trader import MiniqmtTrader, DefaultXtQuantTraderCallback
