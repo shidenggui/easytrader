@@ -7,5 +7,5 @@ from easytrader.log import logger
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-__version__ = "0.23.6"
+__version__ = "0.23.7"
 __author__ = "shidenggui"
