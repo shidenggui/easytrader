@@ -101,3 +101,24 @@ def invoke_tesseract_to_recognize(img):
         )
     valid_chars = re.findall("[0-9a-z]", res, re.IGNORECASE)
     return "".join(valid_chars)
+
+
+def get_yzm_from_image(image: Image):
+    """
+    liudongming
+    image是整个验证码弹窗的截图
+    :param image:
+    :return:
+    """
+    left = 188
+    top = 89
+    code = ''
+    rangle = (left, top, left + 71, top + 23)
+    try:
+        yzm = image.crop(rangle)
+        yzm.save(r'C:\yzm.jpg')
+        code = invoke_tesseract_to_recognize(r'C:\yzm.jpg')
+        print(f'验证码:{code}')
+    except Exception as e:
+        print(f'get_yzm_from_image 异常:{e}')
+    return code
