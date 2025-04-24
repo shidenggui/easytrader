@@ -181,12 +181,47 @@ class Xls(BaseStrategy):
         # ctrl+s 保存 grid 内容为 xls 文件
         self._set_foreground(grid)  # setFocus buggy, instead of SetForegroundWindow
         grid.type_keys("^s", set_foreground=False)
-        count = 10
-        while count > 0:
-            if self._trader.is_exist_pop_dialog():
-                break
-            self._trader.wait(0.2)
-            count -= 1
+        # count = 10
+        # while count > 0:
+        #     if self._trader.is_exist_pop_dialog():
+        #         break
+        #     self._trader.wait(0.2)
+        #     count -= 1
+
+        if  (self._trader.app.top_window().window(class_name="Static", title_re="验证码").exists(timeout=1)): #检查是否有验证码输入Window
+            file_path = "tmp.png"
+            count = 5
+            found = False
+            while count > 0:
+                self._trader.app.top_window().window(
+                    control_id=0x965, class_name="Static"
+                ).capture_as_image().save(
+                    file_path
+                )  # 保存验证码
+
+                captcha_num = captcha_recognize(file_path).strip()  # 识别验证码
+                captcha_num = "".join(captcha_num.split())
+                logger.info("captcha result-->" + captcha_num)
+                if len(captcha_num) == 4:
+
+                    editor = self._trader.app.top_window().window(
+                        control_id=0x964, class_name="Edit")
+                    editor.select()
+                    editor.type_keys(captcha_num)
+
+                    self._trader.app.top_window().set_focus()
+                    pywinauto.keyboard.SendKeys("{ENTER}")  # 模拟发送enter，点击确定
+                    if self._trader.app.window(title='另存为').exists(timeout=1):
+                        found = True
+                        break
+                    logger.info(f"captcha result:{captcha_num} error")
+                count -= 1
+                self._trader.wait(0.1)
+                self._trader.app.top_window().window(
+                    control_id=0x965, class_name="Static"
+                ).click()
+            if not found:
+                self._trader.app.top_window().Button2.click()  # 点击取消
 
         temp_path = tempfile.mktemp(suffix=".xls", dir=self.tmp_folder)
         self._set_foreground(self._trader.app.top_window())
