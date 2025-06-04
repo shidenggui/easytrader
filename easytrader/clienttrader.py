@@ -578,6 +578,13 @@ class ClientTrader(IClientTrader):
             if result:
                 return result
         return {"message": "success"}
+    
+    def print_all_controls(self):
+        # 遍历所有控件，查找 Static 控件
+        controls = self._main.children()
+        for control in controls:
+            # if control.control_type == "Text":  # Static 控件一般是 Text 类型
+            logger.debug(f"Control: {control}, Control ID: {control.control_id()}, type: {control.control_type}, Name: {control.window_text()}")
 
 
 class BaseLoginClientTrader(ClientTrader):

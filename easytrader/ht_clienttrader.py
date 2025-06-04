@@ -43,11 +43,11 @@ class HTClientTrader(clienttrader.BaseLoginClientTrader):
                     break
                 except RuntimeError:
                     pass
-            self._app.top_window().Edit1.set_focus()
-            self._app.top_window().Edit1.type_keys(user)
+            self._app.top_window().Edit2.set_focus()
+            # self._app.top_window().Edit1.type_keys(user)
             self._app.top_window().Edit2.type_keys(password)
 
-            self._app.top_window().Edit3.set_edit_text(comm_password)
+            # self._app.top_window().Edit3.set_edit_text(comm_password)
 
             self._app.top_window().button0.click()
 

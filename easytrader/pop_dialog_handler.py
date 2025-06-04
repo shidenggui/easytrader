@@ -36,7 +36,7 @@ class PopDialogHandler:
         return {"message": "unknown message: {}".format(content)}
 
     def _extract_content(self):
-        self.log_control_identifiers()
+        # self.log_control_identifiers()
 
         edit_control = self._app.top_window().child_window(class_name="Edit",  found_index=0)
         if edit_control.exists():

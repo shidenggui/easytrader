@@ -187,28 +187,32 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 time.sleep(3)
                 continue
             for transaction in transactions:
-                trade_cmd = {
-                    "strategy": strategy,
-                    "strategy_name": name,
-                    "action": transaction["action"],
-                    "stock_code": transaction["stock_code"],
-                    "amount": transaction["amount"],
-                    "price": transaction["price"],
-                    "datetime": transaction["datetime"],
-                }
-                if self.is_cmd_expired(trade_cmd):
+                try:
+                    trade_cmd = {
+                        "strategy": strategy,
+                        "strategy_name": name,
+                        "action": transaction["action"],
+                        "stock_code": transaction["stock_code"],
+                        "amount": transaction["amount"],
+                        "price": transaction["price"],
+                        "datetime": transaction["datetime"],
+                    }
+                    if self.is_cmd_expired(trade_cmd):
+                        continue
+                    logger.info(
+                        "策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
+                        name,
+                        trade_cmd["stock_code"],
+                        trade_cmd["action"],
+                        trade_cmd["amount"],
+                        trade_cmd["price"],
+                        trade_cmd["datetime"],
+                    )
+                    self.trade_queue.put(trade_cmd)
+                    self.add_cmd_to_expired_cmds(trade_cmd)
+                except Exception as e:
+                    logger.exception("策略 [%s] 处理调仓记录 %s 失败, 错误: %s", name, transaction, e)
                     continue
-                logger.info(
-                    "策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
-                    name,
-                    trade_cmd["stock_code"],
-                    trade_cmd["action"],
-                    trade_cmd["amount"],
-                    trade_cmd["price"],
-                    trade_cmd["datetime"],
-                )
-                self.trade_queue.put(trade_cmd)
-                self.add_cmd_to_expired_cmds(trade_cmd)
             try:
                 for _ in range(int(interval * 10)):  # 將 interval 乘以 10，再轉換為整數
                     time.sleep(0.1)  # 每次睡眠 0.1 秒
@@ -218,12 +222,11 @@ class BaseFollower(metaclass=abc.ABCMeta):
 
     @staticmethod
     def generate_expired_cmd_key(cmd):
-        return "{}_{}_{}_{}_{}_{}".format(
+        return "{}_{}_{}_{}_{}".format(
             cmd["strategy_name"],
             cmd["stock_code"],
             cmd["action"],
             cmd["amount"],
-            cmd["price"],
             cmd["datetime"],
         )
 
@@ -349,6 +352,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
         """
         while True:
             trade_cmd = self.trade_queue.get()
+            logger.info(f"开始执行交易指令: {trade_cmd}")
             self._execute_trade_cmd(
                 trade_cmd, users, expire_seconds, entrust_prop, send_interval
             )
@@ -400,6 +404,10 @@ class BaseFollower(metaclass=abc.ABCMeta):
         # 调整调仓记录的顺序为先卖再买
         sell_first_transactions = []
         for transaction in transactions:
+            if 'action' not in transaction:
+                logger.warning("调仓记录 %s 不包含 action 字段，跳过", transaction)
+                continue
+
             if transaction["action"] == "sell":
                 sell_first_transactions.insert(0, transaction)
             else:
