@@ -359,11 +359,12 @@ class ClientTrader(IClientTrader):
 
     @perf_clock
     def is_exist_pop_dialog(self):
-        self.wait(0.5)  # wait dialog display
         try:
-            return (
-                self._main.wrapper_object() != self._app.top_window().wrapper_object()
-            )
+            cnt = 0
+            while self._main.wrapper_object() == self._app.top_window().wrapper_object() and cnt < 50:
+                self.wait(0.01)
+                cnt += 1
+            return (self._main.wrapper_object() != self._app.top_window().wrapper_object())
         except (
             findwindows.ElementNotFoundError,
             timings.TimeoutError,
@@ -379,7 +380,7 @@ class ClientTrader(IClientTrader):
                 w = self._app.top_window()
                 if w is not None:
                     w.close()
-                    self.wait(0.2)
+                    self.wait(0.02)
         except (
                 findwindows.ElementNotFoundError,
                 timings.TimeoutError,
@@ -427,7 +428,7 @@ class ClientTrader(IClientTrader):
 
     @perf_clock
     def _submit_trade(self):
-        time.sleep(0.2)
+        time.sleep(0.02)
         self._main.child_window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID, class_name="Button"
         ).click()
@@ -452,7 +453,7 @@ class ClientTrader(IClientTrader):
         self._type_edit_control_keys(self._config.TRADE_SECURITY_CONTROL_ID, code)
 
         # wait security input finish
-        self.wait(0.1)
+        self.wait(0.01)
 
         # 设置交易所
         if security.lower().startswith("sz"):
@@ -462,7 +463,7 @@ class ClientTrader(IClientTrader):
         if security.lower().startswith("bj"):
             self._set_stock_exchange_type("股转Ａ股")
 
-        self.wait(0.1)
+        self.wait(0.01)
 
         self._type_edit_control_keys(
             self._config.TRADE_PRICE_CONTROL_ID,
@@ -519,20 +520,20 @@ class ClientTrader(IClientTrader):
             item.collapse()
 
     @perf_clock
-    def _switch_left_menus(self, path, sleep=0.2):
+    def _switch_left_menus(self, path, sleep=0.01):
         self.close_pop_dialog()
         self._get_left_menus_handle().get_item(path).select()
         self._app.top_window().type_keys('{F5}')
         self.wait(sleep)
 
-    def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.5):
+    def _switch_left_menus_by_shortcut(self, shortcut, sleep=0.01):
         self.close_pop_dialog()
         self._app.top_window().type_keys(shortcut)
         self.wait(sleep)
 
     @functools.lru_cache()
     def _get_left_menus_handle(self):
-        count = 2
+        count = 40
         while True:
             try:
                 handle = self._main.child_window(
@@ -541,7 +542,7 @@ class ClientTrader(IClientTrader):
                 if count <= 0:
                     return handle
                 # sometime can't find handle ready, must retry
-                handle.wait("ready", 2)
+                handle.wait("ready", 0.1)
                 return handle
             # pylint: disable=broad-except
             except Exception as ex:
