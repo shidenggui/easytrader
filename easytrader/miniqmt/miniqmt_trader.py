@@ -5,6 +5,8 @@ import random
 from easytrader.log import logger
 from easytrader.utils.perf import perf_clock
 from easytrader.utils.stock import get_stock_type
+import time
+import threading
 
 # 市价委托类型映射
 MARKET_ORDER_TYPE_NAME_MAP = {
@@ -196,18 +198,21 @@ class DefaultXtQuantTraderCallback(XtQuantTraderCallback):
         )
 
 
-class MiniqmtTrader:
+class MiniqmtTrader(XtQuantTraderCallback):
     broker_type = "miniqmt"
+    max_retries = 10  # 最大重试次数
 
     def __init__(self):
         self._account: StockAccount = None
         self._trader: XtQuantTrader = None
+        self._trades = {}
+        self._retry_count = {}
 
     def connect(
         self,
         miniqmt_path: str = r"D:\国金证券QMT交易端\userdata_mini",
         stock_account: str = None,
-        trader_callback: XtQuantTraderCallback = DefaultXtQuantTraderCallback(),
+        # trader_callback: XtQuantTraderCallback = DefaultXtQuantTraderCallback(),
     ):
         """
         连接到 miniqmt 交易端
@@ -219,13 +224,18 @@ class MiniqmtTrader:
         :return: None
         """
         session_id = int(random.randint(100000, 999999))
-        self._trader = XtQuantTrader(miniqmt_path, session_id, callback=trader_callback)
+        self._trader = XtQuantTrader(miniqmt_path, session_id, callback=self)
         self._trader.start()
 
         if self._trader.connect() == 0:
             logger.info(f'成功连接到 miniqmt, 账号 {stock_account}')
-            self._account = StockAccount(stock_account)
-            self._trader.subscribe(self._account)
+            self._account = StockAccount(stock_account, 'STOCK')
+            logger.info(f'account_type={self._account.account_type}, account_id={self._account.account_id}')
+            subscribe_result = self._trader.subscribe(self._account)
+            if subscribe_result == 0:
+                logger.info(f'成功订阅， 账号 {stock_account}')
+            else:
+                logger.warning(f'订阅失败: {subscribe_result}')
         else:
             logger.error('连接失败，请检查路径或其他情况')
 
@@ -441,7 +451,7 @@ class MiniqmtTrader:
         return trades
 
     @perf_clock
-    def buy(self, security: str, price: float, amount: int):
+    def buy(self, security: str, price: float, amount: int, **kwargs):
         """
         限价买入
         qmt 官方文档： https://dict.thinktrader.net/nativeApi/xttrader.html?id=7zqjlm#%E8%82%A1%E7%A5%A8%E5%90%8C%E6%AD%A5%E6%8A%A5%E5%8D%95
@@ -491,19 +501,33 @@ class MiniqmtTrader:
             下单失败回调: order_id=10231, error_id=-61, error_msg=限价买入 [SZ162411] [COUNTER] [12313][当前时间不允许此类证券交易]
         """
         action = "买入" if is_buy else "卖出"
-        logger.info(f"限价{action}请求: 股票代码={security}, 价格={price}, 数量={amount}")
-        
-        order_id = self._trader.order_stock(
-            account=self._account,
-            stock_code=self._get_stock_code(security),
-            order_type=xtconstant.STOCK_BUY if is_buy else xtconstant.STOCK_SELL,
-            order_volume=amount,
-            price_type=xtconstant.FIX_PRICE,
-            price=price,
-        )
+        stock_code = self._get_stock_code(security)
+        order_type=xtconstant.STOCK_BUY if is_buy else xtconstant.STOCK_SELL
+        price_type=xtconstant.FIX_PRICE
+
+        try:
+            order_id = self._trader.order_stock(
+                account=self._account,
+                stock_code=stock_code,
+                order_type=order_type,
+                order_volume=amount,
+                price_type=price_type,
+                price=price,
+            )
+        except Exception as e:
+            logger.error(f"限价{action}委托失败: 股票代码={security}, 错误码={order_id}")
         
         if order_id > 0:
             logger.info(f"限价{action}委托成功: 股票代码={security}, 委托单号={order_id}")
+            self._trades[order_id] = {
+                'order_id': order_id,
+                'security': security,
+                'stock_code': stock_code,
+                'order_type': xtconstant.STOCK_BUY if is_buy else xtconstant.STOCK_SELL,
+                'order_volume': amount,
+                'price_type': xtconstant.FIX_PRICE,
+                'price': price,
+            }
         else:
             logger.error(f"限价{action}委托失败: 股票代码={security}, 错误码={order_id}")
             
@@ -644,4 +668,130 @@ class MiniqmtTrader:
         :param security: 六位证券代码
         :return: 格式化的股票代码
         """
-        return f'{security}.{get_stock_type(security).upper()}'
+        return f'{security[2:]}.{security[:2].upper()}'
+    
+    def on_disconnected(self):
+        """
+        连接状态回调
+        :return:
+        """
+        logger.info("连接断开")
+
+    def on_account_status(self, status):
+        """
+        账号状态信息推送
+        :param response: XtAccountStatus 对象
+        :return:
+        """
+        logger.info(
+            f"账户状态信息: account_id={status.account_id}, account_type={status.account_type}, status={status.status}"
+        )
+
+    def on_stock_order(self, order):
+        """
+        委托信息推送
+        :param order: XtOrder对象
+        :return:
+        """
+        logger.info(
+            f"委托回调: stock_code={order.stock_code}, order_status={order.order_status}, order_sysid={order.order_sysid}"
+        )
+
+    def on_stock_trade(self, trade):
+        """
+        成交信息推送
+        :param trade: XtTrade对象
+        :return:
+        """
+        logger.info(
+            f"成交回调: account_id={trade.account_id}, stock_code={trade.stock_code}, order_id={trade.order_id}"
+        )
+
+    def on_order_error(self, order_error):
+        """
+        下单失败信息推送
+        :param order_error:XtOrderError 对象
+        :return:
+        """
+        logger.info(
+            f"下单失败回调: order_id={order_error.order_id}, error_id={order_error.error_id}, error_msg={order_error.error_msg}"
+        )
+        
+        # 在新线程中调用重试逻辑
+        retry_thread = threading.Thread(target=self.retry_order, args=[order_error])
+        retry_thread.start()
+
+    def on_cancel_error(self, cancel_error):
+        """
+        撤单失败信息推送
+        :param cancel_error: XtCancelError 对象
+        :return:
+        """
+        logger.info(
+            f"撤单失败回调: order_id={cancel_error.order_id}, error_id={cancel_error.error_id}, error_msg={cancel_error.error_msg}"
+        )
+
+    def on_order_stock_async_response(self, response):
+        """
+        异步下单回报推送
+        :param response: XtOrderResponse 对象
+        :return:
+        """
+        logger.info(f"异步下单回报: account_id={response.account_id}, order_id={response.order_id}, seq={response.seq}")
+
+    def on_smt_appointment_async_response(self, response):
+        """
+        :param response: XtAppointmentResponse 对象
+        :return:
+        """
+        logger.info(
+            f"预约委托异步回报: account_id={response.account_id}, order_sysid={response.order_sysid}, error_id={response.error_id}, error_msg={response.error_msg}, seq={response.seq}"
+        )
+
+    
+    # 针对下单失败的重试逻辑
+    def retry_order(self, order_error):
+        failed_order = self._trades.get(order_error.order_id)
+        if not failed_order:
+            logger.error(f"无法找到失败订单: order_id={order_error.order_id}, 错误信息={order_error.error_msg}")
+            return
+
+        retry_key = (failed_order['stock_code'], failed_order['order_type'], failed_order['order_volume'], failed_order['price_type'], failed_order['price'])
+        if retry_key not in self._retry_count:
+            self._retry_count[retry_key] = 0
+        self._retry_count[retry_key] += 1
+
+        retry_count = self._retry_count[retry_key]
+        if retry_count > self.max_retries:
+            logger.error(f"超过最大重试次数({self.max_retries})，放弃重试: 股票代码={failed_order['stock_code']}, 订单号={order_error.order_id}, 订单类型={failed_order['order_type']}, 委托数量={failed_order['order_volume']}, 报价类型={failed_order['price_type']}, 价格={failed_order['price']}")
+            return
+
+        time.sleep(0.1) 
+
+        try:
+            # 使用相同参数重新尝试下单
+            logger.info(f"重试下单: 原订单号={order_error.order_id}, 股票代码={failed_order['stock_code']}, 失败原因={order_error.error_msg}, 重试次数={retry_count}/{self.max_retries}, 订单类型={failed_order['order_type']}, 委托数量={failed_order['order_volume']}, 报价类型={failed_order['price_type']}, 价格={failed_order['price']}")
+            order_id = self._trader.order_stock(
+                account=self._account,
+                stock_code=failed_order['stock_code'],
+                order_type=failed_order['order_type'],
+                order_volume=failed_order['order_volume'],
+                price_type=failed_order['price_type'],
+                price=failed_order['price'],
+            )
+
+            if order_id > 0:
+                logger.info(f"重试成功: 新订单号={order_id}")
+                self._trades[order_id] = {
+                    'order_id': order_id,
+                    'security': failed_order['security'],
+                    'stock_code': failed_order['stock_code'],
+                    'order_type': failed_order['order_type'],
+                    'order_volume': failed_order['order_volume'],
+                    'price_type': failed_order['price_type'],
+                    'price': failed_order['price'],
+                }
+            else:
+                logger.error(f"重试失败: order_id={order_id}")
+        except Exception as e:
+            logger.error(f"重试异常: {e}")
