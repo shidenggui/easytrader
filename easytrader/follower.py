@@ -215,18 +215,17 @@ class BaseFollower(metaclass=abc.ABCMeta):
                     continue
             try:
                 for _ in range(int(interval * 10)):  # 將 interval 乘以 10，再轉換為整數
-                    time.sleep(0.1)  # 每次睡眠 0.1 秒
+                    time.sleep(0.01)  # 每次睡眠 0.01 秒
             except KeyboardInterrupt:
                 logger.info("程序退出")
                 break
 
     @staticmethod
     def generate_expired_cmd_key(cmd):
-        return "{}_{}_{}_{}_{}".format(
+        return "{}_{}_{}_{}".format(
             cmd["strategy_name"],
             cmd["stock_code"],
             cmd["action"],
-            cmd["amount"],
             cmd["datetime"],
         )
 
