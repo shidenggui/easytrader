@@ -169,7 +169,7 @@ class Xls(BaseStrategy):
     """
     通过将 Grid 另存为 xls 文件再读取的方式获取 grid 内容
     """
-
+    _need_captcha_reg = True
     def __init__(self, tmp_folder: Optional[str] = None):
         """
         :param tmp_folder: 用于保持临时文件的文件夹
@@ -183,9 +183,10 @@ class Xls(BaseStrategy):
         # ctrl+s 保存 grid 内容为 xls 文件
         self._set_foreground(grid)  # setFocus buggy, instead of SetForegroundWindow
         grid.type_keys("^s", set_foreground=False)
-        count = 10
+        count = 3
         while count > 0:
             if self._trader.is_exist_pop_dialog():
+                self._get_grid_data()
                 break
             self._trader.wait(0.2)
             count -= 1
@@ -198,7 +199,7 @@ class Xls(BaseStrategy):
         self._trader.wait(0.1)
         self._trader.app.top_window().type_keys("%{s}%{y}", set_foreground=False)
         # Wait until file save complete otherwise pandas can not find file
-        self._trader.wait(0.2)
+        self._trader.wait(0.1)
         if self._trader.is_exist_pop_dialog():
             self._trader.app.top_window().Button2.click()
             self._trader.wait(0.2)
@@ -216,3 +217,53 @@ class Xls(BaseStrategy):
             na_filter=False,
         )
         return df.to_dict("records")
+
+    def _get_grid_data(self) :
+        if Xls._need_captcha_reg:
+            if (
+                    self._trader.app.top_window().window(class_name="Static", title_re="验证码").exists(timeout=1)
+            ):
+                file_path = "tmp.png"
+                count = 3
+                found = False
+                while count > 0:
+                    self._trader.app.top_window().window(
+                        control_id=0x965, class_name="Static"
+                    ).capture_as_image().save(
+                        file_path
+                    )  # 保存验证码
+
+                    captcha_num = captcha_recognize(file_path).strip()  # 识别验证码
+                    captcha_num = "".join(captcha_num.split())
+                    logger.info("captcha result-->" + captcha_num)
+                    if len(captcha_num) == 4:
+                        editor = self._trader.app.top_window().window(
+                            control_id=0x964, class_name="Edit"
+                        )
+                        self._trader.type_edit_control_keys(
+                            editor,
+                            captcha_num
+                        )  # 模拟输入验证码
+
+                        self._trader.app.top_window().set_focus()
+                        pywinauto.keyboard.SendKeys("{ENTER}")  # 模拟发送enter，点击确定
+                        try:
+                            logger.info(
+                                self._trader.app.top_window()
+                                    .window(control_id=0x966, class_name="Static")
+                                    .window_text()
+                            )
+                        except Exception as ex:  # 窗体消失
+                            logger.exception(ex)
+                            found = True
+                            break
+                    count -= 1
+                    self._trader.wait(0.1)
+                    self._trader.app.top_window().window(
+                        control_id=0x965, class_name="Static"
+                    ).click()
+                if not found:
+                    self._trader.app.top_window().Button2.click()  # 点击取消
+            else:
+                Xls._need_captcha_reg = False
+

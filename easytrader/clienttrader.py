@@ -61,10 +61,17 @@ class IClientTrader(abc.ABC):
 
 class ClientTrader(IClientTrader):
     _editor_need_type_keys = False
+    _margin_account = False
     # The strategy to use for getting grid data
     grid_strategy: Union[IGridStrategy, Type[IGridStrategy]] = grid_strategies.Copy
     _grid_strategy_instance: IGridStrategy = None
     refresh_strategy: IRefreshStrategy = refresh_strategies.Switch()
+
+    def set_margin_account(self):
+        """
+        设置为融资融券账户
+        """
+        self._margin_account = False
 
     def enable_type_keys_for_editor(self):
         """
@@ -117,6 +124,8 @@ class ClientTrader(IClientTrader):
         self._close_prompt_windows()
         self._main = self._app.top_window()
         self._init_toolbar()
+        if self._margin_account:
+            self._switch_to_margin()
 
     @property
     def broker_type(self):
@@ -124,9 +133,12 @@ class ClientTrader(IClientTrader):
 
     @property
     def balance(self):
-        self._switch_left_menus(["查询[F4]", "资金股票"])
-
-        return self._get_balance_from_statics()
+        if not self._margin_account:
+            self._switch_left_menus(["查询[F4]", "资金股票"])
+            return self._get_balance_from_statics()
+        else:
+            self._switch_left_menus(["查询[F4]", "查询资产"])
+            return self._get_balance_from_statics_margin_account()
 
     def _init_toolbar(self):
         self._toolbar = self._main.child_window(class_name="ToolbarWindow32")
@@ -141,10 +153,22 @@ class ClientTrader(IClientTrader):
             )
         return result
 
+    def _get_balance_from_statics_margin_account(self):
+        result = {}
+        for key, control_id in self._config.BALANCE_CONTROL_ID_GROUP_MARGIN.items():
+            result[key] = float(
+                self._main.child_window(
+                    control_id=control_id, class_name="Static"
+                ).window_text()
+            )
+        return result
+
     @property
     def position(self):
-        self._switch_left_menus(["查询[F4]", "资金股票"])
-
+        if not self._margin_account:
+            self._switch_left_menus(["查询[F4]", "资金股票"])
+        else:
+            self._switch_left_menus(["查询[F4]", "查询资产"])
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
@@ -211,16 +235,86 @@ class ClientTrader(IClientTrader):
         return self.trade(security, price, amount)
 
     @perf_clock
-    def buy(self, security, price, amount, **kwargs):
-        self._switch_left_menus(["买入[F1]"])
+    def margin_market_buy(self, security, amount, ttype=None, limit_price=None, **kwargs):
+        """
+               融资市价买入
+               :param security: 六位证券代码
+               :param amount: 交易数量
+               :param ttype: 市价委托类型，默认客户端默认选择，
+                            深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
+                            沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+               :param limit_price: 科创板 限价
 
-        return self.trade(security, price, amount)
+               :return: {'entrust_no': '委托单号'}
+               """
+        if self._margin_account:
+            self._switch_left_menus(["市价委托", "融资买入"])
+
+            return self.market_trade(security, amount, ttype, limit_price=limit_price)
+        else:
+            return {"message": "非信用账户不能进行融资交易"}
+
+    @perf_clock
+    def margin_market_sell(self, security, amount, ttype=None, limit_price=None, **kwargs):
+        """
+               融资市价卖出
+               :param security: 六位证券代码
+               :param amount: 交易数量
+               :param ttype: 市价委托类型，默认客户端默认选择，
+                            深市可选 ['对手方最优价格', '本方最优价格', '即时成交剩余撤销', '最优五档即时成交剩余 '全额成交或撤销']
+                            沪市可选 ['最优五档成交剩余撤销', '最优五档成交剩余转限价']
+               :param limit_price: 科创板 限价
+
+               :return: {'entrust_no': '委托单号'}
+               """
+        if self._margin_account:
+            self._switch_left_menus(["市价委托", "融资卖出"])
+
+            return self.market_trade(security, amount, ttype, limit_price=limit_price)
+        else:
+            return {"message": "非信用账户不能进行融资交易"}
+
+
+
+    @perf_clock
+    def buy(self, security, price, amount, **kwargs):
+        if self._margin_account:
+            self._switch_left_menus(["限价委托", "买入[F1]"])
+
+            return self.trade(security, price, amount)
+        else:
+            self._switch_left_menus(["买入[F1]"])
+            return self.trade(security, price, amount)
 
     @perf_clock
     def sell(self, security, price, amount, **kwargs):
-        self._switch_left_menus(["卖出[F2]"])
+        if self._margin_account:
+            self._switch_left_menus(["限价委托", "卖出[F1]"])
 
-        return self.trade(security, price, amount)
+            return self.trade(security, price, amount)
+        else:
+            self._switch_left_menus(["卖出[F2]"])
+
+            return self.trade(security, price, amount)
+
+    @perf_clock
+    def margin_buy(self, security, price, amount, **kwargs):
+        if self._margin_account:
+            self._switch_left_menus(["限价委托", "融资买入"])
+
+            return self.trade(security, price, amount)
+        else:
+            return {"message": "非信用账户不能进行融资交易"}
+
+    @perf_clock
+    def margin_sell(self, security, price, amount, **kwargs):
+        if self._margin_account:
+            self._switch_left_menus(["限价委托", "融券卖出"])
+
+            return self.trade(security, price, amount)
+        else:
+            return {"message": "非信用账户不能进行融资交易"}
+
 
     @perf_clock
     def market_buy(self, security, amount, ttype=None, limit_price=None, **kwargs):
@@ -235,9 +329,14 @@ class ClientTrader(IClientTrader):
 
         :return: {'entrust_no': '委托单号'}
         """
-        self._switch_left_menus(["市价委托", "买入"])
+        if self._margin_account:
+            self._switch_left_menus(["市价委托", "买入"])
 
-        return self.market_trade(security, amount, ttype, limit_price=limit_price)
+            return self.market_trade(security, amount, ttype, limit_price=limit_price)
+        else:
+            self._switch_left_menus(["市价委托", "买入"])
+
+            return self.market_trade(security, amount, ttype, limit_price=limit_price)
 
     @perf_clock
     def market_sell(self, security, amount, ttype=None, limit_price=None, **kwargs):
@@ -251,9 +350,15 @@ class ClientTrader(IClientTrader):
         :param limit_price: 科创板 限价
         :return: {'entrust_no': '委托单号'}
         """
-        self._switch_left_menus(["市价委托", "卖出"])
+        if self._margin_account:
+            self._switch_left_menus(["市价委托", "卖出"])
 
-        return self.market_trade(security, amount, ttype, limit_price=limit_price)
+            return self.market_trade(security, amount, ttype, limit_price=limit_price)
+
+        else:
+            self._switch_left_menus(["市价委托", "卖出"])
+
+            return self.market_trade(security, amount, ttype, limit_price=limit_price)
 
     def market_trade(self, security, amount, ttype=None, limit_price=None, **kwargs):
         """
@@ -528,14 +633,28 @@ class ClientTrader(IClientTrader):
         self._app.top_window().type_keys(shortcut)
         self.wait(sleep)
 
+    def _switch_to_margin(self,sleep=5):
+        if self._margin_account:
+            margin_btn=self._main.child_window(control_id=1001, class_name="CCustomTabCtrl").wrapper_object()
+
+            margin_btn.click_input(coords=(126, 8),button='left',absolute=False)
+
+            self.wait(sleep)
+
     @functools.lru_cache()
     def _get_left_menus_handle(self):
         count = 2
         while True:
             try:
-                handle = self._main.child_window(
-                    control_id=129, class_name="SysTreeView32"
-                )
+                if not self._margin_account:
+                    handle = self._main.child_window(
+                        control_id=129, class_name="SysTreeView32"
+                    )
+                else:
+                    #
+                    handle = self._main.child_window(
+                        control_id=513, class_name="SysTreeView32"
+                    )
                 if count <= 0:
                     return handle
                 # sometime can't find handle ready, must retry
