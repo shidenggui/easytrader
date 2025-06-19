@@ -275,28 +275,30 @@ class XueQiuFollower(BaseFollower):
         user = self._users[0]
         position = user.position
         try:
-            stock = next(s for s in position if s["证券代码"] == stock_code)
+            stock = next(s for s in position if s["stock_code"][-6:] == stock_code)
         except StopIteration:
             logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整", stock_code, stock_code)
             return amount
+        except Exception as e:
+            logger.error("获取股票 %s 持仓信息失败: %s", stock_code, e)
+            return amount
 
         available_amount = stock["可用余额"]
-        if available_amount >= amount:
-            return amount
-        
-        if amount > available_amount:
-            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 调整为 %s", stock_code, available_amount, amount, available_amount)
+        if available_amount <= amount:
+            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 实际可用小于卖出，调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
             return available_amount
 
-        adjust_amount = available_amount // 100 * 100
-        logger.info(
-            "股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 调整为 %s",
-            stock_code,
-            available_amount,
-            amount,
-            adjust_amount,
-        )
-        return adjust_amount
+        if available_amount - amount <= 100:
+            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于100股, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            return available_amount
+        
+        if available_amount - amount < amount * 0.3:
+            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于10%, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            return available_amount
+
+        logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 无需调整", stock_code, available_amount, amount)
+        return amount
+
 
     def _get_portfolio_info(self, portfolio_code):
         """
