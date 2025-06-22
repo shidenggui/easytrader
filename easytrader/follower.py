@@ -177,7 +177,6 @@ class BaseFollower(metaclass=abc.ABCMeta):
         :param interval: 轮询策略的时间间隔，单位为秒"""
         while True:
             try:
-                logger.debug("Tracking strategy {}...".format(name))
                 transactions = self.query_strategy_transaction(
                     strategy, **kwargs
                 )
@@ -306,9 +305,10 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 )
                 break
 
-            actual_price = self._calculate_price_by_slippage(
-                trade_cmd["action"], trade_cmd["price"]
-            )
+            # actual_price = self._calculate_price_by_slippage(
+            #     trade_cmd["action"], trade_cmd["price"]
+            # )
+            actual_price = trade_cmd["price"]
             args = {
                 "security": trade_cmd["stock_code"],
                 "price": actual_price,

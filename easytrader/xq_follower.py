@@ -26,6 +26,7 @@ class XueQiuFollower(BaseFollower):
         super().__init__()
         self._adjust_sell = None
         self._users = None
+        self._trade_cmd_expire_seconds = 120  # 默认交易指令过期时间为 120 秒
 
     def login(self, user=None, password=None, **kwargs):
         """
@@ -101,7 +102,7 @@ class XueQiuFollower(BaseFollower):
         )
 
         self._adjust_sell = adjust_sell
-
+        self._trade_cmd_expire_seconds = trade_cmd_expire_seconds
         self._users = self.warp_list(users)
 
         strategies = self.warp_list(strategies)
@@ -160,6 +161,16 @@ class XueQiuFollower(BaseFollower):
         try:
             if history["count"] <= 0:
                 return []
+                    
+            # check expire
+            now = datetime.now()
+            last_change = history["list"][0]
+            updated_at_datetime = datetime.fromtimestamp(last_change["updated_at"] / 1000)  # Convert milliseconds to seconds
+            expire = (now - updated_at_datetime).total_seconds()
+            if expire > self._trade_cmd_expire_seconds:
+                logger.info("策略%s上一次调仓时间 %s, 超过过期时间 %s 秒, 跳过", last_change["cube_id"] ,updated_at_datetime, self._trade_cmd_expire_seconds)
+                return []
+
             rebalancing_index = 0
             raw_transactions = history["list"][rebalancing_index]["rebalancing_histories"]
             transactions = []
@@ -231,12 +242,19 @@ class XueQiuFollower(BaseFollower):
             buy_price_3 = pankou.get("bp3")
             current_price = pankou.get("current")
             # logger.debug("获取股票 %s, 买3: %s, 现价: %s", stock_code, buy_price_3, current_price)
-            if buy_price_3 is not None and buy_price_3 != 0:
-                return buy_price_3
-        except Exception as e:
+
+            if buy_price_3 is None or buy_price_3 <= 0:
+                logger.info("获取股票 %s 当前价格失败，返回当前价格 %s", stock_code, current_price)
+                return current_price
+
+            if current_price is not None and self.slippage > 0:
+                slippaged_price = round(current_price * (1 - self.slippage), 2)
+                logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的买入价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
+                return slippaged_price
+
+            return buy_price_3
+        except Exception as e:        
             return None
-        
-        return current_price
 
     def get_sell_price(self, stock_code):
         try:
@@ -244,12 +262,19 @@ class XueQiuFollower(BaseFollower):
             sell_price_3 = pankou.get("sp3")
             current_price = pankou.get("current")
             # logger.debug("获取股票 %s, 卖3: %s, 现价: %s", stock_code, sell_price_3, current_price)
-            if sell_price_3 is not None and sell_price_3 != 0:
-                return sell_price_3
-        except Exception as e:
+
+            if sell_price_3 is None or sell_price_3 <= 0:
+                logger.info("获取股票 %s 当前价格失败，返回当前价格 %s", stock_code, current_price)
+                return current_price
+            
+            if current_price is not None and self.slippage > 0:
+                slippaged_price = round(current_price * (1 + self.slippage), 2)
+                logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的卖出价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
+                return slippaged_price
+            
+            return sell_price_3
+        except Exception as e:      
             return None
-        
-        return current_price
 
     def get_realtime_pankou(self, stock_code):
         url = self.REALTIME_PANKOU + f"?symbol={stock_code.upper()}"
@@ -275,9 +300,9 @@ class XueQiuFollower(BaseFollower):
         user = self._users[0]
         position = user.position
         try:
-            stock = next(s for s in position if s["stock_code"][-6:] == stock_code)
+            stock = next(s for s in position if s["stock_code"][:6] == stock_code)
         except StopIteration:
-            logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整", stock_code, stock_code)
+            logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整, position=%s", stock_code, stock_code, position)
             return amount
         except Exception as e:
             logger.error("获取股票 %s 持仓信息失败: %s", stock_code, e)
