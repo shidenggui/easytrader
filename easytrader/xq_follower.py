@@ -308,7 +308,7 @@ class XueQiuFollower(BaseFollower):
             logger.error("获取股票 %s 持仓信息失败: %s", stock_code, e)
             return amount
 
-        available_amount = stock["可用余额"]
+        available_amount = stock["can_use_volume"]
         if available_amount <= amount:
             logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 实际可用小于卖出，调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
             return available_amount
