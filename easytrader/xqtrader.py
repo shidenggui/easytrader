@@ -566,7 +566,7 @@ class XueQiuTrader(webtrader.WebTrader):
         if fetch_position:
             self.position_list = self._get_position()
 
-        position_dict = {position["stock_id"]: position for position in position_list}
+        position_dict = {position["stock_id"]: position for position in self.position_list}
         new_position_list = []
 
         for stock_code, weight in weights.items():
