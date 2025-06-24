@@ -200,7 +200,7 @@ class DefaultXtQuantTraderCallback(XtQuantTraderCallback):
 
 class MiniqmtTrader(XtQuantTraderCallback):
     broker_type = "miniqmt"
-    max_retries = 10  # 最大重试次数
+    max_retries = 30  # 最大重试次数
 
     def __init__(self):
         self._account: StockAccount = None

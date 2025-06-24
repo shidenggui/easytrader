@@ -161,23 +161,33 @@ class XueQiuFollower(BaseFollower):
         try:
             if history["count"] <= 0:
                 return []
-                    
-            # check expire
+   
             now = datetime.now()
             last_change = history["list"][0]
+            if last_change["status"] == "canceled":
+                logger.info("该笔交易已取消，跳过。交易详情: %s", transaction)
+                return []
+
+            # check expire
             updated_at_datetime = datetime.fromtimestamp(last_change["updated_at"] / 1000)  # Convert milliseconds to seconds
             expire = (now - updated_at_datetime).total_seconds()
             if expire > self._trade_cmd_expire_seconds:
                 logger.info("策略%s上一次调仓时间 %s, 超过过期时间 %s 秒, 跳过", last_change["cube_id"] ,updated_at_datetime, self._trade_cmd_expire_seconds)
                 return []
 
-            rebalancing_index = 0
-            raw_transactions = history["list"][rebalancing_index]["rebalancing_histories"]
+            raw_transactions = last_change["rebalancing_histories"]
             transactions = []
             for transaction in raw_transactions:
                 if transaction["price"] is None:
-                    logger.info("该笔交易无法获取价格，疑似未成交，跳过。交易详情: %s", transaction)
-                    continue
+                    logger.info("该笔交易无法获取价格，疑似未成交， 获取实时价格。交易详情: %s", transaction)
+                    # 获取实时交易价格
+                    stock_code = transaction["stock_symbol"].lower()
+                    price = self.get_current_price(stock_code)
+                    if price is not None:
+                        transaction["price"] = price  
+                    else:
+                        logger.info("获取股票 %s 的实时价格失败，跳过该交易。交易详情：%s", stock_code, transaction)
+                        continue
                 transactions.append(transaction)
 
             transactions = list(filter(self.filer_transaction, transactions))
@@ -205,16 +215,17 @@ class XueQiuFollower(BaseFollower):
             )
 
             transaction["action"] = "buy" if weight_diff > 0 else "sell"
-            transaction["stock_code"] = transaction["stock_symbol"].lower()
-
-            # 获取交易价格
-            price = self.get_sell_price(transaction["stock_code"]) if transaction["action"] == "buy" else self.get_buy_price(transaction["stock_code"])
-            if price is not None:
-                transaction["price"] = price
+            transaction["stock_code"] = transaction["stock_symbol"].lower()          
 
             if transaction["price"] is None:
-                logger.info(f"获取股票 {transaction['stock_code']}, 价格失败: {transaction}, price: {price}")
+                logger.info(f"股票 {transaction['stock_code']}, 价格为空: {transaction}")
                 continue
+            elif self.slippage > 0:
+                if transaction["action"] == "buy":
+                    transaction["price"] = self.get_buy_price(transaction["stock_code"])
+                else:
+                    transaction["price"] = self.get_sell_price(transaction["stock_code"])
+
             initial_amount = abs(weight_diff) / 100 * assets / transaction["price"]
 
             transaction["datetime"] = datetime.fromtimestamp(
@@ -236,43 +247,47 @@ class XueQiuFollower(BaseFollower):
         response = self.s.get(url)
         return response.json()
     
-    def get_buy_price(self, stock_code):
+    def get_current_price(self, stock_code):
         try:
             pankou = self.get_realtime_pankou(stock_code)
-            buy_price_3 = pankou.get("bp3")
             current_price = pankou.get("current")
-            # logger.debug("获取股票 %s, 买3: %s, 现价: %s", stock_code, buy_price_3, current_price)
 
-            if buy_price_3 is None or buy_price_3 <= 0:
-                logger.info("获取股票 %s 当前价格失败，返回当前价格 %s", stock_code, current_price)
-                return current_price
-
-            if current_price is not None and self.slippage > 0:
-                slippaged_price = round(current_price * (1 - self.slippage), 2)
-                logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的买入价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
-                return slippaged_price
-
-            return buy_price_3
-        except Exception as e:        
+            if current_price is not None and current_price > 0:
+                return round(current_price, 2)
+            else:
+                logger.error("获取股票 %s 的当前价格失败，返回 None", stock_code)
+                return None
+        except Exception as e:
+            logger.error("获取股票 %s 的当前价格时发生错误: %s", stock_code, e)
             return None
 
     def get_sell_price(self, stock_code):
         try:
             pankou = self.get_realtime_pankou(stock_code)
-            sell_price_3 = pankou.get("sp3")
+            buy_price_5 = pankou.get("bp5")
             current_price = pankou.get("current")
-            # logger.debug("获取股票 %s, 卖3: %s, 现价: %s", stock_code, sell_price_3, current_price)
 
-            if sell_price_3 is None or sell_price_3 <= 0:
-                logger.info("获取股票 %s 当前价格失败，返回当前价格 %s", stock_code, current_price)
-                return current_price
-            
-            if current_price is not None and self.slippage > 0:
-                slippaged_price = round(current_price * (1 + self.slippage), 2)
+            if self.slippage > 0 and current_price is not None and current_price > 0 and buy_price_5 is not None and buy_price_5 > 0:
+                slippaged_price = round(current_price * (1 - self.slippage), 2)
                 logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的卖出价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
                 return slippaged_price
+
+            return current_price
+        except Exception as e:        
+            return None
+
+    def get_buy_price(self, stock_code):
+        try:
+            pankou = self.get_realtime_pankou(stock_code)
+            sell_price_5 = pankou.get("sp5")
+            current_price = pankou.get("current")
+
+            if self.slippage > 0 and current_price is not None and current_price > 0 and sell_price_5 is not None and sell_price_5 > 0:
+                slippaged_price = round(current_price * (1 + self.slippage), 2)
+                logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的买入价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
+                return slippaged_price
             
-            return sell_price_3
+            return current_price
         except Exception as e:      
             return None
 
@@ -300,7 +315,7 @@ class XueQiuFollower(BaseFollower):
         user = self._users[0]
         position = user.position
         try:
-            stock = next(s for s in position if s["stock_code"][:6] == stock_code)
+            stock = next(s for s in position if s["security"] == stock_code)
         except StopIteration:
             logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整, position=%s", stock_code, stock_code, position)
             return amount
@@ -310,18 +325,18 @@ class XueQiuFollower(BaseFollower):
 
         available_amount = stock["can_use_volume"]
         if available_amount <= amount:
-            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 实际可用小于卖出，调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 实际可用小于卖出，调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
             return available_amount
 
         if available_amount - amount <= 100:
-            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于100股, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于100股, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
             return available_amount
         
         if available_amount - amount < amount * 0.3:
-            logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于10%, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于10%, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
             return available_amount
 
-        logger.info("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 无需调整", stock_code, available_amount, amount)
+        logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 无需调整", stock_code, available_amount, amount)
         return amount
 
 
