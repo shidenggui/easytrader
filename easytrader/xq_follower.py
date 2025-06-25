@@ -2,6 +2,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import json
+import math
 import re
 from datetime import datetime
 from numbers import Number
@@ -214,14 +215,15 @@ class XueQiuFollower(BaseFollower):
                 transaction["prev_target_weight"]
             )
 
-            transaction["action"] = "buy" if weight_diff > 0 else "sell"
+            is_buy = weight_diff > 0
+            transaction["action"] = "buy" if is_buy else "sell"
             transaction["stock_code"] = transaction["stock_symbol"].lower()          
 
             if transaction["price"] is None:
                 logger.info(f"股票 {transaction['stock_code']}, 价格为空: {transaction}")
                 continue
             elif self.slippage > 0:
-                if transaction["action"] == "buy":
+                if is_buy:
                     transaction["price"] = self.get_buy_price(transaction["stock_code"])
                 else:
                     transaction["price"] = self.get_sell_price(transaction["stock_code"])
@@ -232,11 +234,21 @@ class XueQiuFollower(BaseFollower):
                 transaction["created_at"] // 1000
             )
 
-            transaction["amount"] = int(round(initial_amount, -2))
+            transaction["amount"] =  self.floor_to_hundred(initial_amount) if is_buy else self.ceil_to_hundred(initial_amount)
             if transaction["action"] == "sell" and self._adjust_sell:
                 transaction["amount"] = self._adjust_sell_amount(
                     transaction["stock_code"], transaction["amount"]
                 )
+
+    # Floor to nearest hundred
+    @staticmethod
+    def floor_to_hundred(x):
+        return int(math.floor(x / 100) * 100)
+
+    # Ceil to nearest hundred
+    @staticmethod
+    def ceil_to_hundred(x):
+        return int(math.ceil(x / 100) * 100)
     
     def filer_transaction(self, transaction):
         return abs(self.none_to_zero(transaction["target_weight"]) - self.none_to_zero(transaction["prev_target_weight"])) >= 2.0
