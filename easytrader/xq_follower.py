@@ -2,6 +2,7 @@
 from __future__ import division, print_function, unicode_literals
 
 import json
+import math
 import re
 from datetime import datetime
 from numbers import Number
@@ -16,13 +17,17 @@ class XueQiuFollower(BaseFollower):
     LOGIN_PAGE = "https://www.xueqiu.com"
     LOGIN_API = "https://xueqiu.com/snowman/login"
     TRANSACTION_API = "https://xueqiu.com/cubes/rebalancing/history.json"
+    CUBE_RANK = "https://www.xueqiu.com/cubes/discover/rank/cube/list.json"
+    REALTIME_PANKOU = "https://stock.xueqiu.com/v5/stock/realtime/pankou.json"
     PORTFOLIO_URL = "https://xueqiu.com/p/"
     WEB_REFERER = "https://www.xueqiu.com"
+    WEB_ORIGIN = "https://www.xueqiu.com"
 
     def __init__(self):
         super().__init__()
         self._adjust_sell = None
         self._users = None
+        self._trade_cmd_expire_seconds = 120  # 默认交易指令过期时间为 120 秒
 
     def login(self, user=None, password=None, **kwargs):
         """
@@ -43,6 +48,12 @@ class XueQiuFollower(BaseFollower):
 
         cookie_dict = parse_cookies_str(cookies)
         self.s.cookies.update(cookie_dict)
+
+        # 将 Cookies 添加到 headers 中
+        cookie_str = '; '.join([f"{key}={value}" for key, value in cookie_dict.items()])
+        self.s.headers['Cookie'] = cookie_str
+        self.s.headers['Host'] = 'xueqiu.com'
+        self.s.headers['Referer'] = 'https://xueqiu.com/P/ZH106644'
 
         logger.info("登录成功")
 
@@ -78,6 +89,10 @@ class XueQiuFollower(BaseFollower):
         :param cmd_cache: 是否读取存储历史执行过的指令，防止重启时重复执行已经交易过的指令
         :param slippage: 滑点，0.0 表示无滑点, 0.05 表示滑点为 5%
         """
+
+        if track_interval / len(self.warp_list(strategies)) < 1.5:
+            raise ValueError("雪球跟踪间隔(%s)小于 1.5s, 可能会被雪球限制访问", track_interval / len(strategies))
+        
         super().follow(
             users=users,
             strategies=strategies,
@@ -88,7 +103,7 @@ class XueQiuFollower(BaseFollower):
         )
 
         self._adjust_sell = adjust_sell
-
+        self._trade_cmd_expire_seconds = trade_cmd_expire_seconds
         self._users = self.warp_list(users)
 
         strategies = self.warp_list(strategies)
@@ -100,6 +115,7 @@ class XueQiuFollower(BaseFollower):
 
         self.start_trader_thread(self._users, trade_cmd_expire_seconds)
 
+        logger.info('开始跟踪策略: %s, 总资产：%s, 初始资产：%s', strategies, total_assets, initial_assets)   
         for strategy_url, strategy_total_assets, strategy_initial_assets in zip(
             strategies, total_assets, initial_assets
         ):
@@ -143,18 +159,44 @@ class XueQiuFollower(BaseFollower):
         return rep.json()[info_index]["name"]
 
     def extract_transactions(self, history):
-        if history["count"] <= 0:
-            return []
-        rebalancing_index = 0
-        raw_transactions = history["list"][rebalancing_index]["rebalancing_histories"]
-        transactions = []
-        for transaction in raw_transactions:
-            if transaction["price"] is None:
-                logger.info("该笔交易无法获取价格，疑似未成交，跳过。交易详情: %s", transaction)
-                continue
-            transactions.append(transaction)
+        try:
+            if history["count"] <= 0:
+                return []
+   
+            now = datetime.now()
+            last_change = history["list"][0]
+            if last_change["status"] == "canceled":
+                logger.info("该笔交易已取消，跳过。交易详情: %s", transaction)
+                return []
 
-        return transactions
+            # check expire
+            updated_at_datetime = datetime.fromtimestamp(last_change["updated_at"] / 1000)  # Convert milliseconds to seconds
+            expire = (now - updated_at_datetime).total_seconds()
+            if expire > self._trade_cmd_expire_seconds:
+                logger.info("策略%s上一次调仓时间 %s, 超过过期时间 %s 秒, 跳过", last_change["cube_id"] ,updated_at_datetime, self._trade_cmd_expire_seconds)
+                return []
+
+            raw_transactions = last_change["rebalancing_histories"]
+            transactions = []
+            for transaction in raw_transactions:
+                if transaction["price"] is None:
+                    logger.info("该笔交易无法获取价格，疑似未成交， 获取实时价格。交易详情: %s", transaction)
+                    # 获取实时交易价格
+                    stock_code = transaction["stock_symbol"].lower()
+                    price = self.get_current_price(stock_code)
+                    if price is not None:
+                        transaction["price"] = price  
+                    else:
+                        logger.info("获取股票 %s 的实时价格失败，跳过该交易。交易详情：%s", stock_code, transaction)
+                        continue
+                transactions.append(transaction)
+
+            transactions = list(filter(self.filer_transaction, transactions))
+            return transactions
+        except KeyError as e:
+             # 打印错误信息和 history
+            logger.warn(f"KeyError: {e}. Current history: {history}")
+            raise
 
     def create_query_transaction_params(self, strategy):
         params = {"cube_symbol": strategy, "page": 1, "count": 1}
@@ -169,9 +211,22 @@ class XueQiuFollower(BaseFollower):
     # noinspection PyMethodOverriding
     def project_transactions(self, transactions, assets):
         for transaction in transactions:
-            weight_diff = self.none_to_zero(transaction["weight"]) - self.none_to_zero(
-                transaction["prev_weight"]
+            weight_diff = self.none_to_zero(transaction["target_weight"]) - self.none_to_zero(
+                transaction["prev_target_weight"]
             )
+
+            is_buy = weight_diff > 0
+            transaction["action"] = "buy" if is_buy else "sell"
+            transaction["stock_code"] = transaction["stock_symbol"].lower()          
+
+            if transaction["price"] is None:
+                logger.info(f"股票 {transaction['stock_code']}, 价格为空: {transaction}")
+                continue
+            elif self.slippage > 0:
+                if is_buy:
+                    transaction["price"] = self.get_buy_price(transaction["stock_code"])
+                else:
+                    transaction["price"] = self.get_sell_price(transaction["stock_code"])
 
             initial_amount = abs(weight_diff) / 100 * assets / transaction["price"]
 
@@ -179,15 +234,80 @@ class XueQiuFollower(BaseFollower):
                 transaction["created_at"] // 1000
             )
 
-            transaction["stock_code"] = transaction["stock_symbol"].lower()
-
-            transaction["action"] = "buy" if weight_diff > 0 else "sell"
-
-            transaction["amount"] = int(round(initial_amount, -2))
+            transaction["amount"] =  self.floor_to_hundred(initial_amount) if is_buy else self.ceil_to_hundred(initial_amount)
             if transaction["action"] == "sell" and self._adjust_sell:
                 transaction["amount"] = self._adjust_sell_amount(
                     transaction["stock_code"], transaction["amount"]
                 )
+
+    # Floor to nearest hundred
+    @staticmethod
+    def floor_to_hundred(x):
+        return int(math.floor(x / 100) * 100)
+
+    # Ceil to nearest hundred
+    @staticmethod
+    def ceil_to_hundred(x):
+        return int(math.ceil(x / 100) * 100)
+    
+    def filer_transaction(self, transaction):
+        return abs(self.none_to_zero(transaction["target_weight"]) - self.none_to_zero(transaction["prev_target_weight"])) >= 2.0
+
+    # Category: 14 - 热门组合
+    def get_cube_by_rank(self, category=14, page=1, count=100):
+        url = self.CUBE_RANK + f"?category={category}&page={page}&count={count}"
+        response = self.s.get(url)
+        return response.json()
+    
+    def get_current_price(self, stock_code):
+        try:
+            pankou = self.get_realtime_pankou(stock_code)
+            current_price = pankou.get("current")
+
+            if current_price is not None and current_price > 0:
+                return round(current_price, 2)
+            else:
+                logger.error("获取股票 %s 的当前价格失败，返回 None", stock_code)
+                return None
+        except Exception as e:
+            logger.error("获取股票 %s 的当前价格时发生错误: %s", stock_code, e)
+            return None
+
+    def get_sell_price(self, stock_code):
+        try:
+            pankou = self.get_realtime_pankou(stock_code)
+            buy_price_5 = pankou.get("bp5")
+            current_price = pankou.get("current")
+
+            if self.slippage > 0 and current_price is not None and current_price > 0 and buy_price_5 is not None and buy_price_5 > 0:
+                slippaged_price = round(current_price * (1 - self.slippage), 2)
+                logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的卖出价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
+                return slippaged_price
+
+            return current_price
+        except Exception as e:        
+            return None
+
+    def get_buy_price(self, stock_code):
+        try:
+            pankou = self.get_realtime_pankou(stock_code)
+            sell_price_5 = pankou.get("sp5")
+            current_price = pankou.get("current")
+
+            if self.slippage > 0 and current_price is not None and current_price > 0 and sell_price_5 is not None and sell_price_5 > 0:
+                slippaged_price = round(current_price * (1 + self.slippage), 2)
+                logger.debug("股票 %s, 当前价格: %s, 滑点: %.2f%%, 调整后的买入价格: %s", stock_code, current_price, self.slippage * 100, slippaged_price)
+                return slippaged_price
+            
+            return current_price
+        except Exception as e:      
+            return None
+
+    def get_realtime_pankou(self, stock_code):
+        url = self.REALTIME_PANKOU + f"?symbol={stock_code.upper()}"
+        response = self.s.get(url)
+        # logger.debug("获取股票 %s, URL: %s, 实时盘口信息: %s", stock_code, url, response.json())
+        return response.json().get("data")
 
     def _adjust_sell_amount(self, stock_code, amount):
         """
@@ -207,24 +327,30 @@ class XueQiuFollower(BaseFollower):
         user = self._users[0]
         position = user.position
         try:
-            stock = next(s for s in position if s["证券代码"] == stock_code)
+            stock = next(s for s in position if s["security"] == stock_code)
         except StopIteration:
-            logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整", stock_code, stock_code)
+            logger.info("根据持仓调整 %s 卖出额，发现未持有股票 %s, 不做任何调整, position=%s", stock_code, stock_code, position)
+            return amount
+        except Exception as e:
+            logger.error("获取股票 %s 持仓信息失败: %s", stock_code, e)
             return amount
 
-        available_amount = stock["可用余额"]
-        if available_amount >= amount:
-            return amount
+        available_amount = stock["can_use_volume"]
+        if available_amount <= amount:
+            logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 实际可用小于卖出，调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            return available_amount
 
-        adjust_amount = available_amount // 100 * 100
-        logger.info(
-            "股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 调整为 %s",
-            stock_code,
-            available_amount,
-            amount,
-            adjust_amount,
-        )
-        return adjust_amount
+        if available_amount - amount <= 100:
+            logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于100股, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            return available_amount
+        
+        if available_amount - amount < amount * 0.3:
+            logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 相差小于10%, 调整为 %s, 全部卖出", stock_code, available_amount, amount, available_amount)
+            return available_amount
+
+        logger.debug("股票 %s 实际可用余额 %s, 指令卖出股数为 %s, 无需调整", stock_code, available_amount, amount)
+        return amount
+
 
     def _get_portfolio_info(self, portfolio_code):
         """
