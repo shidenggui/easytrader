@@ -72,7 +72,7 @@ def get_today_ipo_data():
     json_data = json.loads(ipo_response.text)
     today_ipo = []
 
-    for line in json_data["data"]:
+    for line in json_data.get("data", []):
         if datetime.datetime.now().strftime("%a %b %d") == line[3][:10]:
             today_ipo.append(
                 {
