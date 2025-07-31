@@ -144,18 +144,21 @@ class ClientTrader(IClientTrader):
     @property
     def position(self):
         self._switch_left_menus(["查询[F4]", "资金股票"])
+        self.refresh()
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
     def today_entrusts(self):
         self._switch_left_menus(["查询[F4]", "当日委托"])
+        self.refresh()
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
     @property
     def today_trades(self):
         self._switch_left_menus(["查询[F4]", "当日成交"])
+        self.refresh()
 
         return self._get_grid_data(self._config.COMMON_GRID_CONTROL_ID)
 
@@ -430,7 +433,7 @@ class ClientTrader(IClientTrader):
         time.sleep(0.2)
         self._main.child_window(
             control_id=self._config.TRADE_SUBMIT_CONTROL_ID, class_name="Button"
-        ).click()
+        ).type_keys('{ENTER}')
 
     @perf_clock
     def __get_top_window_pop_dialog(self):
