@@ -98,6 +98,25 @@ class RemoteClient:
             raise Exception(response.json()["error"])
         return response.json()
 
+
+    def market_buy(self, security, amount, **kwargs):
+        params = locals().copy()
+        params.pop("self")
+
+        response = self._s.post(self._api + "/market_buy", json=params)
+        if response.status_code >= 300:
+            raise Exception(response.json()["error"])
+        return response.json()
+
+    def market_sell(self, security, amount, **kwargs):
+        params = locals().copy()
+        params.pop("self")
+
+        response = self._s.post(self._api + "/market_sell", json=params)
+        if response.status_code >= 300:
+            raise Exception(response.json()["error"])
+        return response.json()
+
     def cancel_entrust(self, entrust_no):
         params = locals().copy()
         params.pop("self")
