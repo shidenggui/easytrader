@@ -1,3 +1,14 @@
+# 关于本Fork
+
+本 Fork 站在巨人的肩膀上, 增加或增强部分特性, 主要是自用, 如果我增加的特性有问题, 欢迎向我反馈, 原版的问题请直接向食灯鬼大佬提issue.
+
+- [x] 增加远程连接miniqmt特性
+- [ ] RemoteClient增加市价单
+- [ ] 增加基于ws的行情订阅
+- [ ] 增加远程miniqmt的on_*_error回调订阅
+
+# 下面是原本Readme, 再次感谢食灯鬼大佬
+
 # easytrader
 
 [![Package](https://img.shields.io/pypi/v/easytrader.svg)](https://pypi.python.org/pypi/easytrader)
