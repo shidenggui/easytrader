@@ -11,7 +11,8 @@ def use(broker, host, port=1430, **kwargs):
 class RemoteClient:
     def __init__(self, broker, host, port=1430, **kwargs):
         self._s = requests.session()
-        self._api = "http://{}:{}".format(host, port)
+        # 支持 ssl (有时候需要过某些反向代理要用https协议)
+        self._api = f"http{'s' if kwargs.get('ssl') is True else ''}://{host}:{port}"
         self._broker = broker
 
     def prepare(
@@ -21,7 +22,7 @@ class RemoteClient:
         password=None,
         exe_path=None,
         comm_password=None,
-        **kwargs
+        **kwargs,
     ):
         """
         登陆客户端
@@ -97,7 +98,6 @@ class RemoteClient:
         if response.status_code >= 300:
             raise Exception(response.json()["error"])
         return response.json()
-
 
     def market_buy(self, security, amount, **kwargs):
         params = locals().copy()
