@@ -5,12 +5,20 @@ from easytrader.utils.misc import file2dict
 
 
 def use(broker, host, port=1430, **kwargs):
-    return RemoteClient(broker, host, port)
+    return RemoteClient(broker, host, port, **kwargs)
 
 
 class RemoteClient:
     def __init__(self, broker, host, port=1430, **kwargs):
         self._s = requests.session()
+        # 支持 basic auth 或 其它 auth 方法
+        if kwargs.get("user") and kwargs.get("passwd"):
+            self._s.auth = requests.auth.HTTPBasicAuth(
+                kwargs.get("user"), kwargs.get("passwd")
+            )
+        elif kwargs.get("auth"):
+            self._s.auth = kwargs.get("auth")
+
         # 支持 ssl (有时候需要过某些反向代理要用https协议)
         self._api = f"http{'s' if kwargs.get('ssl') is True else ''}://{host}:{port}"
         self._broker = broker
