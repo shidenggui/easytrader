@@ -5,13 +5,22 @@ from easytrader.utils.misc import file2dict
 
 
 def use(broker, host, port=1430, **kwargs):
-    return RemoteClient(broker, host, port)
+    return RemoteClient(broker, host, port, **kwargs)
 
 
 class RemoteClient:
     def __init__(self, broker, host, port=1430, **kwargs):
         self._s = requests.session()
-        self._api = "http://{}:{}".format(host, port)
+        # 支持 basic auth 或 其它 auth 方法
+        if kwargs.get("user") and kwargs.get("passwd"):
+            self._s.auth = requests.auth.HTTPBasicAuth(
+                kwargs.get("user"), kwargs.get("passwd")
+            )
+        elif kwargs.get("auth"):
+            self._s.auth = kwargs.get("auth")
+
+        # 支持 ssl (有时候需要过某些反向代理要用https协议)
+        self._api = f"http{'s' if kwargs.get('ssl') is True else ''}://{host}:{port}"
         self._broker = broker
 
     def prepare(
@@ -21,7 +30,7 @@ class RemoteClient:
         password=None,
         exe_path=None,
         comm_password=None,
-        **kwargs
+        **kwargs,
     ):
         """
         登陆客户端
@@ -94,6 +103,24 @@ class RemoteClient:
         params.pop("self")
 
         response = self._s.post(self._api + "/sell", json=params)
+        if response.status_code >= 300:
+            raise Exception(response.json()["error"])
+        return response.json()
+
+    def market_buy(self, security, amount, **kwargs):
+        params = locals().copy()
+        params.pop("self")
+
+        response = self._s.post(self._api + "/market_buy", json=params)
+        if response.status_code >= 300:
+            raise Exception(response.json()["error"])
+        return response.json()
+
+    def market_sell(self, security, amount, **kwargs):
+        params = locals().copy()
+        params.pop("self")
+
+        response = self._s.post(self._api + "/market_sell", json=params)
         if response.status_code >= 300:
             raise Exception(response.json()["error"])
         return response.json()
