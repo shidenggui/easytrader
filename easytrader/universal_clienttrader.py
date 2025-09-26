@@ -30,7 +30,8 @@ class UniversalClientTrader(clienttrader.BaseLoginClientTrader):
                 path=self._run_exe_path(exe_path), timeout=1
             )
         # pylint: disable=broad-except
-        except Exception:
+        except Exception as e:
+            print(e)
             self._app = pywinauto.Application().start(exe_path)
 
             # wait login window ready
@@ -41,15 +42,18 @@ class UniversalClientTrader(clienttrader.BaseLoginClientTrader):
                 except:
                     self.wait(1)
 
-            self.wait(1)
-            self._app.window(handle=login_window).Edit1.set_focus()
-            self._app.window(handle=login_window).Edit1.type_keys(user)
+            try: # ldm
+                self.wait(1)
+                self._app.window(handle=login_window).Edit1.set_focus()
+                self._app.window(handle=login_window).Edit1.type_keys(user)
 
-            self._app.window(handle=login_window).button7.click()
+                self._app.window(handle=login_window).button7.click()
 
-            # detect login is success or not
-            # self._app.top_window().wait_not("exists", 100)
-            self.wait(5)
+                # detect login is success or not
+                # self._app.top_window().wait_not("exists", 100)
+                self.wait(5)
+            except Exception as e:
+                print(e)
 
             self._app = pywinauto.Application().connect(
                 path=self._run_exe_path(exe_path), timeout=10
