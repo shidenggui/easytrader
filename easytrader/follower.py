@@ -44,6 +44,8 @@ class BaseFollower(metaclass=abc.ABCMeta):
         
         # 创建线程池用于非阻塞网络请求
         self.network_executor = ThreadPoolExecutor(max_workers=5, thread_name_prefix="network_req")
+        # 创建单独的线程池用于交易执行，避免与网络请求竞争资源
+        self.trade_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="trade_exec")
 
         self.slippage: float = 0.0
 
@@ -59,12 +61,12 @@ class BaseFollower(metaclass=abc.ABCMeta):
         def request_worker():
             try:
                 start_time = time.time()
-                logger.debug("🔗 开始网络请求: %s", url)
+                # logger.debug("🔗 开始网络请求: %s", url)  # 每次请求都打印，太冗余
                 
                 response = self.s.get(url, params=params, timeout=timeout)
                 
                 request_time = time.time() - start_time
-                logger.debug("📡 网络请求完成，耗时: %.3f秒", request_time)
+                # logger.debug("📡 网络请求完成，耗时: %.3f秒", request_time)  # 每次请求都打印，太冗余
                 
                 result[0] = response
             except Exception as e:
@@ -86,6 +88,45 @@ class BaseFollower(metaclass=abc.ABCMeta):
             logger.warning("🚨 强制超时: 请求超过 %.1f秒未完成", timeout + 0.5)
             raise TimeoutRequestException(f"Request timeout after {timeout + 0.5} seconds")
 
+    def _reliable_request_post(self, url, data=None, timeout=1.0):
+        """可靠的POST请求，强制超时控制"""
+        import threading
+        import time
+        
+        result = [None]  # 使用列表来存储结果，方便在内部函数中修改
+        exception = [None]  # 存储异常
+        finished = threading.Event()
+        
+        def request_worker():
+            try:
+                start_time = time.time()
+                # logger.debug("🔗 开始POST请求: %s", url)  # 每次请求都打印，太冗余
+                
+                response = self.s.post(url, data=data, timeout=timeout)
+                
+                request_time = time.time() - start_time
+                # logger.debug("📡 POST请求完成，耗时: %.3f秒", request_time)  # 每次请求都打印，太冗余
+                
+                result[0] = response
+            except Exception as e:
+                exception[0] = e
+            finally:
+                finished.set()
+        
+        # 启动请求线程
+        request_thread = threading.Thread(target=request_worker, daemon=True)
+        request_thread.start()
+        
+        # 等待完成或超时
+        if finished.wait(timeout=timeout + 0.5):  # 额外0.5秒容错
+            if exception[0]:
+                raise exception[0]
+            return result[0]
+        else:
+            # 超时情况
+            logger.warning("🚨 强制超时: POST请求超过 %.1f秒未完成", timeout + 0.5)
+            raise TimeoutRequestException(f"POST request timeout after {timeout + 0.5} seconds")
+
     def login(self, user=None, password=None, **kwargs):
         """
         登陆接口
@@ -98,11 +139,11 @@ class BaseFollower(metaclass=abc.ABCMeta):
         self.s.headers.update(headers)
 
         # init cookie
-        self.s.get(self.LOGIN_PAGE)
+        self._reliable_request_get(self.LOGIN_PAGE, timeout=2.0)
 
         # post for login
         params = self.create_login_params(user, password, **kwargs)
-        rep = self.s.post(self.LOGIN_API, data=params)
+        rep = self._reliable_request_post(self.LOGIN_API, data=params, timeout=2.0)
 
         self.check_login_success(rep)
         logger.info("登录成功")
@@ -426,7 +467,16 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 "entrust_prop": entrust_prop,
             }
             try:
+                trader_name = type(user).__name__
+                logger.info("🎯 使用 %s 执行交易: %s %s 数量:%s 价格:%s", 
+                           trader_name, trade_cmd["action"], trade_cmd["stock_code"], 
+                           trade_cmd["amount"], actual_price)
+                
+                trade_start = time.time()
                 response = getattr(user, trade_cmd["action"])(**args)
+                trade_time = time.time() - trade_start
+                logger.debug("⚡ 实际交易执行耗时: %.3f秒", trade_time)
+                
             except exceptions.TradeError as e:
                 trader_name = type(user).__name__
                 err_msg = "{}: {}".format(type(e).__name__, e.args)
@@ -467,24 +517,24 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 # 非阻塞方式获取交易指令，避免无限等待
                 queue_start = time.time()
                 try:
-                    trade_cmd = self.trade_queue.get(timeout=1.0)  # 1秒超时
+                    trade_cmd = self.trade_queue.get(timeout=0.1)  # 降低超时到100ms，提升响应速度
                     queue_time = time.time() - queue_start
                     processed_count += 1
                     logger.info(f"📤 获取交易指令#{processed_count}，队列等待: {queue_time:.3f}秒")
                 except queue.Empty:
-                    # 队列为空，继续循环
+                    # 队列为空，等待一段时间再检查
                     queue_time = time.time() - queue_start
-                    if queue_time > 0.5:  # 只有等待时间较长时才记录
-                        logger.debug(f"📭 交易队列为空，等待: {queue_time:.3f}秒")
-                    time.sleep(0.1)
+                    # logger.debug(f"📭 交易队列为空，等待: {queue_time:.3f}秒")  # 每秒都打印，太频繁
+                    time.sleep(0.05)  # 降低睡眠时间到50ms，提升响应速度
                     continue
                 
                 logger.info(f"🚀 开始执行交易指令#{processed_count}: {trade_cmd}")
                 
-                # 使用线程池执行交易，避免阻塞交易线程
+                # 使用专用交易线程池执行交易，避免与网络请求竞争资源
+                execute_start = time.time()  # 移到try外，避免变量作用域错误
                 try:
                     submit_start = time.time()
-                    future = self.network_executor.submit(
+                    future = self.trade_executor.submit(
                         self._execute_trade_cmd,
                         trade_cmd, users, expire_seconds, entrust_prop, send_interval
                     )
@@ -492,14 +542,13 @@ class BaseFollower(metaclass=abc.ABCMeta):
                     logger.debug(f"🎯 交易指令#{processed_count}已提交到线程池，耗时: {submit_time:.3f}秒")
                     
                     # 设置交易执行超时，避免无限等待
-                    execute_start = time.time()
                     future.result(timeout=30.0)  # 30秒超时
                     execute_time = time.time() - execute_start
                     logger.info(f"✅ 交易指令#{processed_count}执行完成，耗时: {execute_time:.3f}秒")
                     
                 except Exception as e:
                     execute_time = time.time() - execute_start
-                    logger.error(f"❌ 交易指令#{processed_count}执行失败，耗时: {execute_time:.3f}秒，错误: {e}")
+                    logger.exception(f"❌ 交易指令#{processed_count}执行失败，耗时: {execute_time:.3f}秒")
                 
                 # 交易间隔等待
                 if send_interval > 0:
@@ -514,85 +563,41 @@ class BaseFollower(metaclass=abc.ABCMeta):
 
     def query_strategy_transaction(self, strategy, **kwargs):
         """查询策略调仓信息，带详细监控"""
-        query_start = time.time()
-        logger.debug("🌐 开始查询策略 %s 调仓信息", strategy)
-        
         try:
-            # 创建查询参数
-            param_start = time.time()
+            query_start = time.time()
+            # logger.debug("🌐 开始查询策略 %s 调仓信息", strategy)
+            
             params = self.create_query_transaction_params(strategy)
-            param_time = time.time() - param_start
-            logger.debug("📋 策略 %s 参数创建完成，耗时: %.3f秒", strategy, param_time)
+            rep = self._reliable_request_get(self.TRANSACTION_API, params=params, timeout=1.0)  # 降低超时到1秒
             
-            # 发起网络请求
-            request_start = time.time()
-            logger.debug("📡 策略 %s 开始网络请求: %s", strategy, self.TRANSACTION_API)
+            query_time = time.time() - query_start
+            # logger.debug("🌐 查询策略 %s 调仓信息完成，耗时: %.3f秒", strategy, query_time)
             
-            rep = self._reliable_request_get(self.TRANSACTION_API, params=params, timeout=1.0)
-            
-            request_time = time.time() - request_start
-            logger.debug("📥 策略 %s 网络请求完成，耗时: %.3f秒，状态码: %d", 
-                        strategy, request_time, rep.status_code)
-            
-            # 检查HTTP状态码
-            if rep.status_code != 200:
-                logger.warning("❌ 查询策略 %s 调仓信息HTTP错误: %d, 响应: %s", 
-                             strategy, rep.status_code, rep.text[:200])
-                return []
-            
-            # 解析JSON
-            json_start = time.time()
             history = rep.json()
-            json_time = time.time() - json_start
-            logger.debug("📊 策略 %s JSON解析完成，耗时: %.3f秒", strategy, json_time)
+            transactions = self.extract_transactions(history)
             
-        except requests.exceptions.Timeout:
-            request_time = time.time() - request_start
-            logger.warning("⏰ 查询策略 %s 调仓信息请求超时(1秒)，实际耗时: %.3f秒", strategy, request_time)
-            return []
-        except TimeoutRequestException as e:
-            request_time = time.time() - request_start
-            logger.warning("🚨 查询策略 %s 调仓信息强制超时，实际耗时: %.3f秒，错误: %s", strategy, request_time, e)
-            return []
-        except requests.exceptions.ConnectionError as e:
-            request_time = time.time() - request_start
-            logger.warning("🔌 查询策略 %s 调仓信息连接错误，耗时: %.3f秒，错误: %s", strategy, request_time, e)
+            if transactions:
+                parse_start = time.time()
+                self.project_transactions(transactions, **kwargs)
+                result = self.order_transactions_sell_first(transactions)
+                parse_time = time.time() - parse_start
+                logger.debug("📊 处理策略 %s 交易数据完成，耗时: %.3f秒", strategy, parse_time)
+                
+                return result
+            else:
+                # logger.debug("策略 %s 无调仓信息", strategy)
+                return []
+        except (requests.exceptions.Timeout, TimeoutRequestException):
+            query_time = time.time() - query_start
+            logger.warning("⏰ 策略 %s 查询调仓信息超时，耗时: %.3f秒", strategy, query_time)
             return []
         except requests.exceptions.RequestException as e:
-            request_time = time.time() - request_start
-            logger.warning("🚫 查询策略 %s 调仓信息请求失败，耗时: %.3f秒，错误: %s", strategy, request_time, e)
-            return []
-        except ValueError as e:
-            logger.error("📄 查询策略 %s 调仓信息JSON解析失败: %s", strategy, e)
+            query_time = time.time() - query_start
+            logger.warning("❌ 策略 %s 查询调仓信息请求失败，耗时: %.3f秒，错误: %s", strategy, query_time, e)
             return []
         except Exception as e:
-            request_time = time.time() - request_start
-            logger.error("💥 查询策略 %s 调仓信息时发生未知错误，耗时: %.3f秒，错误: %s", strategy, request_time, e)
-            return []
-
-        # 处理业务逻辑
-        try:
-            process_start = time.time()
-            transactions = self.extract_transactions(history)
-            extract_time = time.time() - process_start
-            
-            project_start = time.time()
-            self.project_transactions(transactions, **kwargs)
-            project_time = time.time() - project_start
-            
-            order_start = time.time()
-            result = self.order_transactions_sell_first(transactions)
-            order_time = time.time() - order_start
-            
-            total_time = time.time() - query_start
-            logger.debug("⚙️ 策略 %s 业务处理完成，提取: %.3f秒，投影: %.3f秒，排序: %.3f秒，总耗时: %.3f秒", 
-                        strategy, extract_time, project_time, order_time, total_time)
-            
-            return result
-            
-        except Exception as e:
-            total_time = time.time() - query_start
-            logger.error("⚙️ 策略 %s 业务处理失败，总耗时: %.3f秒，错误: %s", strategy, total_time, e)
+            query_time = time.time() - query_start
+            logger.error("💥 策略 %s 查询调仓信息时发生未知错误，耗时: %.3f秒，错误: %s", strategy, query_time, e)
             return []
 
     def extract_transactions(self, history) -> List[str]:
@@ -647,6 +652,9 @@ class BaseFollower(metaclass=abc.ABCMeta):
             if hasattr(self, 'network_executor'):
                 self.network_executor.shutdown(wait=True)
                 logger.info("网络请求线程池已关闭")
+            if hasattr(self, 'trade_executor'):
+                self.trade_executor.shutdown(wait=True)
+                logger.info("交易执行线程池已关闭")
         except Exception as e:
             logger.error("关闭线程池时发生错误: %s", e)
 

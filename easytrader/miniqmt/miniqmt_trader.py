@@ -505,6 +505,7 @@ class MiniqmtTrader(XtQuantTraderCallback):
         order_type=xtconstant.STOCK_BUY if is_buy else xtconstant.STOCK_SELL
         price_type=xtconstant.FIX_PRICE
 
+        order_id = None
         try:
             order_id = self._trader.order_stock(
                 account=self._account,
@@ -515,7 +516,8 @@ class MiniqmtTrader(XtQuantTraderCallback):
                 price=price,
             )
         except Exception as e:
-            logger.error(f"限价{action}委托失败: 股票代码={security}, 错误码={order_id}")
+            logger.exception(f"限价{action}委托异常: 股票代码={security}, 价格={price}, 数量={amount}")
+            order_id = -1  # 设置为失败标志
         
         if order_id > 0:
             logger.info(f"限价{action}委托成功: 股票代码={security}, 委托单号={order_id}")

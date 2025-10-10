@@ -6,9 +6,10 @@ import math
 import re
 from datetime import datetime
 from numbers import Number
-from threading import Thread, Event
+from threading import Thread, Event, Lock
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+from typing import Optional
 
 from easytrader.follower import BaseFollower
 from easytrader.follower import TimeoutRequestException
@@ -38,6 +39,72 @@ class XueQiuFollower(BaseFollower):
         self.stop_event = Event()   # 停止信号
         self.strategy_executor = ThreadPoolExecutor(max_workers=10, thread_name_prefix="strategy_worker")
         self.strategy_futures = {}  # 存储策略任务的future对象
+        
+        # 简单的round robin cookies轮换机制
+        self.cookie_pool = []  # cookies池
+        self.current_cookie_index = 0  # 当前使用的cookie索引
+        self.cookie_lock = Lock()  # 线程锁
+        
+        # 价格缓存机制 - 提升性能
+        self.price_cache = {}  # 价格缓存 {stock_code: {"price_data": data, "timestamp": time}}
+        self.price_cache_ttl = 3.0  # 缓存过期时间3秒
+        self.price_cache_lock = Lock()  # 价格缓存锁
+
+    def set_cookie_pool(self, valid_cookies):
+        """设置cookies池，支持轮换
+        :param valid_cookies: 有效的cookies列表，每个元素是包含name和cookie的字典
+        """
+        with self.cookie_lock:
+            self.cookie_pool = valid_cookies.copy()
+            self.current_cookie_index = 0
+            logger.info("🍪 设置cookies池，共 %d 个有效cookies", len(self.cookie_pool))
+            for i, cookie_info in enumerate(self.cookie_pool):
+                logger.info("  Cookie %d: %s", i+1, cookie_info.get('name', f'账户{i+1}'))
+
+    def get_current_cookie(self):
+        """获取当前轮换的cookie - 标准round robin实现"""
+        with self.cookie_lock:
+            if not self.cookie_pool:
+                return None
+            
+            # 获取当前cookie
+            current_cookie = self.cookie_pool[self.current_cookie_index]
+            
+            # 直接切换到下一个（round robin）
+            self.current_cookie_index = (self.current_cookie_index + 1) % len(self.cookie_pool)
+            
+            # logger.debug("🔄 使用Cookie: %s (第%d个)，下次将使用第%d个", 
+            #            current_cookie.get('name', 'unknown'), 
+            #            (self.current_cookie_index - 1) % len(self.cookie_pool) + 1,
+            #            self.current_cookie_index + 1)
+            
+            return current_cookie.get('cookie')
+
+    def _switch_to_cookie(self, cookie_str):
+        """切换到指定的cookie"""
+        try:
+            from easytrader.utils.misc import parse_cookies_str
+            cookie_dict = parse_cookies_str(cookie_str)
+            self.s.cookies.clear()
+            self.s.cookies.update(cookie_dict)
+            
+            # 更新headers中的Cookie
+            self.s.headers['Cookie'] = cookie_str
+            return True
+        except Exception as e:
+            logger.warning("切换cookie失败: %s", e)
+            return False
+
+    def _reliable_request_get(self, url, params=None, timeout=1.0):
+        """可靠的GET请求，支持cookies轮换"""
+        # 如果有cookies池，使用轮换的cookie
+        if self.cookie_pool:
+            cookie_str = self.get_current_cookie()
+            if cookie_str:
+                self._switch_to_cookie(cookie_str)
+        
+        # 调用父类的可靠请求方法
+        return super()._reliable_request_get(url, params=params, timeout=timeout)
 
     def login(self, user=None, password=None, **kwargs):
         """
@@ -54,7 +121,7 @@ class XueQiuFollower(BaseFollower):
         headers = self._generate_headers()
         self.s.headers.update(headers)
 
-        self.s.get(self.LOGIN_PAGE)
+        self._reliable_request_get(self.LOGIN_PAGE, timeout=2.0)
 
         cookie_dict = parse_cookies_str(cookies)
         self.s.cookies.update(cookie_dict)
@@ -100,8 +167,8 @@ class XueQiuFollower(BaseFollower):
         :param slippage: 滑点，0.0 表示无滑点, 0.05 表示滑点为 5%
         """
 
-        if track_interval / len(self.warp_list(strategies)) < 1.5:
-            raise ValueError("雪球跟踪间隔(%s)小于 1.5s, 可能会被雪球限制访问", track_interval / len(strategies))
+        # if track_interval / len(self.warp_list(strategies)) < 1.5:
+        #     raise ValueError("雪球跟踪间隔(%s)小于 1.5s, 可能会被雪球限制访问", track_interval / len(strategies))
         
         super().follow(
             users=users,
@@ -137,7 +204,7 @@ class XueQiuFollower(BaseFollower):
                 # 使用线程池获取策略名称，避免阻塞
                 try:
                     future = self.network_executor.submit(self.extract_strategy_name, strategy_url)
-                    strategy_name = future.result(timeout=2.0)  # 2秒超时
+                    strategy_name = future.result(timeout=1.5)  # 降低超时到1.5秒
                     logger.info("成功获取策略名称: %s", strategy_name)
                 except Exception as e:
                     strategy_name = f"策略_{strategy_id}"  # 使用默认名称
@@ -163,7 +230,7 @@ class XueQiuFollower(BaseFollower):
             try:
                 # 使用线程池获取组合净值，避免阻塞
                 future = self.network_executor.submit(self._get_portfolio_net_value, strategy_url)
-                net_value = future.result(timeout=2.0)  # 2秒超时
+                net_value = future.result(timeout=1.5)  # 降低超时到1.5秒
                 total_assets = initial_assets * net_value
                 logger.info("成功获取组合净值: %s, 计算总资产: %s", net_value, total_assets)
             except Exception as e:
@@ -373,9 +440,8 @@ class XueQiuFollower(BaseFollower):
     
     def get_current_price(self, stock_code):
         try:
-            # 使用线程池获取实时盘口信息，避免阻塞
-            future = self.network_executor.submit(self.get_realtime_pankou, stock_code)
-            pankou = future.result(timeout=1.5)  # 1.5秒超时
+            # 直接调用，避免线程池死锁（因为已经在线程池中运行）
+            pankou = self.get_realtime_pankou(stock_code)
             current_price = pankou.get("current") if pankou else None
 
             if current_price is not None and current_price > 0:
@@ -389,9 +455,8 @@ class XueQiuFollower(BaseFollower):
 
     def get_sell_price(self, stock_code):
         try:
-            # 使用线程池获取实时盘口信息，避免阻塞
-            future = self.network_executor.submit(self.get_realtime_pankou, stock_code)
-            pankou = future.result(timeout=1.5)  # 1.5秒超时
+            # 直接调用，避免线程池死锁（因为已经在线程池中运行）
+            pankou = self.get_realtime_pankou(stock_code)
             buy_price_5 = pankou.get("bp5") if pankou else None
             current_price = pankou.get("current") if pankou else None
 
@@ -406,9 +471,8 @@ class XueQiuFollower(BaseFollower):
 
     def get_buy_price(self, stock_code):
         try:
-            # 使用线程池获取实时盘口信息，避免阻塞
-            future = self.network_executor.submit(self.get_realtime_pankou, stock_code)
-            pankou = future.result(timeout=1.5)  # 1.5秒超时
+            # 直接调用，避免线程池死锁（因为已经在线程池中运行）
+            pankou = self.get_realtime_pankou(stock_code)
             sell_price_5 = pankou.get("sp5") if pankou else None
             current_price = pankou.get("current") if pankou else None
 
@@ -422,14 +486,37 @@ class XueQiuFollower(BaseFollower):
             return None
 
     def get_realtime_pankou(self, stock_code):
+        """获取实时盘口信息，带缓存机制"""
+        # 检查缓存
+        with self.price_cache_lock:
+            cache_key = stock_code.upper()
+            if cache_key in self.price_cache:
+                cache_data = self.price_cache[cache_key]
+                cache_age = time.time() - cache_data["timestamp"]
+                if cache_age < self.price_cache_ttl:
+                    logger.debug("🔥 使用缓存价格数据 %s，缓存年龄: %.3f秒", stock_code, cache_age)
+                    return cache_data["price_data"]
+        
+        # 缓存未命中或已过期，获取新数据
         url = self.REALTIME_PANKOU + f"?symbol={stock_code.upper()}"
         try:
             # 设置单独的超时时间，确保不会阻塞
-            response = self._reliable_request_get(url, timeout=1.0)
+            response = self._reliable_request_get(url, timeout=0.8)  # 降低超时时间
+            price_data = response.json().get("data")
+            
+            # 更新缓存
+            if price_data:
+                with self.price_cache_lock:
+                    self.price_cache[cache_key] = {
+                        "price_data": price_data,
+                        "timestamp": time.time()
+                    }
+                    logger.debug("💾 缓存价格数据 %s", stock_code)
+            
             # logger.debug("获取股票 %s, URL: %s, 实时盘口信息: %s", stock_code, url, response.json())
-            return response.json().get("data")
+            return price_data
         except (requests.exceptions.Timeout, TimeoutRequestException):
-            logger.warning("获取股票 %s 实时盘口信息请求超时(1秒)", stock_code)
+            logger.warning("获取股票 %s 实时盘口信息请求超时(0.8秒)", stock_code)
             return None
         except requests.exceptions.RequestException as e:
             logger.warning("获取股票 %s 实时盘口信息请求失败: %s", stock_code, e)
@@ -509,6 +596,7 @@ class XueQiuFollower(BaseFollower):
         """
         portfolio_info = self._get_portfolio_info(portfolio_code)
         return portfolio_info["net_value"]
+
     def track_strategy_worker(self, strategy, name, interval=10, **kwargs):
         """雪球策略跟踪worker，带详细监控日志"""
         logger.info("🚀 策略 %s worker线程开始运行，轮询间隔: %s秒", name, interval)
@@ -519,24 +607,64 @@ class XueQiuFollower(BaseFollower):
         
         while not self.stop_event.is_set():
             try:
+                # 新的查询周期开始
+                logger.debug("🔴 [DEBUG] 策略 %s 开始新的查询周期", name)
                 cycle_start = time.time()
-                logger.debug("⏰ 策略 %s 开始新的查询周期，时间: %.3f", name, cycle_start)
+                # logger.debug("⏰ 策略 %s 开始新的查询周期，时间: %.3f", name, cycle_start)  # 每1.6秒打印一次，太频繁
                 
-                # 使用非阻塞网络请求，设置1.5秒超时
-                logger.debug("🌐 策略 %s 提交网络查询任务", name)
+                # 提交网络查询任务
+                # logger.debug("🌐 策略 %s 提交网络查询任务", name)  # 每1.6秒打印一次，太频繁
+                logger.debug("🔴 [DEBUG] 策略 %s 提交网络查询任务到线程池", name)
                 future = self.network_executor.submit(self.query_strategy_transaction, strategy, **kwargs)
+                logger.debug("🔴 [DEBUG] 策略 %s 任务已提交，开始等待结果", name)
                 
                 try:
                     network_start = time.time()
-                    transactions = future.result(timeout=1.5)  # 1.5秒超时
-                    network_time = time.time() - network_start
-                    logger.debug("✅ 策略 %s 网络查询完成，耗时: %.3f秒", name, network_time)
-                    consecutive_errors = 0  # 重置错误计数
+                    # 使用更严格的超时机制，确保不会卡住
+                    import threading
+                    result_holder = [None]
+                    exception_holder = [None]
+                    completed = threading.Event()
+                    
+                    def timeout_wrapper():
+                        try:
+                            logger.debug("🔴 [DEBUG] timeout_wrapper开始调用future.result(timeout=2.0)")
+                            result_holder[0] = future.result(timeout=2.0)
+                            logger.debug("🔴 [DEBUG] timeout_wrapper成功获取结果")
+                        except Exception as ex:
+                            logger.debug("🔴 [DEBUG] timeout_wrapper捕获异常: %s", ex)
+                            exception_holder[0] = ex
+                        finally:
+                            logger.debug("🔴 [DEBUG] timeout_wrapper完成，设置completed事件")
+                            completed.set()
+                    
+                    timeout_thread = threading.Thread(target=timeout_wrapper, daemon=True)
+                    timeout_thread.start()
+                    logger.debug("🔴 [DEBUG] timeout_wrapper线程已启动，等待最多3秒")
+                    
+                    # 等待最多3秒，如果还没完成就强制超时
+                    if completed.wait(timeout=3.0):
+                        logger.debug("🔴 [DEBUG] completed.wait(3.0) 返回True，任务已完成")
+                        if exception_holder[0]:
+                            logger.debug("🔴 [DEBUG] 任务有异常，准备抛出: %s", exception_holder[0])
+                            raise exception_holder[0]
+                        transactions = result_holder[0]
+                        network_time = time.time() - network_start
+                        logger.debug("🔴 [DEBUG] 任务成功，网络耗时: %.3f秒", network_time)
+                        consecutive_errors = 0  # 重置错误计数
+                    else:
+                        # 强制超时
+                        network_time = time.time() - network_start
+                        logger.debug("🔴 [DEBUG] completed.wait(3.0) 返回False，强制超时")
+                        logger.error("🚨 策略 %s 查询强制超时，耗时: %.3f秒", name, network_time)
+                        raise Exception("强制超时保护触发")
+                        
                 except Exception as e:
                     consecutive_errors += 1
                     network_time = time.time() - network_start
+                    error_msg = str(e) if str(e) else f"{type(e).__name__} (请求超时)" if "TimeoutError" in str(type(e)) else "未知错误"
                     logger.warning("❌ 策略 %s 网络查询失败，耗时: %.3f秒，连续错误: %d/%d，错误: %s", 
-                                 name, network_time, consecutive_errors, max_consecutive_errors, str(e))
+                                 name, network_time, consecutive_errors, max_consecutive_errors, error_msg)
                     
                     if consecutive_errors >= max_consecutive_errors:
                         logger.error("🔄 策略 %s 连续错误过多，暂停30秒", name)
@@ -544,15 +672,16 @@ class XueQiuFollower(BaseFollower):
                         consecutive_errors = 0
                     else:
                         time.sleep(1)
+                    logger.debug("🔴 [DEBUG] 异常处理完成，准备continue重新开始循环")
                     continue
                 
-                # 处理交易数据
+                # 处理交易记录
                 if transactions:
                     logger.info("📈 策略 %s 发现 %d 条调仓信息", name, len(transactions))
                     for i, transaction in enumerate(transactions):
                         try:
                             process_start = time.time()
-                            logger.debug("🔄 策略 %s 处理第 %d/%d 条交易记录", name, i+1, len(transactions))
+                            # logger.debug("🔄 策略 %s 处理第 %d/%d 条交易记录", name, i+1, len(transactions))  # 每条记录都打印，太冗余
                             
                             # 构建交易指令
                             trade_cmd = {
@@ -565,13 +694,13 @@ class XueQiuFollower(BaseFollower):
                                 "datetime": transaction["datetime"],
                             }
                             
-                            # 检查指令是否过期
+                            # 检查指令是否已执行过
                             if self.is_cmd_expired(trade_cmd):
-                                logger.warning("⏰ 策略 %s 交易指令已过期，跳过: %s", name, trade_cmd)
+                                logger.warning("⏰ 策略 %s 交易指令已执行过，跳过: %s", name, trade_cmd)
                                 continue
                                 
                             logger.info(
-                                "📤 策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
+                                "📈 策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
                                 name,
                                 trade_cmd["stock_code"],
                                 trade_cmd["action"],
@@ -585,7 +714,7 @@ class XueQiuFollower(BaseFollower):
                             self.add_cmd_to_expired_cmds(trade_cmd)
                             
                             process_time = time.time() - process_start
-                            logger.debug("✅ 策略 %s 交易记录处理完成，耗时: %.3f秒", name, process_time)
+                            # logger.debug("✅ 策略 %s 交易记录处理完成，耗时: %.3f秒", name, process_time)  # 每条记录都打印，冗余
                         except Exception as e:
                             logger.error("❌ 策略 %s 处理交易记录失败: %s", name, e)
                 else:
@@ -596,21 +725,27 @@ class XueQiuFollower(BaseFollower):
                         last_heartbeat = current_time
                 
                 # 计算精确的睡眠时间
+                logger.debug("🔴 [DEBUG] 策略 %s 开始计算睡眠时间", name)
                 cycle_time = time.time() - cycle_start
                 sleep_time = max(0, interval - cycle_time)
+                logger.debug("🔴 [DEBUG] 策略 %s 计算完成，周期耗时: %.3f秒，将睡眠: %.3f秒", name, cycle_time, sleep_time)
                 
                 if cycle_time > interval:
                     logger.warning("⚠️ 策略 %s 处理周期过长: %.3f秒，超过间隔: %d秒", name, cycle_time, interval)
                 
-                logger.debug("😴 策略 %s 周期完成，总耗时: %.3f秒，将睡眠: %.3f秒", name, cycle_time, sleep_time)
+                # logger.debug("😴 策略 %s 周期完成，总耗时: %.3f秒，将睡眠: %.3f秒", name, cycle_time, sleep_time)
                 
                 # 可中断的睡眠
+                logger.debug("🔴 [DEBUG] 策略 %s 开始睡眠循环，总时长: %.3f秒", name, sleep_time)
                 sleep_start = time.time()
                 elapsed_sleep = 0
                 while elapsed_sleep < sleep_time and not self.stop_event.is_set():
                     chunk_sleep = min(0.1, sleep_time - elapsed_sleep)
                     time.sleep(chunk_sleep)
                     elapsed_sleep = time.time() - sleep_start
+                
+                actual_sleep_time = time.time() - sleep_start
+                logger.debug("🔴 [DEBUG] 策略 %s 睡眠完成，实际睡眠: %.3f秒", name, actual_sleep_time)
                     
             except Exception as e:
                 consecutive_errors += 1
@@ -627,6 +762,3 @@ class XueQiuFollower(BaseFollower):
         logger.info("🛑 策略 %s worker线程已停止", name)
         # 返回成功状态，避免被监控线程误判为异常
         return {"status": "stopped", "strategy": strategy, "name": name}
-
-
-
