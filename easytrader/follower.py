@@ -8,11 +8,17 @@ import re
 import threading
 import time
 from typing import List
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 import requests
 
 from easytrader import exceptions
 from easytrader.log import logger
+
+
+class TimeoutRequestException(Exception):
+    """自定义超时异常"""
+    pass
 
 
 class BaseFollower(metaclass=abc.ABCMeta):
@@ -33,8 +39,93 @@ class BaseFollower(metaclass=abc.ABCMeta):
 
         self.s = requests.Session()
         self.s.verify = False
+        # 设置默认超时时间为1秒
+        self.s.timeout = 1
+        
+        # 创建线程池用于非阻塞网络请求
+        self.network_executor = ThreadPoolExecutor(max_workers=5, thread_name_prefix="network_req")
+        # 创建单独的线程池用于交易执行，避免与网络请求竞争资源
+        self.trade_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="trade_exec")
 
         self.slippage: float = 0.0
+
+    def _reliable_request_get(self, url, params=None, timeout=1.0):
+        """可靠的GET请求，强制超时控制"""
+        import threading
+        import time
+        
+        result = [None]  # 使用列表来存储结果，方便在内部函数中修改
+        exception = [None]  # 存储异常
+        finished = threading.Event()
+        
+        def request_worker():
+            try:
+                start_time = time.time()
+                # logger.debug("🔗 开始网络请求: %s", url)  # 每次请求都打印，太冗余
+                
+                response = self.s.get(url, params=params, timeout=timeout)
+                
+                request_time = time.time() - start_time
+                # logger.debug("📡 网络请求完成，耗时: %.3f秒", request_time)  # 每次请求都打印，太冗余
+                
+                result[0] = response
+            except Exception as e:
+                exception[0] = e
+            finally:
+                finished.set()
+        
+        # 启动请求线程
+        request_thread = threading.Thread(target=request_worker, daemon=True)
+        request_thread.start()
+        
+        # 等待完成或超时
+        if finished.wait(timeout=timeout + 0.5):  # 额外0.5秒容错
+            if exception[0]:
+                raise exception[0]
+            return result[0]
+        else:
+            # 超时情况
+            logger.warning("🚨 强制超时: 请求超过 %.1f秒未完成", timeout + 0.5)
+            raise TimeoutRequestException(f"Request timeout after {timeout + 0.5} seconds")
+
+    def _reliable_request_post(self, url, data=None, timeout=1.0):
+        """可靠的POST请求，强制超时控制"""
+        import threading
+        import time
+        
+        result = [None]  # 使用列表来存储结果，方便在内部函数中修改
+        exception = [None]  # 存储异常
+        finished = threading.Event()
+        
+        def request_worker():
+            try:
+                start_time = time.time()
+                # logger.debug("🔗 开始POST请求: %s", url)  # 每次请求都打印，太冗余
+                
+                response = self.s.post(url, data=data, timeout=timeout)
+                
+                request_time = time.time() - start_time
+                # logger.debug("📡 POST请求完成，耗时: %.3f秒", request_time)  # 每次请求都打印，太冗余
+                
+                result[0] = response
+            except Exception as e:
+                exception[0] = e
+            finally:
+                finished.set()
+        
+        # 启动请求线程
+        request_thread = threading.Thread(target=request_worker, daemon=True)
+        request_thread.start()
+        
+        # 等待完成或超时
+        if finished.wait(timeout=timeout + 0.5):  # 额外0.5秒容错
+            if exception[0]:
+                raise exception[0]
+            return result[0]
+        else:
+            # 超时情况
+            logger.warning("🚨 强制超时: POST请求超过 %.1f秒未完成", timeout + 0.5)
+            raise TimeoutRequestException(f"POST request timeout after {timeout + 0.5} seconds")
 
     def login(self, user=None, password=None, **kwargs):
         """
@@ -48,11 +139,11 @@ class BaseFollower(metaclass=abc.ABCMeta):
         self.s.headers.update(headers)
 
         # init cookie
-        self.s.get(self.LOGIN_PAGE)
+        self._reliable_request_get(self.LOGIN_PAGE, timeout=2.0)
 
         # post for login
         params = self.create_login_params(user, password, **kwargs)
-        rep = self.s.post(self.LOGIN_API, data=params)
+        rep = self._reliable_request_post(self.LOGIN_API, data=params, timeout=2.0)
 
         self.check_login_success(rep)
         logger.info("登录成功")
@@ -62,9 +153,7 @@ class BaseFollower(metaclass=abc.ABCMeta):
             "Accept": "application/json, text/javascript, */*; q=0.01",
             "Accept-Encoding": "gzip, deflate, br",
             "Accept-Language": "en-US,en;q=0.8",
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/54.0.2840.100 Safari/537.36",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
             "Referer": self.WEB_REFERER,
             "X-Requested-With": "XMLHttpRequest",
             "Origin": self.WEB_ORIGIN,
@@ -120,9 +209,9 @@ class BaseFollower(metaclass=abc.ABCMeta):
         :return: 考虑滑点后的交易价格
         """
         if action == "buy":
-            return price * (1 + self.slippage)
+            return round(price * (1 + self.slippage), 2)
         if action == "sell":
-            return price * (1 - self.slippage)
+            return round(price * (1 - self.slippage), 2)
         return price
 
     def load_expired_cmd_cache(self):
@@ -177,54 +266,116 @@ class BaseFollower(metaclass=abc.ABCMeta):
         :param strategy: 策略id
         :param name: 策略名字
         :param interval: 轮询策略的时间间隔，单位为秒"""
+        logger.info("策略 %s worker线程开始运行，轮询间隔: %s秒", name, interval)
+        
+        consecutive_errors = 0  # 连续错误计数
+        max_consecutive_errors = 5  # 最大连续错误次数
+        
+        # 检查是否有 stop_event 属性（用于优雅停止）
+        stop_event = getattr(self, 'stop_event', None)
+        
         while True:
+            # 如果有 stop_event 且已设置，则退出
+            if stop_event and stop_event.is_set():
+                break
+                
             try:
-                transactions = self.query_strategy_transaction(
-                    strategy, **kwargs
-                )
+                start_time = time.time()
+                
+                # 使用非阻塞网络请求，设置1秒超时
+                future = self.network_executor.submit(self.query_strategy_transaction, strategy, **kwargs)
+                try:
+                    transactions = future.result(timeout=1.0)  # 1秒超时
+                    consecutive_errors = 0  # 重置错误计数
+                except FutureTimeoutError:
+                    consecutive_errors += 1
+                    logger.warning("策略 %s 查询调仓信息超时(1秒)，连续错误次数: %d/%d", 
+                                 name, consecutive_errors, max_consecutive_errors)
+                    
+                    if consecutive_errors >= max_consecutive_errors:
+                        logger.error("策略 %s 连续错误次数过多，暂停30秒后重试", name)
+                        time.sleep(30)
+                        consecutive_errors = 0
+                    else:
+                        time.sleep(1)
+                    continue
             # pylint: disable=broad-except
             except Exception as e:
-                logger.exception("无法获取策略 %s 调仓信息, 错误: %s, 跳过此次调仓查询", name, e)
-                time.sleep(3)
+                consecutive_errors += 1
+                logger.exception("策略 %s 获取调仓信息时发生错误: %s，连续错误次数: %d/%d", 
+                               name, e, consecutive_errors, max_consecutive_errors)
+                
+                if consecutive_errors >= max_consecutive_errors:
+                    logger.error("策略 %s 连续错误次数过多，暂停60秒后重试", name)
+                    time.sleep(60)
+                    consecutive_errors = 0
+                else:
+                    time.sleep(3)
                 continue
+                
+            # 处理交易数据
+            if transactions:
+                logger.info("策略 %s 发现 %d 条调仓信息", name, len(transactions))
             for transaction in transactions:
-                trade_cmd = {
-                    "strategy": strategy,
-                    "strategy_name": name,
-                    "action": transaction["action"],
-                    "stock_code": transaction["stock_code"],
-                    "amount": transaction["amount"],
-                    "price": transaction["price"],
-                    "datetime": transaction["datetime"],
-                }
-                if self.is_cmd_expired(trade_cmd):
+                try:
+                    trade_cmd = {
+                        "strategy": strategy,
+                        "strategy_name": name,
+                        "action": transaction["action"],
+                        "stock_code": transaction["stock_code"],
+                        "amount": transaction["amount"],
+                        "price": transaction["price"],
+                        "datetime": transaction["datetime"],
+                    }
+                    if self.is_cmd_expired(trade_cmd):
+                        continue
+                    logger.info(
+                        "策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
+                        name,
+                        trade_cmd["stock_code"],
+                        trade_cmd["action"],
+                        trade_cmd["amount"],
+                        trade_cmd["price"],
+                        trade_cmd["datetime"],
+                    )
+                    self.trade_queue.put(trade_cmd)
+                    self.add_cmd_to_expired_cmds(trade_cmd)
+                except Exception as e:
+                    logger.exception("策略 [%s] 处理调仓记录 %s 失败, 错误: %s", name, transaction, e)
                     continue
-                logger.info(
-                    "策略 [%s] 发送指令到交易队列, 股票: %s 动作: %s 数量: %s 价格: %s 信号产生时间: %s",
-                    name,
-                    trade_cmd["stock_code"],
-                    trade_cmd["action"],
-                    trade_cmd["amount"],
-                    trade_cmd["price"],
-                    trade_cmd["datetime"],
-                )
-                self.trade_queue.put(trade_cmd)
-                self.add_cmd_to_expired_cmds(trade_cmd)
-            try:
-                for _ in range(interval):
-                    time.sleep(1)
-            except KeyboardInterrupt:
-                logger.info("程序退出")
-                break
+            else:
+                # 添加心跳日志，证明任务还在运行
+                if int(time.time()) % 60 < interval:  # 每分钟只记录一次心跳
+                    logger.debug("策略 %s 无调仓信息，任务正常运行中...", name)
+            
+            # 计算实际睡眠时间，确保准确的轮询间隔
+            elapsed = time.time() - start_time
+            sleep_time = max(0, interval - elapsed)
+            
+            if sleep_time > 0:
+                try:
+                    # 支持中断的睡眠
+                    for _ in range(int(sleep_time * 10)):  # 将秒转换为0.1秒的循环
+                        if stop_event and stop_event.is_set():
+                            break
+                        time.sleep(0.1)
+                except KeyboardInterrupt:
+                    logger.info("程序退出")
+                    break
+                else:
+                    logger.warning("策略 %s 处理时间过长: %.2f秒，超过轮询间隔: %d秒", 
+                                 name, elapsed, interval)
+        
+        logger.info("策略 %s worker线程已停止")
+        # 返回成功状态，避免被监控线程误判为异常
+        return {"status": "stopped", "strategy": strategy, "name": name}
 
     @staticmethod
     def generate_expired_cmd_key(cmd):
-        return "{}_{}_{}_{}_{}_{}".format(
+        return "{}_{}_{}_{}".format(
             cmd["strategy_name"],
             cmd["stock_code"],
             cmd["action"],
-            cmd["amount"],
-            cmd["price"],
             cmd["datetime"],
         )
 
@@ -305,9 +456,10 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 )
                 break
 
-            actual_price = self._calculate_price_by_slippage(
-                trade_cmd["action"], trade_cmd["price"]
-            )
+            # actual_price = self._calculate_price_by_slippage(
+            #     trade_cmd["action"], trade_cmd["price"]
+            # )
+            actual_price = trade_cmd["price"]
             args = {
                 "security": trade_cmd["stock_code"],
                 "price": actual_price,
@@ -315,7 +467,16 @@ class BaseFollower(metaclass=abc.ABCMeta):
                 "entrust_prop": entrust_prop,
             }
             try:
+                trader_name = type(user).__name__
+                logger.info("🎯 使用 %s 执行交易: %s %s 数量:%s 价格:%s", 
+                           trader_name, trade_cmd["action"], trade_cmd["stock_code"], 
+                           trade_cmd["amount"], actual_price)
+                
+                trade_start = time.time()
                 response = getattr(user, trade_cmd["action"])(**args)
+                trade_time = time.time() - trade_start
+                logger.debug("⚡ 实际交易执行耗时: %.3f秒", trade_time)
+                
             except exceptions.TradeError as e:
                 trader_name = type(user).__name__
                 err_msg = "{}: {}".format(type(e).__name__, e.args)
@@ -348,22 +509,96 @@ class BaseFollower(metaclass=abc.ABCMeta):
         """
         :param send_interval: 交易发送间隔， 默认为0s。调大可防止卖出买入时买出单没有及时成交导致的买入金额不足
         """
+        logger.info("💼 交易worker线程开始运行")
+        processed_count = 0
+        
         while True:
-            trade_cmd = self.trade_queue.get()
-            self._execute_trade_cmd(
-                trade_cmd, users, expire_seconds, entrust_prop, send_interval
-            )
-            time.sleep(send_interval)
+            try:
+                # 非阻塞方式获取交易指令，避免无限等待
+                queue_start = time.time()
+                try:
+                    trade_cmd = self.trade_queue.get(timeout=0.1)  # 降低超时到100ms，提升响应速度
+                    queue_time = time.time() - queue_start
+                    processed_count += 1
+                    logger.info(f"📤 获取交易指令#{processed_count}，队列等待: {queue_time:.3f}秒")
+                except queue.Empty:
+                    # 队列为空，等待一段时间再检查
+                    queue_time = time.time() - queue_start
+                    # logger.debug(f"📭 交易队列为空，等待: {queue_time:.3f}秒")  # 每秒都打印，太频繁
+                    time.sleep(0.05)  # 降低睡眠时间到50ms，提升响应速度
+                    continue
+                
+                logger.info(f"🚀 开始执行交易指令#{processed_count}: {trade_cmd}")
+                
+                # 使用专用交易线程池执行交易，避免与网络请求竞争资源
+                execute_start = time.time()  # 移到try外，避免变量作用域错误
+                try:
+                    submit_start = time.time()
+                    future = self.trade_executor.submit(
+                        self._execute_trade_cmd,
+                        trade_cmd, users, expire_seconds, entrust_prop, send_interval
+                    )
+                    submit_time = time.time() - submit_start
+                    logger.debug(f"🎯 交易指令#{processed_count}已提交到线程池，耗时: {submit_time:.3f}秒")
+                    
+                    # 设置交易执行超时，避免无限等待
+                    future.result(timeout=30.0)  # 30秒超时
+                    execute_time = time.time() - execute_start
+                    logger.info(f"✅ 交易指令#{processed_count}执行完成，耗时: {execute_time:.3f}秒")
+                    
+                except Exception as e:
+                    execute_time = time.time() - execute_start
+                    logger.exception(f"❌ 交易指令#{processed_count}执行失败，耗时: {execute_time:.3f}秒")
+                
+                # 交易间隔等待
+                if send_interval > 0:
+                    interval_start = time.time()
+                    time.sleep(send_interval)
+                    interval_time = time.time() - interval_start
+                    logger.debug(f"⏱️ 交易间隔等待完成: {interval_time:.3f}秒")
+                
+            except Exception as e:
+                logger.exception(f"💥 交易worker线程发生错误: {e}")
+                time.sleep(1)  # 错误后短暂等待
 
     def query_strategy_transaction(self, strategy, **kwargs):
-        params = self.create_query_transaction_params(strategy)
-
-        rep = self.s.get(self.TRANSACTION_API, params=params)
-        history = rep.json()
-
-        transactions = self.extract_transactions(history)
-        self.project_transactions(transactions, **kwargs)
-        return self.order_transactions_sell_first(transactions)
+        """查询策略调仓信息，带详细监控"""
+        try:
+            query_start = time.time()
+            # logger.debug("🌐 开始查询策略 %s 调仓信息", strategy)
+            
+            params = self.create_query_transaction_params(strategy)
+            rep = self._reliable_request_get(self.TRANSACTION_API, params=params, timeout=1.0)  # 降低超时到1秒
+            
+            query_time = time.time() - query_start
+            # logger.debug("🌐 查询策略 %s 调仓信息完成，耗时: %.3f秒", strategy, query_time)
+            
+            history = rep.json()
+            transactions = self.extract_transactions(history)
+            
+            if transactions:
+                parse_start = time.time()
+                self.project_transactions(transactions, **kwargs)
+                result = self.order_transactions_sell_first(transactions)
+                parse_time = time.time() - parse_start
+                logger.debug("📊 处理策略 %s 交易数据完成，耗时: %.3f秒", strategy, parse_time)
+                
+                return result
+            else:
+                # logger.debug("策略 %s 无调仓信息", strategy)
+                return []
+        except (requests.exceptions.Timeout, TimeoutRequestException):
+            query_time = time.time() - query_start
+            logger.warning("⏰ 策略 %s 查询调仓信息超时，耗时: %.3f秒", strategy, query_time)
+            return []
+        except requests.exceptions.RequestException as e:
+            query_time = time.time() - query_start
+            logger.warning("❌ 策略 %s 查询调仓信息请求失败，耗时: %.3f秒，错误: %s", strategy, query_time, e)
+            return []
+        except Exception as e:
+            query_time = time.time() - query_start
+            logger.error("💥 策略 %s 查询调仓信息时发生未知错误，耗时: %.3f秒，错误: %s", strategy, query_time, e)
+            return []
 
     def extract_transactions(self, history) -> List[str]:
         """
@@ -401,8 +636,28 @@ class BaseFollower(metaclass=abc.ABCMeta):
         # 调整调仓记录的顺序为先卖再买
         sell_first_transactions = []
         for transaction in transactions:
+            if 'action' not in transaction:
+                logger.warning("调仓记录 %s 不包含 action 字段，跳过", transaction)
+                continue
+
             if transaction["action"] == "sell":
                 sell_first_transactions.insert(0, transaction)
             else:
                 sell_first_transactions.append(transaction)
         return sell_first_transactions
+
+    def cleanup(self):
+        """清理资源，关闭线程池"""
+        try:
+            if hasattr(self, 'network_executor'):
+                self.network_executor.shutdown(wait=True)
+                logger.info("网络请求线程池已关闭")
+            if hasattr(self, 'trade_executor'):
+                self.trade_executor.shutdown(wait=True)
+                logger.info("交易执行线程池已关闭")
+        except Exception as e:
+            logger.error("关闭线程池时发生错误: %s", e)
+
+    def __del__(self):
+        """析构函数，确保资源被正确释放"""
+        self.cleanup()

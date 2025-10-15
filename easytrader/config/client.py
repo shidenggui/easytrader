@@ -39,6 +39,14 @@ class CommonConfig:
 
     COMMON_GRID_CONTROL_ID = 1047
 
+    CURRENT_PRICE_CONTROL_ID = 1024
+
+    SELL_PRICE_1_CONTROL_ID = 1021
+    SELL_PRICE_2_CONTROL_ID = 1022
+
+    BUY_PRICE_1_CONTROL_ID = 1018
+    BUY_PRICE_2_CONTROL_ID = 1025
+
     COMMON_GRID_LEFT_MARGIN = 10
     COMMON_GRID_FIRST_ROW_HEIGHT = 30
     COMMON_GRID_ROW_HEIGHT = 16
@@ -102,7 +110,7 @@ class YH(CommonConfig):
 
 
 class HT(CommonConfig):
-    DEFAULT_EXE_PATH = r"C:\htzqzyb2\xiadan.exe"
+    DEFAULT_EXE_PATH = r"D:\htwt\xiadan.exe"
 
     BALANCE_CONTROL_ID_GROUP = {
         "资金余额": 1012,
