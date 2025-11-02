@@ -135,3 +135,6 @@ class JoinQuantFollower(BaseFollower):
             transaction["action"] = (
                 "buy" if transaction["transaction"] == "买" else "sell"
             )
+            transaction["price"] = (
+                transaction["price"] if isinstance(transaction["transaction"] ,float) else float(transaction["price"])
+            )
