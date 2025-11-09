@@ -38,11 +38,12 @@ class XueQiuFollower(BaseFollower):
             )
         headers = self._generate_headers()
         self.s.headers.update(headers)
-
-        self.s.get(self.LOGIN_PAGE)
-
         cookie_dict = parse_cookies_str(cookies)
         self.s.cookies.update(cookie_dict)
+        
+        self.s.get(self.LOGIN_PAGE)
+
+
 
         logger.info("登录成功")
 
