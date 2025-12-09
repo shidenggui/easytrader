@@ -203,6 +203,12 @@ class MiniqmtTrader:
         self._account: StockAccount = None
         self._trader: XtQuantTrader = None
 
+    def prepare(self, **json_data):
+        """
+        allow remoteClient to pass param to miniqmt
+        """
+        self.connect(**json_data.get('kwargs',{}))
+
     def connect(
         self,
         miniqmt_path: str = r"D:\国金证券QMT交易端\userdata_mini",

@@ -4,7 +4,7 @@ from setuptools import setup
 
 setup(
     name="easytrader",
-    version="0.23.7"
+    version="0.23.7",
     description="A utility for China Stock Trade",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
@@ -30,7 +30,12 @@ setup(
         "Programming Language :: Python :: 3.5",
         "License :: OSI Approved :: BSD License",
     ],
-    packages=["easytrader", "easytrader.config", "easytrader.utils", "easytrader.miniqmt"],
+    packages=[
+        "easytrader",
+        "easytrader.config",
+        "easytrader.utils",
+        "easytrader.miniqmt",
+    ],
     package_data={
         "": ["*.jar", "*.json"],
         "config": ["config/*.json"],
