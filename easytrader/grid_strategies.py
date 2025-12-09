@@ -78,7 +78,7 @@ class Copy(BaseStrategy):
     def get(self, control_id: int) -> List[Dict]:
         grid = self._get_grid(control_id)
         self._set_foreground(grid)
-        grid.type_keys("^A^C", set_foreground=False)
+        grid.type_keys("^A^C", set_foreground=False, pause=0.2)
         content = self._get_clipboard_data()
         return self._format_grid_data(content)
 
@@ -141,7 +141,9 @@ class Copy(BaseStrategy):
                 if not found:
                     self._trader.app.top_window().Button2.click()  # 点击取消
             else:
-                Copy._need_captcha_reg = False
+                pass
+                # 不要将 Copy._need_captcha_reg 置为 False, 因为它是类方法, 一旦置为 False, 后续操作都不再进行验证码识别
+                # Copy._need_captcha_reg = False
         count = 5
         while count > 0:
             try:
