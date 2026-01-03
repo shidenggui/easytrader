@@ -26,12 +26,12 @@
 ### 相关
 
 * [easyquotation 实时获取全市场股票行情](https://github.com/shidenggui/easyquotation)
-* [easyquant 简单的量化框架](https://github.com/shidenggui/easyqutant)
+* [easyquant 简单的量化框架](https://github.com/shidenggui/easyquant)
 
 
 ### 模拟交易
 
-* 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](doc/xueqiu.md)）
+* 雪球组合 by @[haogefeifei](https://github.com/haogefeifei)（[说明](docs/xueqiu.md)）
 
 ### 使用文档
 
