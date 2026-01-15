@@ -447,7 +447,7 @@ class MiniqmtTrader:
         return trades
 
     @perf_clock
-    def buy(self, security: str, price: float, amount: int):
+    def buy(self, security: str, price: float, amount: int, **kwargs):
         """
         限价买入
         qmt 官方文档： https://dict.thinktrader.net/nativeApi/xttrader.html?id=7zqjlm#%E8%82%A1%E7%A5%A8%E5%90%8C%E6%AD%A5%E6%8A%A5%E5%8D%95
