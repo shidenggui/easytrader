@@ -57,7 +57,7 @@ class WebTrader(metaclass=abc.ABCMeta):
 
     def _prepare_account(self, user, password, **kwargs):
         """映射用户名密码到对应的字段"""
-        raise Exception("支持参数登录需要实现此方法")
+        raise RuntimeError("支持参数登录需要实现此方法")
 
     def autologin(self, limit=10):
         """实现自动登录

@@ -77,7 +77,7 @@ def use(broker, debug=False, **kwargs):
     if broker.lower() in ["miniqmt"]:
         try:
             import xtquant
-        except:
+        except Exception:
             logger.error("miniqmt 相关组件 xtqimt 未安装, 请执行 pip install easytrader[xtquant]安装")
         from easytrader.miniqmt.miniqmt_trader import MiniqmtTrader
 

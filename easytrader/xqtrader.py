@@ -140,7 +140,7 @@ class XueQiuTrader(webtrader.WebTrader):
             portfolio_info = rebalance_info
             portfolio_info['net_value'] = net_value
         except Exception as e:
-            raise Exception("get portfolio info error: {}".format(e))
+            raise RuntimeError("get portfolio info error: {}".format(e))
         return portfolio_info
 
     def get_balance(self):
