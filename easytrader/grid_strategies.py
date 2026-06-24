@@ -112,7 +112,7 @@ class Copy(BaseStrategy):
                     captcha_num = captcha_recognize(file_path).strip()  # 识别验证码
                     captcha_num = "".join(captcha_num.split())
                     logger.info("captcha result-->" + captcha_num)
-                    if len(captcha_num) == 4:
+                    if len(captcha_num) >= 4:
                         editor = self._trader.app.top_window().window(
                             control_id=0x964, class_name="Edit"
                         ) # 验证码输入框
